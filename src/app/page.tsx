@@ -1,8 +1,14 @@
+import MainLayout from '../components/templates/MainLayout';
+import HeroSection from '../components/molecules/HeroSection';
+import Header from '../components/organisms/Header';
 
 export default function Home() {
   return (
-    <div>
-<h1 className="text-red-400 p-7">ahmad</h1>
-    </div>
+ <>
+  <MainLayout>  <Header />
+      <HeroSection />
+    </MainLayout>
+ </>
+ 
   );
 }
