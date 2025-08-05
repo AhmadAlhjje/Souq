@@ -1,7 +1,11 @@
-// components/templates/MainLayout.jsx
+// components/templates/MainLayout.tsx
 import React from 'react';
 
-const MainLayout = ({ children }) => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-gray-100">
       <main className="container mx-auto p-4">{children}</main>

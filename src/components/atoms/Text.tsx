@@ -1,8 +1,17 @@
-// components/atoms/Text.jsx
+// components/atoms/Text.tsx
 import React from 'react';
 
-const Text = ({ text, className }) => {
-  return <p className={`text-xl text-center mb-8 ${className}`}>{text}</p>;
+interface TextProps {
+  text: string;
+  className?: string;
+}
+
+const Text: React.FC<TextProps> = ({ text, className = '' }) => {
+  return (
+    <p className={`text-xl text-center mb-8 ${className}`}>
+      {text}
+    </p>
+  );
 };
 
 export default Text;
