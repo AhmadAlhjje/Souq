@@ -1,5 +1,5 @@
 // components/atoms/Heading.tsx
-import React from 'react';
+import React from "react";
 
 interface HeadingProps {
   text: string;
@@ -7,14 +7,14 @@ interface HeadingProps {
   className?: string;
 }
 
-const Heading: React.FC<HeadingProps> = ({ text, level = 1, className = '' }) => {
-  const Tag = (`h${level}`) as keyof React.JSX.IntrinsicElements;
+const Heading: React.FC<HeadingProps> = ({
+  text,
+  level = 1,
+  className = "",
+}) => {
+  const Tag = `h${level}` as keyof React.JSX.IntrinsicElements;
 
-  return (
-    <Tag className={`text-4xl font-bold mb-6 text-center ${className}`}>
-      {text}
-    </Tag>
-  );
+  return <Tag className={`  mb-6 text-center ${className}`}>{text}</Tag>;
 };
 
 export default Heading;
