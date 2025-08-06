@@ -1,4 +1,4 @@
-// components/atoms/Button.tsx
+// components/atoms/Button.ts
 import React from 'react';
 
 interface ButtonProps {
