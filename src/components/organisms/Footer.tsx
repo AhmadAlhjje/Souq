@@ -5,7 +5,7 @@ import Icon from "../atoms/Icon";
 
 const Footer = () => {
   return (
-    <footer className="bg-black text-white py-5 px-5">
+    <footer className="bg-black text-white mt-10 py-5 px-5">
       <div className="flex flex-col md:flex-row justify-between max-w-7xl mx-auto gap-8">
         
         {/* قسم Instagram */}
