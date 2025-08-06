@@ -1,24 +1,32 @@
 // components/atoms/Icon.tsx
 import React from 'react';
+import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from 'react-icons/fa';
 
 interface IconProps {
-  name: string;
+  name: 'facebook' | 'twitter' | 'linkedin' | 'instagram';
   className?: string;
 }
 
-const Icon: React.FC<IconProps> = ({ name, className }) => {
+const Icon: React.FC<IconProps> = ({ name, className = '' }) => {
+  const iconMap = {
+    facebook: FaFacebook,
+    twitter: FaTwitter,
+    linkedin: FaLinkedin,
+    instagram: FaInstagram,
+  };
+
+  const IconComponent = iconMap[name];
+
+  if (!IconComponent) {
+    console.error(`Icon not found for name: ${name}`);
+    return null; // أو يمكنك عرض أيقونة افتراضية
+  }
+
   return (
-    <svg
-      className={`w-6 h-6 ${className}`}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      
-    >
-      {/* استبدل هذا بالرمز المناسب */}
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
+    <IconComponent
+      className={`w-6 h-6 text-white ${className}`}
+      aria-label={name}
+    />
   );
 };
 
