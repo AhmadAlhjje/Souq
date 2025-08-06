@@ -8,7 +8,7 @@ interface TextProps {
 
 const Text: React.FC<TextProps> = ({ text, className = '' }) => {
   return (
-    <p className={`text-xl text-center mb-8 ${className}`}>
+    <p className={`text-xl  text-center mb-8 ${className}`}>
       {text}
     </p>
   );

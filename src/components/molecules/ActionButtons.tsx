@@ -7,7 +7,7 @@ const ActionButtons: React.FC = () => {
     <div className="flex space-x-2">
       <Button
         text="أنشئ متجرك مجانًا"
-        className="bg-transparent bg-[#004D5A] text-white border border-[#004D5A] hover:bg-[#004D5A] hover:text-white px-5 py-2 rounded-full"
+        className=" bg-[#004D5A] text-white border border-[#004D5A] hover:bg-blue-500 hover:text-white px-5 py-2 rounded-full"
       />
       <Button
         text="تسجيل الدخول"

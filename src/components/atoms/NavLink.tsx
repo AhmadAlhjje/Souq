@@ -12,7 +12,7 @@ const NavLink: React.FC<NavLinkProps> = ({ href, children, className = '' }) => 
   return (
     <Link
       href={href}
-      className={`px-4 py-2 text-[#004D5A] hover:text-blue-500 ${className}`}
+      className={`px-4 py-2 font-bold  text-[#004D5A] hover:text-blue-500 ${className}`}
     >
       {children}
     </Link>

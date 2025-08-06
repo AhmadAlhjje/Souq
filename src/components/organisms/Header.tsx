@@ -5,7 +5,7 @@ import ActionButtons from '../molecules/ActionButtons';
 
 const Header: React.FC = () => {
   return (
-    <nav className="bg-green-100 shadow-md p-4 flex justify-between items-center">
+    <nav className="bg-[#96EDD9] shadow-md p-4 flex justify-between items-center">
       {/* Action Buttons */}
       <ActionButtons />
 
