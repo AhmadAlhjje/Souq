@@ -1,4 +1,4 @@
-// components/atoms/Button.ts
+// components/atoms/Button.t
 import React from 'react';
 
 interface ButtonProps {
@@ -12,7 +12,7 @@ const Button: React.FC<ButtonProps> = ({ text, onClick, className = '' }) => {
     <button
       onClick={onClick}
       className={className}
-      type="button"
+      type="button" 
     >
       {text}
     </button>
