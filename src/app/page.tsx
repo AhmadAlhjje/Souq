@@ -5,6 +5,7 @@ import Heading from '../components/atoms/Heading';
 import ServicesSection from '../components/organisms/ServicesSection';
 import StatisticsSection from '../components/organisms/StatisticsSection';
 import Button from '../components/atoms/Button';
+import Footer from '@/components/organisms/Footer';
 export default function Home() {
   return (
  <>
@@ -33,6 +34,7 @@ export default function Home() {
         </div>
   </div>
       </div>
+      <Footer/>
     </MainLayout>
  </>
  
