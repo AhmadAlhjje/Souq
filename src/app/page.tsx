@@ -5,6 +5,9 @@ import ServicesSection from "../components/organisms/ServicesSection";
 import StatisticsSection from "../components/organisms/StatisticsSection";
 import Footer from "@/components/organisms/Footer";
 import MainLayout from "../components/templates/MainLayout";
+import SolutionSection from "@/components/molecules/SolutionSection";
+import { FaRocket } from "react-icons/fa";
+import FeaturesSection from "@/components/organisms/FeaturesSection";
 
 export default function Home() {
   return (
@@ -29,6 +32,10 @@ export default function Home() {
           </div>
           {/* Section 3: Statistics */}
           <StatisticsSection />
+
+          {/* Section 4: Statistics */}
+  
+          <FeaturesSection />
         </div>
         <Footer />
       </MainLayout>
