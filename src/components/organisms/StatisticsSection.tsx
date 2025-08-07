@@ -5,7 +5,7 @@ import { FaChartLine, FaUsers, FaCrown } from 'react-icons/fa';
 
 const StatisticsSection: React.FC = () => {
   return (
-    <div className="flex flex-col md:flex-row justify-between gap-6 mt-10 px-4">
+    <div className="flex flex-col md:flex-row justify-around gap-6 mt-10 px-4">
       {/* البطاقة 1: المبيعات */}
       <StatisticCard
         title="مبيعات المتاجر والبائعين"
