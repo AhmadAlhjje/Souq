@@ -43,7 +43,7 @@ export default function CustomerSatisfactionSection() {
       className="py-20 px-6 bg-gradient-to-br from-[#96EDD9]/10 via-white to-[#96EDD9]/5"
       background="light"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto text-right">
         {/* Header */}
         <div className="text-center mb-16">
           <Badge
