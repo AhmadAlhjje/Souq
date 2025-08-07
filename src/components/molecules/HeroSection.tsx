@@ -6,27 +6,93 @@ import Button from '../atoms/Button';
 
 const HeroSection: React.FC = () => {
   return (
-    <div className="flex flex-col justify-center h-screen text-[#004D5A] bg-[#96EDD9] px-6 relative">
+    <div className="relative mt-16 min-h-screen bg-gradient-to-br from-[#96EDD9] via-[#A8F0DC] to-[#B8F3E0] overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute top-20 right-20 w-32 h-32 bg-white rounded-full"></div>
+        <div className="absolute bottom-40 left-20 w-24 h-24 bg-white rounded-full"></div>
+        <div className="absolute top-1/2 left-1/3 w-16 h-16 bg-white rounded-full"></div>
+      </div>
+
       {/* Top Banner */}
-      <div className="absolute top-14 mr-8 sm:right-10 md:right-6 p-3 bg-white bg-opacity-90 rounded-lg shadow-md">
-        <span className="text-sm sm:text-base md:text-lg font-bold ">
-          TMC انضم لأكثر من 60,000 تاجر نشط في  
-        </span>
+      <div className="absolute top-6 right-4 sm:right-8 md:right-12 z-10">
+        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-4 transition-all duration-300 hover:shadow-xl">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-[#004D5A] rounded-full animate-pulse"></div>
+            <span className="text-sm sm:text-base font-bold text-[#004D5A]">
+              انضم لأكثر من 60,000 تاجر نشط في TMC
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Main Content - Right Aligned */}
-      <div className=" text-4xl font-bold max-w-lg lg:max-w-xl ml-auto mr-0 text-right ">
-        <Heading text="كن الشيء الكبير القادم" />
-       
-        <Text text="  .TMC احلم كثيراً و أنشأ بسرعة، وانطلق بعيدًا مع " />
+      {/* Main Content Container */}
+      <div className="flex items-center justify-end min-h-screen px-6 sm:px-12 md:px-16 lg:px-20">
+        <div className="max-w-2xl text-right space-y-8 relative z-10">
+          
+          {/* Main Heading */}
+          <div className="space-y-4">
+            <Heading 
+              text="كن الشيء الكبير القادم" 
+              level={1} 
+              className="text-4xl sm:text-5xl lg:text-6xl font-black text-[#004D5A] leading-tight"
+            />
+            
+            {/* Decorative Line */}
+            <div className="w-20 h-1 bg-gradient-to-r from-[#004D5A] to-transparent mr-auto rounded-full"></div>
+          </div>
 
-        <Text text=" .نقدم لكم جميع أنواع الخدمات والمبيع والشراء والشحن "
-        className='' />
-        <Button
-          text="أنشئ متجرك"
-          className=" text-sm mt-6 mr-14 bg-[#004D5A] hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg shadow-md"
-        />
+          {/* Description Text */}
+          <div className="space-y-6">
+            <Text 
+              text="احلم كثيراً وأنشئ بسرعة، وانطلق بعيداً مع TMC" 
+              className="text-xl sm:text-2xl text-[#003940] font-medium leading-relaxed"
+            />
+            
+            <Text 
+              text="نقدم لكم جميع أنواع الخدمات والمبيع والشراء والشحن" 
+              className="text-lg sm:text-xl text-[#004D5A]/80 leading-relaxed"
+            />
+          </div>
+
+          {/* Call to Action */}
+          <div className="pt-4">
+            <Button
+              text="أنشئ متجرك الآن"
+              className="group relative bg-[#004D5A] hover:bg-[#003940] text-white font-bold py-4 px-8 sm:px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg"
+            />
+            
+            {/* Secondary CTA */}
+            <div className="mt-6 flex items-center justify-end gap-4 text-sm text-[#004D5A]/70">
+              <span>أو</span>
+              <button className="underline hover:text-[#004D5A] transition-colors duration-200">
+                تعرف على المزيد
+              </button>
+            </div>
+          </div>
+
+          {/* Stats or Features Preview */}
+          <div className="pt-8 border-t border-white/30">
+            <div className="flex justify-end gap-8 text-center">
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-[#004D5A]">60K+</div>
+                <div className="text-sm text-[#004D5A]/70">تاجر نشط</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-[#004D5A]">24/7</div>
+                <div className="text-sm text-[#004D5A]/70">دعم فني</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-2xl font-bold text-[#004D5A]">99%</div>
+                <div className="text-sm text-[#004D5A]/70">رضا العملاء</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Bottom Gradient Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/5 to-transparent pointer-events-none"></div>
     </div>
   );
 };
