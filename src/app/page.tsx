@@ -9,6 +9,8 @@ import ServicesSection from "../components/organisms/ServicesSection";
 import StatisticsSection from "../components/organisms/StatisticsSection";
 import Footer from "@/components/organisms/Footer";
 import MainLayout from "../components/templates/MainLayout";
+import SolutionSection from "@/components/molecules/SolutionSection";
+import { FaRocket } from "react-icons/fa";
 import TradeCategoryScroll from "../components/molecules/TradeCategoryScroll";
 import CallToAction from "../components/organisms/CallToAction";
 import FeatureList from '../components/organisms/FeatureList';
@@ -58,6 +60,12 @@ export default function Home() {
           <div className="w-full max-w-4xl">
             <TradeCategoryScroll />
           </div>
+          {/* Section 3: Statistics */}
+          <StatisticsSection />
+
+          {/* Section 4: Statistics */}
+  
+          <FeaturesSection />
         </div>
             <div className="flex flex-col items-center justify-center mt-10 bg-gray-100">
      <FeatureList
