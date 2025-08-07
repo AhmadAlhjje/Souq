@@ -308,11 +308,11 @@ export default function FeaturesSection() {
             <Heading 
               text="جاهز لبدء رحلتك التجارية؟"
               level={3}
-              className="text-xl md:text-2xl font-bold text-gray-50 mb-3" /* تقليل الحجم */
+              className="text-xl md:text-2xl font-bold text-gray-100 mb-3" /* تقليل الحجم */
             />
             <Text 
               text="انضم إلى آلاف التجار الذين اختاروا TMC لتطوير أعمالهم وتحقيق النجاح"
-              className="text-[#96EDD9]/90 text-base mb-6 max-w-2xl mx-auto" /* تقليل حجم النص */
+              className="text-gray-200 text-base mb-6 max-w-2xl mx-auto" /* تقليل حجم النص */
             />
             <button className="bg-[#96EDD9] hover:bg-[#7dd3bf] text-[#004D5A] font-bold py-3 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
               {/* تقليل الpadding وحجم الخط */}
