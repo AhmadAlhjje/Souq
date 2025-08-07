@@ -1,50 +1,60 @@
 // components/molecules/ServiceCard.tsx
 import React from 'react';
-import Image from 'next/image';
-import Button from '../atoms/Button';
-import { HiArrowNarrowLeft } from 'react-icons/hi';    // Heroicons
 
 interface ServiceCardProps {
   title: string;
   description: string;
   imageSrc: string;
   buttonText: string;
+  gradient?: string;
 }
 
-const ServiceCard: React.FC<ServiceCardProps> = ({ title, description, imageSrc, buttonText }) => {
+export default function ServiceCard({ 
+  title, 
+  description, 
+  imageSrc, 
+  buttonText,
+  gradient = "from-blue-500 to-blue-600"
+}: ServiceCardProps) {
   return (
-    <div
-      className="bg-white w-full max-w-[310px] h-[350px] rounded-[10px] border border-[#004D5A] shadow-[0_0_50px_rgba(0,0,0,0.19)] text-right flex flex-col mx-auto"
-      style={{ direction: 'rtl' }}
-    >
-      {/* الصورة */}
-      <div className="flex justify-center mt-3">
-        <Image
+    <div className="group relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden hover:-translate-y-1">
+      
+      {/* Image Container */}
+      <div className="relative h-48 md:h-56 overflow-hidden rounded-t-3xl">
+        <img
           src={imageSrc}
           alt={title}
-          width={120}
-          height={80}
-          className="rounded object-cover"
+          className="w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-500"
         />
+        
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent"></div>
+        
+        {/* Icon Badge */}
+        <div className="absolute top-4 right-4">
+          <div className={`w-10 h-10 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center shadow-md`}>
+            <span className="text-white text-lg">✨</span>
+          </div>
+        </div>
       </div>
 
-      {/* النصوص */}
-      <div className="px-4 mt-24 flex-grow">
-        <h3 className="text-lg font-bold">{title}</h3>
-        <p className="text-gray-600 text-sm mt-1 leading-tight">{description}</p>
-      </div>
+      {/* Content */}
+      <div className="p-6">
+        {/* Title */}
+        <h4 className="text-lg md:text-xl font-bold text-[#004D5A] mb-3 leading-tight">
+          {title}
+        </h4>
+        
+        {/* Description */}
+        <p className="text-[#004D5A]/70 text-sm md:text-base leading-relaxed mb-4">
+          {description}
+        </p>
 
-      {/* الزر في الأسفل */}
-      <div className="px-4 pb-4 text-center">
-        <Button
-          text={buttonText }
-            endIcon={<HiArrowNarrowLeft className="text-2xl " />}
-
-          className="bg-transparent border border-green-300 hover:bg-gray-100 px-4 py-1.5 rounded-full block mx-auto text-xs font-medium"
-        />    
+        {/* Button */}
+        <button className={`w-full bg-gradient-to-r ${gradient} text-white font-medium py-3 px-4 rounded-xl transition-all duration-200 hover:shadow-md`}>
+          {buttonText}
+        </button>
       </div>
     </div>
   );
-};
-
-export default ServiceCard;
+}
