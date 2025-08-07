@@ -1,49 +1,46 @@
 // components/molecules/ScrollButton.tsx
-
-'use client'; // ✅ ضروري
-
 import React from 'react';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 interface ScrollButtonProps {
   direction: 'left' | 'right';
   onClick: () => void;
   disabled?: boolean;
+  className?: string;
 }
 
-const ScrollButton: React.FC<ScrollButtonProps> = ({ direction, onClick, disabled }) => {
-  const isLeft = direction === 'left';
-
+export default function ScrollButton({ 
+  direction, 
+  onClick, 
+  disabled = false, 
+  className = '' 
+}: ScrollButtonProps) {
+  const Icon = direction === 'left' ? FaChevronLeft : FaChevronRight;
+  
   return (
     <button
-      onClick={disabled ? undefined : onClick}
+      onClick={onClick}
       disabled={disabled}
       className={`
-        flex-shrink-0 w-10 h-12 flex items-center justify-center
-        rounded-full shadow-md bg-white border border-gray-200
-        hover:bg-gray-50 active:scale-95
-        transition-all duration-200 
-        ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
-        ${isLeft ? 'mr-1 ml-0.5' : 'ml-1 mr-0.5'}
-        focus:outline-none focus:ring-2 focus:ring-blue-300
+        w-12 h-12 
+        bg-white/90 backdrop-blur-sm
+        border border-gray-200/50
+        rounded-full
+        flex items-center justify-center
+        transition-all duration-300
+        hover:bg-white hover:shadow-lg
+        disabled:opacity-30 disabled:cursor-not-allowed
+        disabled:hover:bg-white/90 disabled:hover:shadow-none
+        z-10
+        ${className}
       `}
       aria-label={`Scroll ${direction}`}
     >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5 text-gray-700"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d={isLeft ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"}
-        />
-      </svg>
+      <Icon className={`
+        text-[#004D5A] text-sm
+        transition-transform duration-200
+        ${!disabled && 'group-hover:scale-110'}
+      `} />
     </button>
   );
-};
-
-export default ScrollButton;
+}
