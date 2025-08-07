@@ -34,9 +34,6 @@ interface FeatureItemProps {
 function FeatureItem({ icon, title, description }: FeatureItemProps) {
   return (
     <div className="flex items-start space-x-4 space-x-reverse group">
-      <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-        {icon}
-      </div>
       <div className="flex-1">
         <Text 
           text={title}
@@ -50,6 +47,9 @@ function FeatureItem({ icon, title, description }: FeatureItemProps) {
           />
         )}
       </div>
+      <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+        {icon}
+      </div>
     </div>
   );
 }
@@ -62,9 +62,9 @@ interface IconWrapperProps {
 
 function IconWrapper({ icon, gradient = "from-[#5CA9B5] to-[#4a9aa7]" }: IconWrapperProps) {
   return (
-    <div className={`w-10 h-10 bg-gradient-to-br mr-4 ${gradient} rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300`}>
-      {/* تصغير من w-12 h-12 إلى w-10 h-10 وmن rounded-2xl إلى rounded-xl */}
-      <div className="text-white text-base "> {/* تصغير من text-xl إلى text-base */}
+    <div className={`w-10 h-10 bg-gradient-to-br ml-4 ${gradient} rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300`}>
+      {/* تصغير من w-12 h-12 إلى w-10 h-10 وmن rounded-2xl إلى rounded-xl وتغيير mr-4 إلى ml-4 */}
+      <div className="text-white text-base text-right"> {/* تصغير من text-xl إلى text-base */}
         {icon}
       </div>
     </div>
@@ -227,7 +227,7 @@ export default function FeaturesSection() {
       </div>
 
       {/* Solutions Container */}
-      <div className="space-y-16"> {/* تقليل المسافة من space-y-20 إلى space-y-16 */}
+      <div className=" text-right space-y-16"> {/* تقليل المسافة من space-y-20 إلى space-y-16 */}
         {solutions.map((solution) => (
           <div key={solution.id} className="relative">
             {/* Background Effect */}

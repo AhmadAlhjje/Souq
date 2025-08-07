@@ -54,7 +54,7 @@ export default function BusinessLaunchSection() {
         </div>
 
         {/* Content */}
-        <div className="bg-gradient-to-br from-gray-50 via-white to-[#96EDD9]/10 rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
+        <div className=" text-right bg-gradient-to-br from-gray-50 via-white to-[#96EDD9]/10 rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
           <div className="grid lg:grid-cols-2 gap-0">
             
             {/* Features Side */}

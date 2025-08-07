@@ -58,7 +58,7 @@ export default function ServicesSection() {
         </div>
 
         {/* Services Container */}
-        <div className="bg-gradient-to-br from-[#96EDD9] via-[#96EDD9]/90 to-[#96EDD9]/80 p-8 md:p-12 rounded-3xl shadow-xl border border-[#96EDD9]/20">
+        <div className=" text-right bg-gradient-to-br from-[#96EDD9] via-[#96EDD9]/90 to-[#96EDD9]/80 p-8 md:p-12 rounded-3xl shadow-xl border border-[#96EDD9]/20">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
               <ServiceCard
