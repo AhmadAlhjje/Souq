@@ -1,3 +1,4 @@
+// المسارات التي لا اردي ان تظهر بها ال Footer
 'use client';
 import { usePathname } from 'next/navigation';
 import Footer from './organisms/Footer';

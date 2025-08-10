@@ -1,3 +1,4 @@
+// المسارات التي لا اردي ان تظهر بها ال Header
 'use client';
 import { usePathname } from 'next/navigation';
 import Header from './organisms/Header';
