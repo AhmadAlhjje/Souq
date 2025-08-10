@@ -10,6 +10,7 @@ import JoinUsSection from "../components/organisms/JoinUsSection";
 import BusinessLaunchSection from "../components/organisms/BusinessLaunchSection";
 import FeaturesSection from "../components/organisms/FeaturesSection";
 import CustomerSatisfactionSection from "../components/organisms/CustomerSatisfactionSection";
+import StoresPage from "@/components/pages/StoresPage";
 
 export default function Home() {
   return (
@@ -23,6 +24,7 @@ export default function Home() {
       <FeaturesSection />
       <CustomerSatisfactionSection />
       <Footer />
+      <StoresPage/>
     </MainLayout>
   );
 }
