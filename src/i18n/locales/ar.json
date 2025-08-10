@@ -7,5 +7,9 @@
   "contact": "تواصل معنا",
   "language": "اللغة",
   "create_store_free": "أنشئ متجرك مجانًا",
-  "login": "تسجيل الدخول"
+  "login": "تسجيل الدخول",
+  "theme": "المظهر",
+  "light_mode": "مضيء",
+  "dark_mode": "مظلم",
+  "system_mode": "النظام"
 }

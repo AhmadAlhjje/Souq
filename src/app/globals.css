@@ -15,3 +15,67 @@
 * {
   scroll-behavior: smooth;
 }
+
+/* إضافة هذا إلى globals.css */
+
+/* Nav Link Styles */
+.nav-link-enhanced {
+  @apply relative px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg;
+  @apply text-gray-700 hover:text-blue-600 hover:bg-white/50;
+  @apply dark:text-slate-300 dark:hover:text-emerald-300 dark:hover:bg-slate-700/50;
+}
+
+.nav-link-enhanced.active {
+  @apply text-blue-600 bg-white/70 font-semibold;
+  @apply dark:text-emerald-300 dark:bg-slate-700/70;
+}
+
+.nav-link-enhanced::after {
+  content: '';
+  @apply absolute bottom-0 left-1/2 w-0 h-0.5 bg-blue-600 transition-all duration-200;
+  @apply dark:bg-emerald-400;
+  transform: translateX(-50%);
+}
+
+.nav-link-enhanced:hover::after,
+.nav-link-enhanced.active::after {
+  @apply w-full;
+}
+
+/* Mobile Menu Links */
+.nav-link-enhanced.block {
+  @apply text-gray-700 hover:text-blue-600 hover:bg-gray-50;
+  @apply dark:text-slate-300 dark:hover:text-emerald-300 dark:hover:bg-slate-700;
+}
+
+.nav-link-enhanced.block.active {
+  @apply text-blue-600 bg-gray-100 font-semibold;
+  @apply dark:text-emerald-300 dark:bg-slate-700;
+}
+
+/* Smooth theme transitions */
+* {
+  @apply transition-colors duration-300;
+}
+
+/* Custom scrollbar for dark mode */
+::-webkit-scrollbar {
+  @apply w-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-slate-800;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-slate-600 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-slate-500;
+}
+
+/* Body background for dark mode */
+body {
+  @apply bg-white dark:bg-slate-900 transition-colors duration-300;
+}
