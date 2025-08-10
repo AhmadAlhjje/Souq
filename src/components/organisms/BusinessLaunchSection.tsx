@@ -35,11 +35,7 @@ export default function BusinessLaunchSection() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <Badge
-            text="🚀 قوة التكنولوجيا"
-            variant="primary"
-            className="mb-4"
-          />
+          <Badge text="🚀 قوة التكنولوجيا" variant="primary" className="mb-4" />
           <Heading
             text="انطلق بتجارتك أينما كنت"
             level={2}
@@ -56,7 +52,8 @@ export default function BusinessLaunchSection() {
         {/* Content */}
         <div className=" text-right bg-gradient-to-br from-gray-50 via-white to-[#96EDD9]/10 rounded-3xl shadow-xl border border-gray-200/50 overflow-hidden">
           <div className="grid lg:grid-cols-2 gap-0">
-            
+            {/* Images Side */}
+            <ImageShowcase />
             {/* Features Side */}
             <div className="p-8 lg:p-12">
               <div className="mb-8">
@@ -81,9 +78,6 @@ export default function BusinessLaunchSection() {
                 </button>
               </div>
             </div>
-
-            {/* Images Side */}
-            <ImageShowcase />
           </div>
         </div>
       </div>

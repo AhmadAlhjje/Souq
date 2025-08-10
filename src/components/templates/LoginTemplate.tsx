@@ -11,19 +11,19 @@ const LoginTemplate: React.FC<LoginTemplateProps> = ({ children, showSlider = fa
   const slides = [
     {
       id: 1,
-      image: '/api/placeholder/400/250',
+      image: '/images/image 1.png',
       title: 'أتي النظام على آخر تحديثات TMC',
       description: 'استفد من أحدث التقنيات والأدوات المتطورة لإدارة متجرك الإلكتروني بكفاءة عالية'
     },
     {
       id: 2,
-      image: '/api/placeholder/400/250',
+      image: '/images/image2.png',
       title: 'إدارة شاملة لمتجرك',
       description: 'نظام متكامل يوفر لك جميع الأدوات اللازمة لإدارة المبيعات والمخزون والعملاء'
     },
     {
       id: 3,
-      image: '/api/placeholder/400/250',
+      image: '/images/image3.png',
       title: 'تحليلات متقدمة',
       description: 'احصل على رؤى عميقة حول أداء متجرك من خلال التقارير والتحليلات المفصلة'
     }
@@ -31,15 +31,19 @@ const LoginTemplate: React.FC<LoginTemplateProps> = ({ children, showSlider = fa
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
-      {/* الصورة والمحتوى - على اليسار */}
-      <div className="w-full lg:w-1/2 bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center relative overflow-hidden min-h-[200px] sm:min-h-[300px] lg:min-h-screen order-1 lg:order-1">
+      {/* نموذج تسجيل الدخول - على اليسار */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 order-2 lg:order-1">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 w-full max-w-sm sm:max-w-md">
+          {children}
+        </div>
+      </div>
+
+      {/* الصورة والمحتوى - على اليمين */}
+      <div className="w-full lg:w-1/2 bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center relative overflow-hidden min-h-[200px] sm:min-h-[300px] lg:min-h-screen order-1 lg:order-2">
         <div className="text-center text-white p-4 sm:p-6 lg:p-8 w-full max-w-lg">
           
           {showSlider ? (
-            // عرض الـ Slider لصفحة تسجيل الدخول
-            <ImageSlider slides={slides} />
-          ) : (
-            // عرض الـ Dashboard لصفحة إنشاء الحساب
+            // عرض الـ Dashboard عند showSlider = true
             <>
               {/* صورة Dashboard */}
               <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-4 lg:p-6 mb-4 sm:mb-6 lg:mb-8 transform rotate-1 sm:rotate-3 hover:rotate-0 transition-transform duration-500">
@@ -99,12 +103,15 @@ const LoginTemplate: React.FC<LoginTemplateProps> = ({ children, showSlider = fa
                     <div className="text-xs text-gray-600 leading-tight">
                       <div className="font-semibold mb-1">Ready by Now</div>
                       <div className="hidden sm:block">Sunt qui minim exercitation ullamco mollit adipiscing sit.</div>
-                      <div className="hidden sm:block mt-1">Voluptate veniat officia elit ipsum.</div>
+                      <div className="hidden sm:block mt-1">Voluptate veniam officia elit ipsum.</div>
                     </div>
                   </div>
                 </div>
               </div>
             </>
+          ) : (
+            // عرض الـ Slider عند showSlider = false
+            <ImageSlider slides={slides} />
           )}
           
           {/* عناصر زخرفية - تظهر فقط على الشاشات الكبيرة */}
@@ -114,12 +121,7 @@ const LoginTemplate: React.FC<LoginTemplateProps> = ({ children, showSlider = fa
         </div>
       </div>
 
-      {/* نموذج تسجيل الدخول - على اليمين */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 order-2 lg:order-2">
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 lg:p-8 w-full max-w-sm sm:max-w-md">
-          {children}
-        </div>
-      </div>
+
     </div>
   );
 };
