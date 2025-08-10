@@ -1,14 +1,13 @@
 import React from 'react';
-import Image from 'next/image';
-import Typography from '../atoms/Typography';
-import StoreLocation from '../molecules/StoreLocation';
-import ActionCard from '../molecules/ActionCard';
+import { MapPin, Star } from 'lucide-react';
 
 interface Store {
   id: number;
   name: string;
   image: string;
   location: string;
+  rating?: number;
+  reviewsCount?: number;
 }
 
 interface StoreCardProps {
@@ -16,59 +15,48 @@ interface StoreCardProps {
   onViewDetails: (store: Store) => void;
 }
 
-const StoreCard: React.FC<StoreCardProps> = ({ 
-  store, 
-  onViewDetails 
-}) => {
+const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
   return (
-    <div 
-      className="bg-white rounded-2xl overflow-hidden border-2 border-[#96EDD9]/30 hover:border-[#004D5A] hover:shadow-2xl transition-all duration-300 group hover:-translate-y-2 backdrop-blur-sm bg-white/95"
-      dir="rtl"
-    >
-      {/* Store Image */}
-      <div className="relative h-48 overflow-hidden">
-        <Image 
+    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group cursor-pointer">
+      <div className="relative overflow-hidden">
+        <img
           src={store.image}
-          alt={`متجر ${store.name}`}
-          fill
-          className="object-cover group-hover:scale-110 transition-transform duration-500"
-          sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-          priority={false}
+          alt={store.name}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        
-        {/* Gradient Overlay للنص الأفضل */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      </div>
-
-      {/* Store Info */}
-      <div className="p-6">
-        {/* اسم المتجر والموقع في نفس السطر */}
-        <div className="flex items-start justify-between mb-4">
-          <Typography 
-            variant="h3" 
-            className="group-hover:text-[#006B7A] transition-colors text-right flex-1"
-          >
-            {store.name}
-          </Typography>
-          
-          {/* الموقع على اليمين */}
-          <div className="mr-3 flex-shrink-0">
-            <StoreLocation location={store.location} />
+        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <div className="flex items-center space-x-1">
+            <span className="text-sm font-medium text-gray-700">
+              {store.rating || 4.5}
+            </span>
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
           </div>
         </div>
-
-        {/* زر بارتفاع أقل ونفس العرض */}
-        <ActionCard 
-          onClick={() => onViewDetails(store)}
-          title="عرض التفاصيل"
-          subtitle=" "
-          iconName="chevron-right"
-          className="text-right py-2"
-        />
       </div>
 
-      {/* تأثير إضافي للهوفر */}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#96EDD9]/5 to-[#004D5A]/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-teal-600 transition-colors">
+          {store.name}
+        </h3>
+        
+        <div className="flex items-center text-gray-500 mb-4">
+          <MapPin className="w-4 h-4 ml-1" />
+          <span className="text-sm">{store.location}</span>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-500">
+            ({store.reviewsCount || 127} تقييم)
+          </span>
+          
+          <button
+            onClick={() => onViewDetails(store)}
+            className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+          >
+            زيارة المتجر
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

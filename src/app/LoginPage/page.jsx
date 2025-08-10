@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import LoginTemplate from "../../components/templates/LoginTemplate";
-import Header from "../../components/organisms/Header";
 import AuthTabs from "../../components/molecules/AuthTabs";
 import LoginForm from "../../components/organisms/LoginForm";
 import SignInForm from "../../components/organisms/SignInForm";
