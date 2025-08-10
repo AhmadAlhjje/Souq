@@ -1,24 +1,29 @@
 import React from 'react';
-import ImageSlider from '../molecules/ImageSlider';
+import ImageSlider from '../../components/molecules/ImageSlider';
 
-const LoginTemplate = ({ children, showSlider = false }) => {
+interface LoginTemplateProps {
+  children: React.ReactNode;
+  showSlider?: boolean;
+}
+
+const LoginTemplate: React.FC<LoginTemplateProps> = ({ children, showSlider = false }) => {
   // بيانات الشرائح
   const slides = [
     {
       id: 1,
-      image: '/images/image 1.png',
+      image: '/api/placeholder/400/250',
       title: 'أتي النظام على آخر تحديثات TMC',
       description: 'استفد من أحدث التقنيات والأدوات المتطورة لإدارة متجرك الإلكتروني بكفاءة عالية'
     },
     {
       id: 2,
-      image: '/images/image2.png',
+      image: '/api/placeholder/400/250',
       title: 'إدارة شاملة لمتجرك',
       description: 'نظام متكامل يوفر لك جميع الأدوات اللازمة لإدارة المبيعات والمخزون والعملاء'
     },
     {
       id: 3,
-      image: '/images/image22.png',
+      image: '/api/placeholder/400/250',
       title: 'تحليلات متقدمة',
       description: 'احصل على رؤى عميقة حول أداء متجرك من خلال التقارير والتحليلات المفصلة'
     }

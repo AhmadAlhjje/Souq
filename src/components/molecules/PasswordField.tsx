@@ -3,8 +3,14 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 import Input from '../../components/atoms/Input';
 import Label from '../../components/atoms/Label';
 
-const PasswordField = ({ label, value, onChange }) => {
-  const [showPassword, setShowPassword] = useState(false);
+interface PasswordFieldProps {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const PasswordField: React.FC<PasswordFieldProps> = ({ label, value, onChange }) => {
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   return (
     <div className="mb-3 sm:mb-4">
