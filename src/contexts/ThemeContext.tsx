@@ -5,11 +5,12 @@ type Theme = 'light' | 'dark' | 'system';
 
 interface ThemeContextProps {
   theme: Theme;
-  actualTheme: 'light' | 'dark'; // الثيم الفعلي المطبق
+  actualTheme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
   isDark: boolean;
   isLight: boolean;
+  isLoaded: boolean; // إضافة حالة للتحقق من التحميل
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
@@ -17,6 +18,7 @@ const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
+  const [isLoaded, setIsLoaded] = useState(false); // حالة التحميل
 
   // دالة للحصول على الثيم المفضل من النظام
   const getSystemTheme = useCallback((): 'light' | 'dark' => {
@@ -37,13 +39,15 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     const calculated = calculateActualTheme(newTheme);
     setActualTheme(calculated);
     
-    // تحديث DOM
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(calculated);
-    document.documentElement.setAttribute('data-theme', calculated);
-    
-    // تحديث localStorage
-    localStorage.setItem('theme', newTheme);
+    // تحديث DOM فقط في المتصفح
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(calculated);
+      document.documentElement.setAttribute('data-theme', calculated);
+      
+      // تحديث localStorage
+      localStorage.setItem('theme', newTheme);
+    }
   }, [calculateActualTheme]);
 
   // تحديد الثيم
@@ -61,18 +65,21 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     setTheme(nextTheme);
   }, [theme, setTheme]);
 
-  // تحميل الثيم المحفوظ عند البدء
+  // تحميل الثيم المحفوظ عند البدء - يحدث فقط في العميل
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
     const storedTheme = localStorage.getItem('theme') as Theme | null;
     const initialTheme: Theme = storedTheme || 'system';
     
     setThemeState(initialTheme);
     updateActualTheme(initialTheme);
+    setIsLoaded(true); // تعيين حالة التحميل
   }, [updateActualTheme]);
 
   // مراقبة تغييرات النظام للثيم
   useEffect(() => {
-    if (theme !== 'system') return;
+    if (typeof window === 'undefined' || theme !== 'system') return;
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
@@ -82,7 +89,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    // استخدام addEventListener الحديث
     mediaQuery.addEventListener('change', handleChange);
     
     return () => {
@@ -101,7 +107,8 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       toggleTheme, 
       setTheme,
       isDark,
-      isLight
+      isLight,
+      isLoaded
     }}>
       {children}
     </ThemeContext.Provider>

@@ -18,6 +18,8 @@ export default function useTheme() {
     themeClasses: {
       light: context.isLight,
       dark: context.isDark,
-    }
+    },
+    // حماية إضافية
+    isClient: typeof window !== 'undefined'
   };
 }

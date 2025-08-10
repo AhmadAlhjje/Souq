@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useTheme from "../../hooks/useTheme";
+import ClientOnly from "../ClientOnly";
 
 // Import Components
 import Logo from "../atoms/Logo";
@@ -19,17 +20,26 @@ import "../../i18n";
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { i18n } = useTranslation();
-  const { isDark } = useTheme();
+  const { isDark, isLoaded } = useTheme();
 
-  // تحميل اللغة المحفوظة
+  // تحميل اللغة المحفوظة - فقط في العميل
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const savedLang = localStorage.getItem("lang") || "ar";
-    i18n.changeLanguage(savedLang);
+    if (i18n.language !== savedLang) {
+      i18n.changeLanguage(savedLang);
+    }
   }, [i18n]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+
+  // Fallback للتحميل
+  const LoadingFallback = () => (
+    <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+  );
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
@@ -53,11 +63,15 @@ const Header: React.FC = () => {
               {/* Shopping Cart */}
               <ShoppingCartButton itemCount={3} />
 
-              {/* Theme Selector */}
-              <ThemeSelector />
+              {/* Theme Selector - Client Only */}
+              <ClientOnly fallback={<LoadingFallback />}>
+                {isLoaded && <ThemeSelector />}
+              </ClientOnly>
 
-              {/* Language Selector */}
-              <LanguageSelector />
+              {/* Language Selector - Client Only */}
+              <ClientOnly fallback={<LoadingFallback />}>
+                <LanguageSelector />
+              </ClientOnly>
 
               {/* Action Buttons - Desktop */}
               <div className="hidden lg:block">
@@ -73,8 +87,10 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
-        <MobileMenu isOpen={isMobileMenuOpen} />
+        {/* Mobile Menu - Client Only */}
+        <ClientOnly>
+          <MobileMenu isOpen={isMobileMenuOpen} />
+        </ClientOnly>
       </nav>
     </header>
   );
