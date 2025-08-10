@@ -29,7 +29,7 @@ const ThemeSelector: React.FC = () => {
   const themeOptions = [
     { key: 'light', name: t('light_mode') || 'Light', icon: Sun },
     { key: 'dark', name: t('dark_mode') || 'Dark', icon: Moon },
-    { key: 'system', name: t('system_mode') || 'System', icon: Monitor },
+    // { key: 'system', name: t('system_mode') || 'System', icon: Monitor },
   ];
 
   const currentThemeOption = themeOptions.find(opt => opt.key === theme) || themeOptions[0];
