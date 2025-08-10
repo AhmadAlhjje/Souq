@@ -1,11 +1,10 @@
 "use client"
 import React, { useState } from 'react';
 import PageHeader from '../templates/PageHeader';
-import ProductsSection from '../templates/ProductsSection';
 import StoresSection from '../templates/StoresSection';
 
-import { Store } from '../../types';
-import { SAMPLE_STORES, SAMPLE_PRODUCTS, SUPPORT_FEATURES } from '../../utils/constants';
+import { Store } from '../../types/store';
+import { SAMPLE_STORES } from '../../utils/constants';
 
 const StoresPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
