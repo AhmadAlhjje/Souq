@@ -1,6 +1,23 @@
 import React from 'react';
+import { LucideIcon } from 'lucide-react';
 
-const Input = ({ type = "text", placeholder, value, onChange, icon: Icon, className = "" }) => {
+interface InputProps {
+  type?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  icon?: LucideIcon;
+  className?: string;
+}
+
+const Input: React.FC<InputProps> = ({ 
+  type = "text", 
+  placeholder, 
+  value, 
+  onChange, 
+  icon: Icon, 
+  className = "" 
+}) => {
   return (
     <div className="relative">
       {Icon && (

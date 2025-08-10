@@ -7,6 +7,6 @@ export interface SignUpFormData {
 }
 
 export interface SignInFormData {
-  identifier: string; // email or phone
+  identifier: string;
   password: string;
 }

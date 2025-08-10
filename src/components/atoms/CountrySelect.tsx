@@ -1,6 +1,11 @@
 import React from 'react';
 
-const CountrySelect = ({ value, onChange }) => {
+interface CountrySelectProps {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
+}
+
+const CountrySelect: React.FC<CountrySelectProps> = ({ value, onChange }) => {
   return (
     <div className="relative">
       <select
