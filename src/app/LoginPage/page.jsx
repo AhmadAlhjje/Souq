@@ -1,52 +1,77 @@
-"use client"
-import React, { useState } from 'react';
-import LoginTemplate from '../../components/templates/LoginTemplate';
-import Header from '../../components/organisms/Header';
-import AuthTabs from '../../components/molecules/AuthTabs';
-import LoginForm from '../../components/organisms/LoginForm';
+"use client";
+import React, { useState } from "react";
+import LoginTemplate from "../../components/templates/LoginTemplate";
+import Header from "../../components/organisms/Header";
+import AuthTabs from "../../components/molecules/AuthTabs";
+import LoginForm from "../../components/organisms/LoginForm";
+import SignInForm from "../../components/organisms/SignInForm";
 
 const LoginPage = () => {
-  const [activeTab, setActiveTab] = useState('register');
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    phoneNumber: '',
-    countryCode: '+963',
-    password: ''
+  const [activeTab, setActiveTab] = useState("register");
+
+  // بيانات إنشاء الحساب
+  const [signUpData, setSignUpData] = useState({
+    fullName: "",
+    email: "",
+    phoneNumber: "",
+    countryCode: "+963",
+    password: "",
   });
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
+  // بيانات تسجيل الدخول
+  const [signInData, setSignInData] = useState({
+    identifier: "",
+    password: "",
+  });
+
+  const handleSignUpChange = (field, value) => {
+    setSignUpData((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Form submitted:', formData);
-    // هنا يمكن إضافة منطق تسجيل الدخول
+  const handleSignInChange = (field, value) => {
+    setSignInData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSignUpSubmit = () => {
+    console.log("Sign Up submitted:", signUpData);
+    // منطق إنشاء الحساب
+  };
+
+  const handleSignInSubmit = () => {
+    console.log("Sign In submitted:", signInData);
+    // منطق تسجيل الدخول
   };
 
   return (
-    <LoginTemplate>
+    <LoginTemplate showSlider={activeTab === "login"}>
       {/* <Header /> */}
       <AuthTabs activeTab={activeTab} setActiveTab={setActiveTab} />
-      <LoginForm
-        formData={formData}
-        handleInputChange={handleInputChange}
-        onSubmit={handleSubmit}
-      />
-      
-      {/* <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200">
-        <div className="text-center">
-          <h3 className="text-sm sm:text-base font-semibold text-gray-800 mb-1 sm:mb-2">
-            كل ما تحتاجه لتنمو بمتجرك
-          </h3>
-          <p className="text-xs text-gray-600 leading-relaxed">
-            إنك فخور بأن نستفيد من مئات الأدعادات اللوجستية والأدوات التسويقية المتكاملة في TMC
-          </p>
-        </div>
-      </div> */}
+
+      {activeTab === "register" ? (
+        // نموذج إنشاء الحساب
+        <>
+          <LoginForm
+            formData={signUpData}
+            handleInputChange={handleSignUpChange}
+            onSubmit={handleSignUpSubmit}
+          />
+        </>
+      ) : (
+        // نموذج تسجيل الدخول
+        <>
+          <SignInForm
+            formData={signInData}
+            handleInputChange={handleSignInChange}
+            onSubmit={handleSignInSubmit}
+          />
+        </>
+      )}
     </LoginTemplate>
   );
 };
