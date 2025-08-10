@@ -7,5 +7,9 @@
   "contact": "Contact Us",
   "language": "Language",
   "create_store_free": "Create Store Free",
-  "login": "Login"
+  "login": "Login",
+  "theme": "Theme",
+  "light_mode": "Light",
+  "dark_mode": "Dark",
+  "system_mode": "System"
 }

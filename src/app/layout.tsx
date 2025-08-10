@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ConditionalHeader from "../components/ConditionalHeader";
 import ConditionalFooter from "../components/ConditionalFooter";
+import Providers from "../components/providers/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,23 +26,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="ltr">
+    <html lang="ar" dir="ltr" suppressHydrationWarning>
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-cairo`}
         style={{ fontFamily: 'Cairo, sans-serif' }}
+        suppressHydrationWarning
       >
-        {/* Header مشروط */}
-        <ConditionalHeader />
-        
-        <main>
-          {children}
-        </main>
-        
-        {/* Footer مشروط */}
-        <ConditionalFooter />
+        <Providers>
+          <ConditionalHeader />
+          <main>
+            {children}
+          </main>
+          <ConditionalFooter />
+        </Providers>
       </body>
     </html>
   );
