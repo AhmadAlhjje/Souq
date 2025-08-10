@@ -1,30 +1,79 @@
-// components/atoms/Icon.tsx
 import React from 'react';
-import { FaFacebook, FaTwitter, FaLinkedin, FaInstagram } from 'react-icons/fa';
+import { 
+  FaFacebook, 
+  FaTwitter, 
+  FaLinkedin, 
+  FaInstagram,
+  FaSearch,
+  FaHeart,
+  FaShare,
+  FaShoppingCart,
+  FaStar,
+  FaMapMarkerAlt,
+  FaClock,
+  FaUsers,
+  FaShieldAlt, // استخدم FaShieldAlt بدلاً من FaShield
+  FaCreditCard,
+  FaTruck,
+  FaHeadphones,
+  FaChevronRight,
+  FaPercent
+} from 'react-icons/fa';
 
 interface IconProps {
-  name: 'facebook' | 'twitter' | 'linkedin' | 'instagram';
+  name: 'facebook' | 'twitter' | 'linkedin' | 'instagram' | 'search' | 'heart' | 
+        'share' | 'cart' | 'star' | 'location' | 'clock' | 'users' | 'shield' | 
+        'credit-card' | 'truck' | 'headphones' | 'chevron-right' | 'percent';
   className?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  color?: string;
 }
 
-const Icon: React.FC<IconProps> = ({ name, className = '' }) => {
+const Icon: React.FC<IconProps> = ({ 
+  name, 
+  className = '', 
+  size = 'md',
+  color 
+}) => {
   const iconMap = {
     facebook: FaFacebook,
     twitter: FaTwitter,
     linkedin: FaLinkedin,
     instagram: FaInstagram,
+    search: FaSearch,
+    heart: FaHeart,
+    share: FaShare,
+    cart: FaShoppingCart,
+    star: FaStar,
+    location: FaMapMarkerAlt,
+    clock: FaClock,
+    users: FaUsers,
+    shield: FaShieldAlt, // هنا الإصلاح
+    'credit-card': FaCreditCard,
+    truck: FaTruck,
+    headphones: FaHeadphones,
+    'chevron-right': FaChevronRight,
+    percent: FaPercent
+  };
+
+  const sizes = {
+    sm: 'w-4 h-4',
+    md: 'w-5 h-5',
+    lg: 'w-6 h-6',
+    xl: 'w-8 h-8'
   };
 
   const IconComponent = iconMap[name];
 
   if (!IconComponent) {
     console.error(`Icon not found for name: ${name}`);
-    return null; // أو يمكنك عرض أيقونة افتراضية
+    return null;
   }
 
   return (
     <IconComponent
-      className={`w-6 h-6 text-white ${className}`}
+      className={`${sizes[size]} ${className}`}
+      style={{ color: color }}
       aria-label={name}
     />
   );
