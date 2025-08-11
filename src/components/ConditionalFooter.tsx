@@ -1,4 +1,3 @@
-// المسارات التي لا اردي ان تظهر بها ال Footer
 'use client';
 import { usePathname } from 'next/navigation';
 import Footer from './organisms/Footer';
@@ -6,10 +5,18 @@ import Footer from './organisms/Footer';
 export default function ConditionalFooter() {
   const pathname = usePathname();
   
-  // الصفحات التي لا تحتاج Footer
-  const hideFooterPages = ['/login', '/LoginPage', '/auth/login', '/register', '/auth/register'];
+  // مسارات محددة لإخفاء Footer
+  const specificHidePages = ['/login', '/LoginPage'];
   
-  if (hideFooterPages.includes(pathname)) {
+  // مسارات تبدأ بـ (prefixes) لإخفاء Footer
+  const hideFooterPrefixes = ['/admin', '/auth'];
+  
+  // التحقق من المسارات
+  const shouldHideFooter = 
+    specificHidePages.includes(pathname) || 
+    hideFooterPrefixes.some(prefix => pathname.startsWith(prefix));
+  
+  if (shouldHideFooter) {
     return null;
   }
   
