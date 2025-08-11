@@ -1,7 +1,8 @@
-'use client';
+"use client";
 
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { ReactNode } from 'react';
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ReactNode } from "react";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -10,7 +11,7 @@ interface ProvidersProps {
 export default function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider>
-      {children}
+      <LanguageProvider>{children}</LanguageProvider>
     </ThemeProvider>
   );
 }
