@@ -40,9 +40,294 @@
   "hero_title_badge": "🚀 Leading Platform in Syria",
   "hero_title_heading": "Largest Syrian Commerce Platform in the Middle East",
   "hero_title_description": "An integrated platform combining advanced technology and innovative solutions to empower traders to achieve their goals",
+
   "hero": {
     "badge": "🚀 Leading Platform in Syria",
     "title": "The Largest Syrian Trading Platform in the Middle East",
     "description": "A comprehensive platform that combines advanced technology and innovative solutions to enable traders to achieve their goals"
+  },
+
+  "services": {
+    "badge": "✨ Our Premium Services",
+    "title": "Everything You Need to Build a Successful Store with TMC",
+    "subtitle": "Comprehensive and integrated solutions that support you at every step of your business journey",
+    "ecommerce": {
+      "title": "E-commerce Store Creation",
+      "description": "A comprehensive platform to create your online store with the latest technologies and easiest methods",
+      "buttonText": "Start Now"
+    },
+    "payments": {
+      "title": "Secure Payment System",
+      "description": "Diverse and secure payment solutions supporting all local and international payment methods",
+      "buttonText": "Learn More"
+    },
+    "shipping": {
+      "title": "Shipping & Delivery Services",
+      "description": "An extensive network of shipping companies to ensure your products reach customers on time",
+      "buttonText": "Explore Service"
+    }
+  },
+
+  "joinUs": {
+    "heading": "Create your store today and join thousands of individuals, organizations, and successful companies with TMC",
+    "stats": {
+      "traders": {
+        "value": "Thousands",
+        "label": "Traders"
+      },
+      "success": {
+        "value": "+",
+        "label": "Success"
+      }
+    }
+  },
+
+  "featuresSection": {
+    "header": {
+      "badge": "🛠️ Integrated Solutions",
+      "title": "TMC Solutions Support You Every Step of Your Business Journey",
+      "subtitle": "An integrated ecosystem of tools and services that ensure your business success and growth"
+    },
+    "solutions": {
+      "solution1": {
+        "title": "Easy Launch Even with Your Busy Schedule",
+        "description": "You don't need prior experience or full-time availability to start your business with us. Intuitive interface and smart tools make starting easier than you expect",
+        "buttonText": "Create and Launch Store",
+        "features": {
+          "feature1": {
+            "title": "1000+ services from merchant service providers offering everything you need",
+            "description": "Wide network of certified partners"
+          },
+          "feature2": {
+            "title": "Easy and quick steps to create your store",
+            "description": "Set up your store in just minutes"
+          },
+          "feature3": {
+            "title": "Exchange experiences and expertise with thousands of merchants in TMC community",
+            "description": "Support network from successful merchants"
+          }
+        }
+      },
+      "solution2": {
+        "title": "Secure Payments for Sustainable Commerce and Strong Trust",
+        "description": "Benefit from TMC's integrated electronic payment system to manage your store and customer payments with complete security and ease",
+        "buttonText": "Payment System",
+        "features": {
+          "feature1": {
+            "title": "Diverse payment methods that meet all your customers' needs",
+            "description": "Credit cards, digital wallets, and bank transfers"
+          },
+          "feature2": {
+            "title": "Quick payment system activation within one day",
+            "description": "Start receiving payments immediately"
+          },
+          "feature3": {
+            "title": "Payment collection according to agreement",
+            "description": "Flexibility in scheduling money receipt"
+          },
+          "feature4": {
+            "title": "High protection and security for all your operations",
+            "description": "Advanced encryption and fraud protection"
+          }
+        }
+      },
+      "solution3": {
+        "title": "Integrated Shipping Fleet at Your Products' Service",
+        "description": "Diverse shipping options connecting your store to the world, ensuring your products arrive safely and on time",
+        "buttonText": "Shipping and Delivery",
+        "features": {
+          "feature1": {
+            "title": "Easy connection without complex contracts",
+            "description": "Instant activation of shipping services"
+          },
+          "feature2": {
+            "title": "Connect your store to more than 100 local and international shipping and delivery companies",
+            "description": "Comprehensive coverage for all destinations"
+          },
+          "feature3": {
+            "title": "Shipping and logistics services customized for all product types",
+            "description": "Specialized solutions for each product type"
+          },
+          "feature4": {
+            "title": "International and domestic shipping covering all cities, villages, and remote locations",
+            "description": "Reach everywhere in the world"
+          }
+        }
+      },
+      "solution4": {
+        "title": "Marketing Solutions in One Place",
+        "description": "Target more customers with customized and advanced marketing solutions that ensure your products reach the right audience",
+        "buttonText": "Marketing Tools",
+        "features": {
+          "feature1": {
+            "title": "Offer your customers special discount coupons that encourage them to complete purchases",
+            "description": "Smart system for managing offers and discounts"
+          },
+          "feature2": {
+            "title": "Control all details of offers and discounts",
+            "description": "Comprehensive control panel for promotional campaigns"
+          },
+          "feature3": {
+            "title": "Affiliate marketing support for your store",
+            "description": "Network of marketers working for you"
+          },
+          "feature4": {
+            "title": "Precise targeting of abandoned carts",
+            "description": "Smart recovery of hesitant customers"
+          },
+          "feature5": {
+            "title": "Advertising campaign management across different platforms",
+            "description": "Integrated marketing across all digital channels"
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to Start Your Business Journey?",
+      "description": "Join thousands of merchants who chose TMC to develop their businesses and achieve success",
+      "buttonText": "Start Free Now"
+    }
+  },
+  "customerSatisfactionSection": {
+    "header": {
+      "badge": "😊 Customer Satisfaction is Our Priority",
+      "title": "Make Your Customers Happy with an Easy Shopping Experience",
+      "subtitle": "A distinctive shopping experience that builds trust and achieves customer satisfaction with every purchase"
+    },
+    "customerData": {
+      "customer1": {
+        "alt": "Customer Trust",
+        "title": "Of customers increase their trust in TMC stores",
+        "subtitle": "High satisfaction rate",
+        "percentage": "98%",
+        "features": {
+          "feature1": "Payment Security",
+          "feature2": "Fast Delivery",
+          "feature3": "Product Quality"
+        }
+      },
+      "customer2": {
+        "alt": "Easy Shopping",
+        "title": "Direct purchase without complexity or account creation",
+        "subtitle": "Smooth experience",
+        "percentage": "3 Steps",
+        "features": {
+          "feature1": "Quick Registration",
+          "feature2": "Flexible Payment",
+          "feature3": "Order Tracking"
+        }
+      },
+      "customer3": {
+        "alt": "Wide Reach",
+        "title": "5 out of 5 in Syria bought from TMC stores",
+        "subtitle": "Widespread trust",
+        "percentage": "100%",
+        "features": {
+          "feature1": "Comprehensive Coverage",
+          "feature2": "24/7 Service",
+          "feature3": "Local Support"
+        }
+      }
+    }
+  },
+  "customerCard": {
+    "learnMore": "Learn More"
+  },
+  "enhancedCallToAction": {
+    "title": "Own a Professional Store on TMC",
+    "description": "Create your store now with flexible tools and integrated solutions that help you every step of the way",
+    "benefits": {
+      "benefit1": "Quick Setup",
+      "benefit2": "Free Support",
+      "benefit3": "High Security",
+      "benefit4": "Guaranteed Growth"
+    },
+    "buttonText": "Create Store Now - Free",
+    "images": {
+      "dashboard": {
+        "alt": "TMC Dashboard"
+      },
+      "mobile": {
+        "alt": "Mobile App"
+      }
+    },
+    "stats": {
+      "number": "+50K",
+      "label": "Active Store"
+    }
+  },
+  "footer": {
+    "description": "The leading e-commerce platform in Syria. We help merchants build their online stores and achieve success.",
+    "followUs": "Follow us on:",
+    "sections": {
+      "aboutUs": "ℹ️ About Us",
+      "paymentMethods": "💳 Payment Methods",
+      "contactUs": "📞 Contact Us"
+    },
+    "aboutLinks": {
+      "topStores": "Top Stores",
+      "articles": "Our Articles",
+      "privacyPolicy": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "userGuide": "User Guide",
+      "faq": "Frequently Asked Questions"
+    },
+    "paymentMethods": {
+      "creditCards": "Credit Cards",
+      "paypal": "PayPal",
+      "applePay": "Apple Pay",
+      "googlePay": "Google Pay"
+    },
+    "securePayment": "100% Secure and Guaranteed Payment",
+    "contact": {
+      "address": {
+        "label": "Address:",
+        "value": "Damascus, Syria - Al Thawra Street"
+      },
+      "phone": {
+        "label": "Phone:",
+        "value": "+963 11 123 4567"
+      },
+      "email": {
+        "label": "Email:",
+        "value": "info@tmc.com"
+      },
+      "workingHours": {
+        "label": "Working Hours:",
+        "value": "Sunday - Thursday: 9:00 AM - 6:00 PM"
+      }
+    },
+    "copyright": "2024 TMC. All rights reserved.",
+    "bottomLinks": {
+      "terms": "Terms and Conditions",
+      "privacy": "Privacy Policy",
+      "agreement": "User Agreement"
+    },
+    "madeWith": {
+      "text": "Made with",
+      "location": "in Syria"
+    }
+  },
+  "loginForm": {
+    "fullName": {
+      "label": "Full Name",
+      "placeholder": "Enter your full name"
+    },
+    "email": {
+      "label": "Email Address",
+      "placeholder": "Enter your email address"
+    },
+    "phone": {
+      "label": "Phone Number"
+    },
+    "password": {
+      "label": "Password"
+    }
+  },
+  "phoneField": {
+    "placeholder": "Enter phone number"
+  },
+  "passwordField": {
+    "placeholder": "Enter password"
   }
 }

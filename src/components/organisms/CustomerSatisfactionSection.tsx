@@ -1,4 +1,5 @@
 // components/organisms/CustomerSatisfactionSection.tsx
+"use client";
 import React from "react";
 import Section from "../molecules/Section";
 import Heading from "../atoms/Heading";
@@ -6,35 +7,50 @@ import Text from "../atoms/Text";
 import Badge from "../atoms/Badge";
 import CustomerCard from "../molecules/CustomerCard";
 import EnhancedCallToAction from "../molecules/EnhancedCallToAction";
+import useTranslation from "../../hooks/useTranslation";
 
 export default function CustomerSatisfactionSection() {
+  const { t, isRTL } = useTranslation();
+
   const customerData = [
     {
       src: "/images/image 1.png",
-      alt: "ثقة العملاء",
-      title: "من العملاء تزداد ثقتهم في متاجر TMC",
-      subtitle: "نسبة رضا عالية",
-      percentage: "98%",
+      alt: t('customerSatisfactionSection.customerData.customer1.alt'),
+      title: t('customerSatisfactionSection.customerData.customer1.title'),
+      subtitle: t('customerSatisfactionSection.customerData.customer1.subtitle'),
+      percentage: t('customerSatisfactionSection.customerData.customer1.percentage'),
       color: "from-green-500 to-green-600",
-      features: ["أمان المدفوعات", "سرعة التسليم", "جودة المنتجات"],
+      features: [
+        t('customerSatisfactionSection.customerData.customer1.features.feature1'),
+        t('customerSatisfactionSection.customerData.customer1.features.feature2'),
+        t('customerSatisfactionSection.customerData.customer1.features.feature3')
+      ],
     },
     {
       src: "/images/image2.png",
-      alt: "سهولة الشراء",
-      title: "شراء مباشر دون تعقيد أو إنشاء حساب",
-      subtitle: "تجربة سلسة",
-      percentage: "3 خطوات",
+      alt: t('customerSatisfactionSection.customerData.customer2.alt'),
+      title: t('customerSatisfactionSection.customerData.customer2.title'),
+      subtitle: t('customerSatisfactionSection.customerData.customer2.subtitle'),
+      percentage: t('customerSatisfactionSection.customerData.customer2.percentage'),
       color: "from-blue-500 to-blue-600",
-      features: ["تسجيل سريع", "دفع مرن", "متابعة الطلبات"],
+      features: [
+        t('customerSatisfactionSection.customerData.customer2.features.feature1'),
+        t('customerSatisfactionSection.customerData.customer2.features.feature2'),
+        t('customerSatisfactionSection.customerData.customer2.features.feature3')
+      ],
     },
     {
       src: "/images/image3.png",
-      alt: "انتشار واسع",
-      title: "5 من أصل 5 في سوريا اشتروا من متاجر TMC",
-      subtitle: "ثقة منتشرة",
-      percentage: "100%",
+      alt: t('customerSatisfactionSection.customerData.customer3.alt'),
+      title: t('customerSatisfactionSection.customerData.customer3.title'),
+      subtitle: t('customerSatisfactionSection.customerData.customer3.subtitle'),
+      percentage: t('customerSatisfactionSection.customerData.customer3.percentage'),
       color: "from-purple-500 to-purple-600",
-      features: ["تغطية شاملة", "خدمة 24/7", "دعم محلي"],
+      features: [
+        t('customerSatisfactionSection.customerData.customer3.features.feature1'),
+        t('customerSatisfactionSection.customerData.customer3.features.feature2'),
+        t('customerSatisfactionSection.customerData.customer3.features.feature3')
+      ],
     },
   ];
 
@@ -43,22 +59,22 @@ export default function CustomerSatisfactionSection() {
       className="py-20 px-6 bg-gradient-to-br from-[#96EDD9]/10 via-white to-[#96EDD9]/5"
       background="light"
     >
-      <div className="max-w-7xl mx-auto text-right">
+      <div className={`max-w-7xl mx-auto ${isRTL ? 'text-right' : 'text-left'}`}>
         {/* Header */}
         <div className="text-center mb-16">
           <Badge
-            text="😊 رضا العملاء أولويتنا"
+            text={t('customerSatisfactionSection.header.badge')}
             variant="primary"
             className="mb-4"
           />
           <Heading
-            text="أسعد عملاءك بتجربة شراء سهلة"
+            text={t('customerSatisfactionSection.header.title')}
             level={2}
             variant="section"
             className="text-3xl md:text-4xl font-bold text-[#004D5A] mb-6"
           />
           <Text
-            text="تجربة تسوق متميزة تبني الثقة وتحقق رضا العملاء مع كل عملية شراء"
+            text={t('customerSatisfactionSection.header.subtitle')}
             variant="subtitle"
             className="text-[#004D5A]/70 text-lg max-w-4xl mx-auto leading-relaxed"
           />
