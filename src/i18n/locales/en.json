@@ -314,14 +314,18 @@
       "placeholder": "Enter your full name"
     },
     "email": {
-      "label": "Email Address",
-      "placeholder": "Enter your email address"
+      "label": "Email",
+      "placeholder": "Enter your email"
     },
     "phone": {
       "label": "Phone Number"
     },
     "password": {
       "label": "Password"
+    },
+    "actions": {
+      "login": "Log In",
+      "createAccount": "Create Account"
     }
   },
   "phoneField": {
@@ -329,5 +333,23 @@
   },
   "passwordField": {
     "placeholder": "Enter password"
+  },
+  "authTabs": {
+    "login": "Log In",
+    "register": "Create Account"
+  },
+  "signInForm": {
+    "identifier": {
+      "label": "Email or Phone Number",
+      "placeholder": "Enter your email or phone number"
+    },
+    "password": {
+      "label": "Password"
+    },
+    "forgotPassword": "Forgot password?",
+    "actions": {
+      "login": "Log In",
+      "createAccount": "Create Account"
+    }
   }
 }

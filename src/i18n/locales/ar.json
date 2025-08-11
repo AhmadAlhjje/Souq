@@ -320,6 +320,10 @@
     },
     "password": {
       "label": "كلمة المرور"
+    },
+    "actions": {
+      "login": "تسجيل الدخول",
+      "createAccount": "إنشاء حساب"
     }
   },
   "phoneField": {
@@ -327,5 +331,23 @@
   },
   "passwordField": {
     "placeholder": "أدخل كلمة المرور"
+  },
+  "authTabs": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب"
+  },
+  "signInForm": {
+    "identifier": {
+      "label": "البريد الإلكتروني أو رقم الجوال",
+      "placeholder": "أدخل البريد الإلكتروني أو رقم الجوال"
+    },
+    "password": {
+      "label": "كلمة المرور"
+    },
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "actions": {
+      "login": "تسجيل الدخول",
+      "createAccount": "إنشاء حساب"
+    }
   }
 }
