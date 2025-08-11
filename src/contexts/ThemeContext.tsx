@@ -1,114 +1,51 @@
 'use client';
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark';
 
 interface ThemeContextProps {
   theme: Theme;
-  actualTheme: 'light' | 'dark';
   toggleTheme: () => void;
   setTheme: (theme: Theme) => void;
   isDark: boolean;
   isLight: boolean;
-  isLoaded: boolean; // إضافة حالة للتحقق من التحميل
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setThemeState] = useState<Theme>('system');
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
-  const [isLoaded, setIsLoaded] = useState(false); // حالة التحميل
+  const [theme, setTheme] = useState<Theme>('light');
 
-  // دالة للحصول على الثيم المفضل من النظام
-  const getSystemTheme = useCallback((): 'light' | 'dark' => {
-    if (typeof window === 'undefined') return 'light';
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  useEffect(() => {
+    // عند بدء التطبيق: جلب القيمة من localStorage أو النظام
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
   }, []);
 
-  // دالة لحساب الثيم الفعلي
-  const calculateActualTheme = useCallback((currentTheme: Theme): 'light' | 'dark' => {
-    if (currentTheme === 'system') {
-      return getSystemTheme();
-    }
-    return currentTheme;
-  }, [getSystemTheme]);
-
-  // تحديث الثيم الفعلي
-  const updateActualTheme = useCallback((newTheme: Theme) => {
-    const calculated = calculateActualTheme(newTheme);
-    setActualTheme(calculated);
-    
-    // تحديث DOM فقط في المتصفح
-    if (typeof window !== 'undefined') {
-      document.documentElement.classList.remove('light', 'dark');
-      document.documentElement.classList.add(calculated);
-      document.documentElement.setAttribute('data-theme', calculated);
-      
-      // تحديث localStorage
-      localStorage.setItem('theme', newTheme);
-    }
-  }, [calculateActualTheme]);
-
-  // تحديد الثيم
-  const setTheme = useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    updateActualTheme(newTheme);
-  }, [updateActualTheme]);
-
-  // تبديل الثيم
-  const toggleTheme = useCallback(() => {
-    const nextTheme: Theme = 
-      theme === 'light' ? 'dark' : 
-      theme === 'dark' ? 'system' : 
-      'light';
-    setTheme(nextTheme);
-  }, [theme, setTheme]);
-
-  // تحميل الثيم المحفوظ عند البدء - يحدث فقط في العميل
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    // تحديث localStorage و class في <html>
+    document.documentElement.classList.remove('light', 'dark');
+    document.documentElement.classList.add(theme);
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
-    const storedTheme = localStorage.getItem('theme') as Theme | null;
-    const initialTheme: Theme = storedTheme || 'system';
-    
-    setThemeState(initialTheme);
-    updateActualTheme(initialTheme);
-    setIsLoaded(true); // تعيين حالة التحميل
-  }, [updateActualTheme]);
-
-  // مراقبة تغييرات النظام للثيم
-  useEffect(() => {
-    if (typeof window === 'undefined' || theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = () => {
-      if (theme === 'system') {
-        updateActualTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [theme, updateActualTheme]);
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+  };
 
   // خصائص مساعدة
-  const isDark = actualTheme === 'dark';
-  const isLight = actualTheme === 'light';
+  const isDark = theme === 'dark';
+  const isLight = theme === 'light';
 
   return (
     <ThemeContext.Provider value={{ 
       theme, 
-      actualTheme,
       toggleTheme, 
       setTheme,
       isDark,
-      isLight,
-      isLoaded
+      isLight
     }}>
       {children}
     </ThemeContext.Provider>
