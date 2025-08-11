@@ -11,5 +11,29 @@
   "theme": "Theme",
   "light_mode": "Light",
   "dark_mode": "Dark",
-  "system_mode": "System"
+  "system_mode": "System",
+
+  "hero_banner": "Join 60,000+ active traders in TMC",
+  "hero_title": "Be The Next Big Thing",
+  "hero_subtitle": "Dream big, create fast, and go far with TMC",
+  "hero_description": "We provide all types of services including selling, buying, and shipping",
+  "hero_cta_primary": "Create Your Store Now",
+  "hero_cta_or": "or",
+  "hero_cta_secondary": "Learn More",
+  "hero_stats_active_traders": "Active Traders",
+  "hero_stats_tech_support": "Tech Support",
+  "hero_stats_customer_satisfaction": "Customer Satisfaction",
+
+  "business_badge": "🚀 Technology Power",
+  "business_title": "Launch Your Business Anywhere",
+  "business_subtitle": "Advanced technology and flexible solutions enable you to manage your business efficiently from anywhere",
+  "business_section_title": "Where Simplicity Meets Elegance",
+  "business_section_description": "A unique experience combining ease of use with technical advancement",
+  "business_cta_button": "Try Platform for Free",
+  "business_feature_management_title": "Simplify store management and provide exceptional shopping experience for your customers",
+  "business_feature_management_description": "Advanced admin interface with detailed analytics",
+  "business_feature_orders_title": "Receive easy and flexible purchase orders for every customer",
+  "business_feature_orders_description": "Smart ordering system that adapts to your customers' needs",
+  "business_feature_display_title": "Display 3D images that highlight elegant details",
+  "business_feature_display_description": "Advanced display technologies to showcase your products' beauty"
 }
