@@ -1,86 +1,77 @@
-import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
-import ar from "./locales/ar.json";
-import en from "./locales/en.json";
+// استيراد ملفات الترجمة
+import arTranslation from './locales/ar.json';
+import enTranslation from './locales/en.json';
 
-// تكوين اللغات المتاحة
-export const SUPPORTED_LANGUAGES = {
-  ar: { translation: ar },
-  en: { translation: en },
-} as const;
+// دوال بسيطة للكوكيز
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
+}
 
-// أسماء اللغات للعرض
-export const LANGUAGE_NAMES = {
-  ar: 'العربية',
-  en: 'English',
-} as const;
+function getCookie(name: string) {
+  return document.cookie.split('; ').reduce((res, cookie) => {
+    const [key, val] = cookie.split('=');
+    return key === name ? decodeURIComponent(val) : res;
+  }, '');
+}
 
-// الأعلام للغات
-export const LANGUAGE_FLAGS = {
-  ar: '🇸🇦',
-  en: '🇺🇸',
-} as const;
+// دالة للحصول على اللغة الابتدائية من الكوكيز أو الافتراضية 'ar'
+const getInitialLanguage = () => {
+  if (typeof window !== 'undefined') {
+    return getCookie('language') || 'ar';
+  }
+  return 'ar';
+};
 
-// تحديد ما إذا كنا في بيئة المتصفح
-const isBrowser = typeof window !== 'undefined';
+const resources = {
+  ar: { translation: arTranslation },
+  en: { translation: enTranslation },
+};
 
-// إعداد i18n
-i18n.use(initReactI18next).init({
-  resources: SUPPORTED_LANGUAGES,
-  
-  // اللغة الافتراضية
-  lng: "ar",
-  fallbackLng: "ar",
-  
-  interpolation: {
-    escapeValue: false
-  },
-  
-  // تمكين namespace إذا كنت تريد تنظيم الترجمات
-  defaultNS: 'translation',
-  ns: ['translation'],
-  
-  // خيارات إضافية لتحسين الأداء
-  react: {
-    useSuspense: false // مهم جداً لمنع مشاكل SSR
-  },
-  
-  // تعطيل debug في production
-  debug: false,
-});
+i18n
+  .use(LanguageDetector)
+  .use(initReactI18next)
+  .init({
+    resources,
+    lng: getInitialLanguage(),
+    fallbackLng: 'ar',
+    detection: {
+      order: ['cookie', 'navigator'], // تحقق أولاً من الكوكيز ثم المتصفح
+      caches: ['cookie'],             // خزّن اللغة في الكوكيز
+      lookupCookie: 'language',
+    },
+    interpolation: {
+      escapeValue: false,
+    },
+    react: {
+      useSuspense: false, // لمنع مشاكل SSR
+    },
+  });
 
-// دالة مساعدة لتغيير اللغة مع حفظها - تعمل فقط في المتصفح
+const languageConfig = {
+  ar: { code: 'ar', name: 'العربية', isRTL: true },
+  en: { code: 'en', name: 'English', isRTL: false },
+};
+
+// دالة تغيير اللغة مع تخزينها في الكوكيز
 export const changeLanguage = (langCode: string) => {
-  if (!isBrowser) return;
-  
-  i18n.changeLanguage(langCode);
-  localStorage.setItem('lang', langCode);
-  
-  // تحديث dir في document
-  document.documentElement.dir = langCode === 'ar' ? 'rtl' : 'ltr';
-  document.documentElement.lang = langCode;
+  if (typeof window !== 'undefined') {
+    setCookie('language', langCode);
+  }
+  return i18n.changeLanguage(langCode);
 };
 
-// دالة للحصول على معلومات اللغة الحالية
+// جلب معلومات اللغة الحالية
 export const getCurrentLanguageInfo = () => {
-  const currentLang = i18n.language || 'ar';
-  return {
-    code: currentLang,
-    name: LANGUAGE_NAMES[currentLang as keyof typeof LANGUAGE_NAMES] || 'العربية',
-    flag: LANGUAGE_FLAGS[currentLang as keyof typeof LANGUAGE_FLAGS] || '🇸🇦',
-    isRTL: currentLang === 'ar'
-  };
+  const currentLang = i18n.language || getInitialLanguage();
+  return languageConfig[currentLang as keyof typeof languageConfig] || languageConfig.ar;
 };
 
-// دالة للحصول على جميع اللغات المتاحة
-export const getAvailableLanguages = () => {
-  return Object.keys(SUPPORTED_LANGUAGES).map(code => ({
-    code,
-    name: LANGUAGE_NAMES[code as keyof typeof LANGUAGE_NAMES],
-    flag: LANGUAGE_FLAGS[code as keyof typeof LANGUAGE_FLAGS],
-    isRTL: code === 'ar'
-  }));
-};
+// اللغات المتاحة
+export const getAvailableLanguages = () => Object.values(languageConfig);
 
 export default i18n;

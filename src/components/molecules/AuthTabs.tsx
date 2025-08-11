@@ -1,4 +1,6 @@
+"use client";
 import React from 'react';
+import useTranslation from '../../hooks/useTranslation';
 
 interface AuthTabsProps {
   activeTab: string;
@@ -6,6 +8,8 @@ interface AuthTabsProps {
 }
 
 const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, setActiveTab }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex bg-gray-100 rounded-lg p-1 mb-4 sm:mb-6">
       <button
@@ -16,7 +20,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, setActiveTab }) => {
             : 'text-gray-600 hover:text-gray-800'
         }`}
       >
-        تسجيل الدخول
+        {t('authTabs.login')}
       </button>
       <button
         onClick={() => setActiveTab('register')}
@@ -26,7 +30,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({ activeTab, setActiveTab }) => {
             : 'text-gray-600 hover:text-gray-800'
         }`}
       >
-        إنشاء حساب
+        {t('authTabs.register')}
       </button>
     </div>
   );

@@ -1,7 +1,9 @@
+"use client";
 import React from 'react';
 import Input from '../../components/atoms/Input';
 import Label from '../../components/atoms/Label';
 import CountrySelect from '../../components/atoms/CountrySelect';
+import useTranslation from '../../hooks/useTranslation';
 
 interface PhoneFieldProps {
   label: string;
@@ -18,13 +20,15 @@ const PhoneField: React.FC<PhoneFieldProps> = ({
   phoneNumber, 
   setPhoneNumber 
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="mb-3 sm:mb-4">
       <Label>{label}</Label>
       <div className="flex gap-2">
         <Input
           type="tel"
-          placeholder="أدخل رقم الجوال"
+          placeholder={t('phoneField.placeholder')}
           value={phoneNumber}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPhoneNumber(e.target.value)}
           className="flex-1"

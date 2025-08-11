@@ -1,58 +1,74 @@
-'use client';
+"use client";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { changeLanguage as i18nChangeLanguage, getCurrentLanguageInfo } from '../i18n';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-
-type Language = 'en' | 'ar';
-
-interface LanguageContextProps {
-  language: Language;
-  toggleLanguage: () => void;
-  setLanguage: (lang: Language) => void;
-  isRTL: boolean;
-  isLTR: boolean;
+// دوال كوكيز
+function setCookie(name: string, value: string, days = 365) {
+  const expires = new Date(Date.now() + days * 864e5).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
 }
 
-const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+function getCookie(name: string) {
+  if (typeof window === "undefined") return "";
+  return document.cookie.split('; ').reduce((res, cookie) => {
+    const [key, val] = cookie.split('=');
+    return key === name ? decodeURIComponent(val) : res;
+  }, '');
+}
 
-export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLang] = useState<Language>('ar');
+interface LanguageContextType {
+  language: string;
+  isRTL: boolean;
+  setLanguage: (lang: string) => void;
+  currentLanguage: any;
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+interface LanguageProviderProps {
+  children: ReactNode;
+}
+
+export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
+  const [language, setLanguageState] = useState<string>('ar');
+  const [currentLanguage, setCurrentLanguage] = useState(() => getCurrentLanguageInfo());
 
   useEffect(() => {
-    const storedLang = localStorage.getItem('lang') as Language | null;
-    if (storedLang) setLang(storedLang);
+    if (typeof window !== 'undefined') {
+      const savedLanguage = getCookie('language') || 'ar';
+      setLanguageState(savedLanguage);
+      i18nChangeLanguage(savedLanguage);
+      setCurrentLanguage(getCurrentLanguageInfo());
+    }
   }, []);
 
-  useEffect(() => {
-    document.documentElement.lang = language;
-    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
-    localStorage.setItem('lang', language);
-  }, [language]);
-
-  const toggleLanguage = () => {
-    setLang((prev) => (prev === 'ar' ? 'en' : 'ar'));
+  const setLanguage = (lang: string) => {
+    if (typeof window !== 'undefined') {
+      setCookie('language', lang);
+    }
+    setLanguageState(lang);
+    i18nChangeLanguage(lang);
+    setTimeout(() => setCurrentLanguage(getCurrentLanguageInfo()), 100);
   };
 
-  // خصائص مساعدة
-  const isRTL = language === 'ar';
-  const isLTR = language === 'en';
+  const value: LanguageContextType = {
+    language,
+    isRTL: currentLanguage.isRTL,
+    setLanguage,
+    currentLanguage,
+  };
 
   return (
-    <LanguageContext.Provider
-      value={{ 
-        language, 
-        toggleLanguage, 
-        setLanguage: setLang,
-        isRTL,
-        isLTR
-      }}
-    >
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-export const useLanguageContext = () => {
+export const useLanguageContext = (): LanguageContextType => {
   const context = useContext(LanguageContext);
-  if (!context) throw new Error('useLanguageContext must be used within a LanguageProvider');
+  if (context === undefined) {
+    throw new Error('useLanguageContext must be used within a LanguageProvider');
+  }
   return context;
 };
