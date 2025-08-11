@@ -34,6 +34,9 @@ interface FeatureItemProps {
 function FeatureItem({ icon, title, description }: FeatureItemProps) {
   return (
     <div className="flex items-start space-x-4 space-x-reverse group">
+       <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
+        {icon}
+      </div>
       <div className="flex-1">
         <Text
           text={title}
@@ -47,9 +50,7 @@ function FeatureItem({ icon, title, description }: FeatureItemProps) {
           />
         )}
       </div>
-      <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-        {icon}
-      </div>
+     
     </div>
   );
 }

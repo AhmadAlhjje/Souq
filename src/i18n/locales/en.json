@@ -35,5 +35,14 @@
   "business_feature_orders_title": "Receive easy and flexible purchase orders for every customer",
   "business_feature_orders_description": "Smart ordering system that adapts to your customers' needs",
   "business_feature_display_title": "Display 3D images that highlight elegant details",
-  "business_feature_display_description": "Advanced display technologies to showcase your products' beauty"
+  "business_feature_display_description": "Advanced display technologies to showcase your products' beauty",
+
+  "hero_title_badge": "🚀 Leading Platform in Syria",
+  "hero_title_heading": "Largest Syrian Commerce Platform in the Middle East",
+  "hero_title_description": "An integrated platform combining advanced technology and innovative solutions to empower traders to achieve their goals",
+  "hero": {
+    "badge": "🚀 Leading Platform in Syria",
+    "title": "The Largest Syrian Trading Platform in the Middle East",
+    "description": "A comprehensive platform that combines advanced technology and innovative solutions to enable traders to achieve their goals"
+  }
 }
