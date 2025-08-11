@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useTheme from "../../hooks/useTheme";
-import ClientOnly from "../ClientOnly";
 
 // Import Components
 import Logo from "../atoms/Logo";
@@ -20,7 +19,7 @@ import "../../i18n";
 const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { i18n } = useTranslation();
-  const { isDark, isLoaded } = useTheme();
+  const { isDark } = useTheme();
 
   // تحميل اللغة المحفوظة - فقط في العميل
   useEffect(() => {
@@ -35,11 +34,6 @@ const Header: React.FC = () => {
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
-
-  // Fallback للتحميل
-  const LoadingFallback = () => (
-    <div className="w-6 h-6 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-  );
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
@@ -63,15 +57,11 @@ const Header: React.FC = () => {
               {/* Shopping Cart */}
               <ShoppingCartButton itemCount={3} />
 
-              {/* Theme Selector - Client Only */}
-              <ClientOnly fallback={<LoadingFallback />}>
-                {isLoaded && <ThemeSelector />}
-              </ClientOnly>
+              {/* Theme Selector */}
+              <ThemeSelector />
 
-              {/* Language Selector - Client Only */}
-              <ClientOnly fallback={<LoadingFallback />}>
-                <LanguageSelector />
-              </ClientOnly>
+              {/* Language Selector */}
+              <LanguageSelector />
 
               {/* Action Buttons - Desktop */}
               <div className="hidden lg:block">
@@ -87,10 +77,8 @@ const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu - Client Only */}
-        <ClientOnly>
-          <MobileMenu isOpen={isMobileMenuOpen} />
-        </ClientOnly>
+        {/* Mobile Menu */}
+        <MobileMenu isOpen={isMobileMenuOpen} />
       </nav>
     </header>
   );

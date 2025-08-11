@@ -1,6 +1,5 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 import ar from "./locales/ar.json";
 import en from "./locales/en.json";
@@ -27,28 +26,12 @@ export const LANGUAGE_FLAGS = {
 const isBrowser = typeof window !== 'undefined';
 
 // إعداد i18n
-const i18nInstance = i18n.use(initReactI18next);
-
-// إضافة LanguageDetector فقط في المتصفح
-if (isBrowser) {
-  i18nInstance.use(LanguageDetector);
-}
-
-i18nInstance.init({
+i18n.use(initReactI18next).init({
   resources: SUPPORTED_LANGUAGES,
   
   // اللغة الافتراضية
   lng: "ar",
   fallbackLng: "ar",
-  
-  // خيارات اكتشاف اللغة - فقط في المتصفح
-  ...(isBrowser && {
-    detection: {
-      order: ['localStorage', 'navigator', 'htmlTag'],
-      lookupLocalStorage: 'lang',
-      caches: ['localStorage'],
-    },
-  }),
   
   interpolation: {
     escapeValue: false
