@@ -446,11 +446,17 @@
     "download": "Download",
     "upload": "Upload",
     "refresh": "Refresh",
-    "reset": "Reset"
+    "reset": "Reset",
+    "viewProduct": "View Product",
+    "editProduct": "Edit Product",
+    "deleteProduct": "Delete Product",
+    "addProduct": "Add New Product",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete"
   },
 
   "status": {
-    "active": "Active",
     "inactive": "Inactive",
     "pending": "Pending",
     "approved": "Approved",
@@ -459,7 +465,11 @@
     "cancelled": "Cancelled",
     "processing": "Processing",
     "shipped": "Shipped",
-    "delivered": "Delivered"
+    "delivered": "Delivered",
+    "active": "Active",
+    "out_of_stock": "Out of Stock",
+    "low_stock": "Low Stock",
+    "all": "All Status"
   },
 
   "notifications_types": {
@@ -600,5 +610,74 @@
       "help": "Help",
       "logout": "Logout"
     }
-  }
+  },
+  "product": {
+    "stats": {
+      "totalProducts": "Total Products",
+      "activeProducts": "Active Products",
+      "outOfStock": "Out of Stock",
+      "lowStock": "Low Stock",
+      "loading": "Loading...",
+      "noData": "No Data"
+    }
+  },
+  "modals": {
+    "deleteConfirm": {
+      "title": "Confirm Delete",
+      "warningTitle": "Confirm Warning",
+      "messageWithItem": "Are you sure you want to delete \"{{itemName}}\"? This action cannot be undone.",
+      "messageGeneral": "Are you sure you want to delete this item? This action cannot be undone.",
+      "selectedItem": "Selected item:",
+      "confirmDelete": "Delete",
+      "confirmAction": "Confirm",
+      "cancel": "Cancel",
+      "close": "Close"
+    }
+  },
+  "page": {
+    "title": "Products Management",
+    "subtitle": "Manage and track all your store products"
+  },
+  "stats": {
+    "totalProducts": "Total Products",
+    "activeProducts": "Active Products",
+    "outOfStock": "Out of Stock",
+    "lowStock": "Low Stock"
+  },
+  "emptyState": {
+    "title": "No Products Found",
+    "description": "No products match your current search criteria",
+    "addFirstProduct": "Add Your First Product",
+    "addProduct": "Add Product",
+    "noProductsFound": "No products to display"
+  },
+  "filters": {
+    "search": "Search products...",
+    "category": "Category",
+    "status": "Status",
+    "allCategories": "All Categories",
+    "allStatuses": "All Statuses"
+  },
+  "deleteModal": {
+    "title": "Confirm Delete",
+    "message": "Are you sure you want to delete \"{{productName}}\"? This action cannot be undone.",
+    "confirmDelete": "Delete",
+    "cancel": "Cancel"
+  },
+  "stockWarning": "{{count}} left",
+  "info": {
+    "stock": "Stock:",
+    "sales": "Sales:"
+  },
+  "search": {
+    "placeholder": "Search products..."
+  },
+  "buttons": {
+    "addProduct": "Add New Product"
+  },
+  "viewModes": {
+    "grid": "Grid View",
+    "table": "Table View"
+  },
+  "placeholder": "Search..."
 }
