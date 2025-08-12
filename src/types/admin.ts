@@ -174,10 +174,10 @@ export interface SidebarMenuItem {
   id: string;
   label: string;
   icon: React.ComponentType<any>;
-  href: string;
+  href?: string; // جعل href اختياري
   badge?: number;
   children?: SidebarMenuItem[];
-}
+} 
 
 // حالات التحميل والأخطاء
 export interface LoadingState {

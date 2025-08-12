@@ -1,0 +1,381 @@
+/* styles/rtl.css */
+
+/* ستايلز RTL عامة */
+.rtl {
+  direction: rtl;
+}
+
+.ltr {
+  direction: ltr;
+}
+
+/* تحسين عرض النصوص والعناصر */
+.rtl * {
+  text-align: right;
+}
+
+.ltr * {
+  text-align: left;
+}
+
+/* تحسين الـ Scrollbars للـ RTL */
+.rtl ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ltr ::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Light mode scrollbars */
+:root:not(.dark) .rtl ::-webkit-scrollbar-track,
+:root:not(.dark) .ltr ::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+:root:not(.dark) .rtl ::-webkit-scrollbar-thumb,
+:root:not(.dark) .ltr ::-webkit-scrollbar-thumb {
+  background: #96EDD9;
+  border-radius: 3px;
+}
+
+:root:not(.dark) .rtl ::-webkit-scrollbar-thumb:hover,
+:root:not(.dark) .ltr ::-webkit-scrollbar-thumb:hover {
+  background: #5CA9B5;
+}
+
+/* Dark mode scrollbars */
+:root.dark .rtl ::-webkit-scrollbar-track,
+:root.dark .ltr ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+:root.dark .rtl ::-webkit-scrollbar-thumb,
+:root.dark .ltr ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+  border-radius: 3px;
+}
+
+:root.dark .rtl ::-webkit-scrollbar-thumb:hover,
+:root.dark .ltr ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* تحسين الـ Forms */
+.rtl input, 
+.rtl textarea, 
+.rtl select {
+  text-align: right;
+}
+
+.ltr input, 
+.ltr textarea, 
+.ltr select {
+  text-align: left;
+}
+
+/* تحسين الجداول */
+.rtl table {
+  direction: rtl;
+}
+
+.ltr table {
+  direction: ltr;
+}
+
+.rtl th, 
+.rtl td {
+  text-align: right;
+}
+
+.ltr th, 
+.ltr td {
+  text-align: left;
+}
+
+/* تحسين الـ Modals والـ Dropdowns */
+.rtl .modal-content,
+.rtl .dropdown-content {
+  text-align: right;
+}
+
+.ltr .modal-content,
+.ltr .dropdown-content {
+  text-align: left;
+}
+
+/* تحسين الـ Notifications */
+.rtl .notification {
+  text-align: right;
+}
+
+.ltr .notification {
+  text-align: left;
+}
+
+/* تحسين الـ Cards */
+.rtl .card {
+  text-align: right;
+}
+
+.ltr .card {
+  text-align: left;
+}
+
+/* Animation adjustments for RTL */
+.rtl .slide-enter-from-left {
+  transform: translateX(-100%);
+}
+
+.rtl .slide-enter-from-right {
+  transform: translateX(100%);
+}
+
+.ltr .slide-enter-from-left {
+  transform: translateX(100%);
+}
+
+.ltr .slide-enter-from-right {
+  transform: translateX(-100%);
+}
+
+/* تحسين الـ Breadcrumbs */
+.rtl .breadcrumb-separator::before {
+  content: "/";
+  transform: rotate(180deg);
+}
+
+.ltr .breadcrumb-separator::before {
+  content: "/";
+  transform: rotate(0deg);
+}
+
+/* تحسين الـ Tooltips */
+.rtl .tooltip {
+  text-align: right;
+}
+
+.ltr .tooltip {
+  text-align: left;
+}
+
+/* تحسين الـ Progress bars */
+.rtl .progress-bar {
+  direction: rtl;
+}
+
+.ltr .progress-bar {
+  direction: ltr;
+}
+
+/* تحسين الـ Date pickers */
+.rtl .date-picker {
+  direction: rtl;
+}
+
+.ltr .date-picker {
+  direction: ltr;
+}
+
+/* تحسين الـ Charts والـ Graphs */
+.rtl .chart-container {
+  direction: rtl;
+}
+
+.ltr .chart-container {
+  direction: ltr;
+}
+
+/* إصلاح مشاكل الـ Flexbox مع RTL */
+.rtl .flex-row-reverse {
+  flex-direction: row;
+}
+
+.ltr .flex-row-reverse {
+  flex-direction: row-reverse;
+}
+
+/* تحسين الـ Grid layouts */
+.rtl .grid-container {
+  direction: rtl;
+}
+
+.ltr .grid-container {
+  direction: ltr;
+}
+
+/* إضافات مفيدة للـ RTL */
+
+/* تحسين الـ Lists */
+.rtl ul, .rtl ol {
+  padding-right: 1.5rem;
+  padding-left: 0;
+}
+
+.ltr ul, .ltr ol {
+  padding-left: 1.5rem;
+  padding-right: 0;
+}
+
+/* تحسين الـ Margins */
+.rtl .ml-auto {
+  margin-right: auto;
+  margin-left: unset;
+}
+
+.rtl .mr-auto {
+  margin-left: auto;
+  margin-right: unset;
+}
+
+.ltr .ml-auto {
+  margin-left: auto;
+  margin-right: unset;
+}
+
+.ltr .mr-auto {
+  margin-right: auto;
+  margin-left: unset;
+}
+
+/* تحسين الـ Text alignment */
+.rtl .text-left {
+  text-align: right !important;
+}
+
+.rtl .text-right {
+  text-align: left !important;
+}
+
+.ltr .text-left {
+  text-align: left !important;
+}
+
+.ltr .text-right {
+  text-align: right !important;
+}
+
+/* تحسين الـ Borders */
+.rtl .border-l {
+  border-right-width: 1px;
+  border-left-width: 0;
+}
+
+.rtl .border-r {
+  border-left-width: 1px;
+  border-right-width: 0;
+}
+
+.ltr .border-l {
+  border-left-width: 1px;
+  border-right-width: 0;
+}
+
+.ltr .border-r {
+  border-right-width: 1px;
+  border-left-width: 0;
+}
+
+/* تحسين الـ Positioning */
+.rtl .left-0 {
+  right: 0;
+  left: unset;
+}
+
+.rtl .right-0 {
+  left: 0;
+  right: unset;
+}
+
+.ltr .left-0 {
+  left: 0;
+  right: unset;
+}
+
+.ltr .right-0 {
+  right: 0;
+  left: unset;
+}
+
+/* تحسين الـ Transforms */
+.rtl .transform-flip-x {
+  transform: scaleX(-1);
+}
+
+/* تحسين الـ Navigation */
+.rtl .nav-item {
+  text-align: right;
+}
+
+.ltr .nav-item {
+  text-align: left;
+}
+
+/* تحسين الـ Sidebar */
+.rtl .sidebar {
+  right: 0;
+  left: unset;
+}
+
+.ltr .sidebar {
+  left: 0;
+  right: unset;
+}
+
+/* تحسين الـ Dropdowns */
+.rtl .dropdown-menu {
+  right: 0;
+  left: unset;
+}
+
+.ltr .dropdown-menu {
+  left: 0;
+  right: unset;
+}
+
+/* تحسين الـ Icons */
+.rtl .icon-arrow-left::before {
+  content: "→";
+}
+
+.rtl .icon-arrow-right::before {
+  content: "←";
+}
+
+.ltr .icon-arrow-left::before {
+  content: "←";
+}
+
+.ltr .icon-arrow-right::before {
+  content: "→";
+}
+
+/* تحسين الـ Buttons */
+.rtl .btn-with-icon {
+  flex-direction: row-reverse;
+}
+
+.ltr .btn-with-icon {
+  flex-direction: row;
+}
+
+/* Media queries للـ responsive design */
+@media (max-width: 768px) {
+  .rtl .mobile-sidebar {
+    right: -100%;
+    left: unset;
+  }
+  
+  .rtl .mobile-sidebar.open {
+    right: 0;
+  }
+  
+  .ltr .mobile-sidebar {
+    left: -100%;
+    right: unset;
+  }
+  
+  .ltr .mobile-sidebar.open {
+    left: 0;
+  }
+}

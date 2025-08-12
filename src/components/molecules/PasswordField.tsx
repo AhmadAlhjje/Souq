@@ -1,7 +1,9 @@
+"use client";
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import Input from '../../components/atoms/Input';
 import Label from '../../components/atoms/Label';
+import { useTranslation } from 'react-i18next';
 
 interface PasswordFieldProps {
   label: string;
@@ -10,6 +12,7 @@ interface PasswordFieldProps {
 }
 
 const PasswordField: React.FC<PasswordFieldProps> = ({ label, value, onChange }) => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
   return (
@@ -18,7 +21,7 @@ const PasswordField: React.FC<PasswordFieldProps> = ({ label, value, onChange })
       <div className="relative">
         <Input
           type={showPassword ? "text" : "password"}
-          placeholder="أدخل كلمة المرور"
+          placeholder={t('passwordField.placeholder')}
           value={value}
           onChange={onChange}
           icon={Lock}
