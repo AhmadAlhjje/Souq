@@ -1,22 +1,30 @@
+// components/atoms/Badge.tsx
 import React from 'react';
 
 interface BadgeProps {
-  text: string;
-  variant?: 'primary' | 'hero' | 'success' | 'warning';
-  className?: string;
+  children: React.ReactNode;
+  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew';
 }
 
-export default function Badge({ text, variant = 'primary', className = '' }: BadgeProps) {
-  const variantStyles = {
-    primary: 'bg-[#004D5A]/5 px-4 py-2 rounded-full border border-[#004D5A]/10 text-[#004D5A] font-medium text-sm',
-    hero: 'bg-[#96EDD9]/20 px-6 py-2 rounded-full border border-[#96EDD9]/30 text-[#96EDD9] font-medium text-sm',
-    success: 'bg-green-100 px-4 py-2 rounded-full border border-green-200 text-green-700 font-medium text-sm',
-    warning: 'bg-yellow-100 px-4 py-2 rounded-full border border-yellow-200 text-yellow-700 font-medium text-sm'
+const Badge: React.FC<BadgeProps> = ({ children, variant = 'default' }) => {
+  const variants = {
+    default: "bg-gray-100 text-gray-800",
+    sale: "bg-red-100 text-red-800", 
+    new: "bg-teal-100 text-teal-800",
+    saleNew: "bg-[#96EDD9] text-[#004D5A]",
+    defaultNew: "bg-[#CFF7EE] text-[#004D5A]",
+    newNew: "bg-[#BAF3E6] text-[#004D5A]"
+    
   };
 
   return (
-    <div className={`inline-flex items-center ${variantStyles[variant]} ${className}`}>
-      <span>{text}</span>
-    </div>
+    <span className={`
+      inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+      ${variants[variant]}
+    `}>
+      {children}
+    </span>
   );
-}
+};
+
+export default Badge;

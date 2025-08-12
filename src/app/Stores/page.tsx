@@ -1,12 +1,18 @@
 "use client";
-import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import StoresSection from "../../components/templates/StoresSection";
 import { Store } from "../../types/store";
 import { SAMPLE_STORES } from "../../utils/constants";
 
 const StoresPage: React.FC = () => {
+  const router = useRouter();
+
   const handleViewDetails = (store: Store) => {
-    alert(`زيارة متجر ${store.name}`);
+    // عرض رسالة تأكيد سريعة
+    console.log(`زيارة متجر ${store.name}`);
+    
+    // التنقل إلى صفحة المنتجات مع تمرير معرف المتجر
+    router.push(`/products?store=${store.id}&storeName=${encodeURIComponent(store.name)}`);
   };
 
   return (

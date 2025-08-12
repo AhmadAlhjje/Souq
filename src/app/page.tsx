@@ -10,6 +10,8 @@ import CustomerSatisfactionSection from "../components/organisms/CustomerSatisfa
 
 export default function Home() {
   return (
+
+    <>
     <MainLayout>
       <HeroSection />
       <HeroTitleSection />
@@ -19,5 +21,6 @@ export default function Home() {
       <FeaturesSection />
       <CustomerSatisfactionSection />
     </MainLayout>
+      </>
   );
 }

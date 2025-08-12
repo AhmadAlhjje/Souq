@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
 import Button from '../atoms/Button';
 import Typography from '../atoms/Typography';
@@ -34,24 +35,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
       {/* العروض */}
       <OffersSlider />
 
-      {/* Section Header */}
-      <div className="text-center mb-8 mt-12">
-        <Typography variant="h2" className="mb-6">
-          المتاجر المميزة ⭐
-        </Typography>
-        <Typography variant="body" className="text-xl text-gray-600">
-          متاجر موثوقة تقبل الدفع بالشيكات والراتبات
-        </Typography>
-      </div>
-
-      {/* Search Input */}
-      <div className="mb-8">
-        <SearchInput
-          value={searchTerm}
-          onChange={setSearchTerm}
-          placeholder="ابحث عن متجر..."
-        />
-      </div>
+    
 
       {/* Stores Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -67,22 +51,36 @@ const StoresSection: React.FC<StoresSectionProps> = ({
       {/* No Results Message */}
       {filteredStores.length === 0 && searchTerm && (
         <div className="text-center py-12">
+          <div className="text-6xl mb-4">🔍</div>
           <Typography variant="h3" className="text-gray-500 mb-4">
             لا توجد نتائج
           </Typography>
-          <Typography variant="body" className="text-gray-400">
-            لم نجد أي متاجر تطابق بحثك "{searchTerm}"
+          <Typography variant="body" className="text-gray-400 mb-6">
+            لم نجد أي متاجر تطابق بحثك عن 
           </Typography>
+          <button 
+            onClick={() => setSearchTerm('')}
+            className="bg-teal-100 text-teal-700 px-6 py-2 rounded-lg hover:bg-teal-200 transition-colors"
+          >
+            إزالة الفلتر
+          </button>
         </div>
       )}
 
       {/* Load More Button */}
-      <div className="text-center">
-        <Button
-          text="استكشف جميع المتاجر"
-          endIcon={<Icon name="chevron-right" size="sm" />}
-        />
-      </div>
+      {filteredStores.length > 0 && (
+        <div className="text-center">
+          <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+            <span>استكشف جميع المتاجر</span>
+            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+      
+        </div>
+      )}
+
+     
     </div>
   );
 };
