@@ -1,5 +1,7 @@
 // types/admin.ts
 
+import { LucideIcon } from "lucide-react";
+
 export interface AdminUser {
   id: string;
   name: string;
@@ -195,4 +197,14 @@ export interface ApiResponse<T> {
     total: number;
     totalPages: number;
   };
+}
+
+export interface SidebarConfig {
+  header: {
+    title: string;
+    subtitle: string;
+    icon: LucideIcon;
+  };
+  mainMenuItems: SidebarMenuItem[];
+  bottomMenuItems: SidebarMenuItem[];
 }

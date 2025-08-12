@@ -434,11 +434,17 @@
     "download": "تحميل",
     "upload": "رفع",
     "refresh": "تحديث",
-    "reset": "إعادة تعيين"
+    "reset": "إعادة تعيين",
+    "viewProduct": "عرض المنتج",
+    "editProduct": "تعديل المنتج",
+    "deleteProduct": "حذف المنتج",
+    "addProduct": "إضافة منتج جديد",
+    "view": "عرض",
+    "edit": "تعديل",
+    "delete": "حذف"
   },
 
   "status": {
-    "active": "نشط",
     "inactive": "غير نشط",
     "pending": "في الانتظار",
     "approved": "موافق عليه",
@@ -447,7 +453,11 @@
     "cancelled": "ملغي",
     "processing": "قيد المعالجة",
     "shipped": "تم الشحن",
-    "delivered": "تم التسليم"
+    "delivered": "تم التسليم",
+    "active": "متاح",
+    "out_of_stock": "نفد المخزون",
+    "low_stock": "مخزون منخفض",
+    "all": "جميع الحالات"
   },
 
   "notifications_types": {
@@ -538,10 +548,6 @@
     "mobile": {
       "alt": "تطبيق الجوال"
     }
-  },
-  "stats": {
-    "number": "+50K",
-    "label": "متجر نشط"
   },
 
   "businessLaunchSection": {
@@ -636,5 +642,86 @@
       "help": "المساعدة",
       "logout": "تسجيل الخروج"
     }
-  }
+  },
+  "product": {
+    "stats": {
+      "totalProducts": "إجمالي المنتجات",
+      "activeProducts": "المنتجات المتاحة",
+      "outOfStock": "نفد المخزون",
+      "lowStock": "مخزون منخفض",
+      "loading": "جاري التحميل...",
+      "noData": "لا توجد بيانات"
+    }
+  },
+  "modals": {
+    "deleteConfirm": {
+      "title": "تأكيد الحذف",
+      "warningTitle": "تأكيد التحذير",
+      "messageWithItem": "هل أنت متأكد من حذف \"{{itemName}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+      "messageGeneral": "هل أنت متأكد من حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.",
+      "selectedItem": "العنصر المحدد:",
+      "confirmDelete": "حذف",
+      "confirmAction": "تأكيد",
+      "cancel": "إلغاء",
+      "close": "إغلاق"
+    }
+  },
+
+  "page": {
+    "title": "إدارة المنتجات",
+    "subtitle": "إدارة وتتبع جميع منتجات متجرك"
+  },
+  "stats": {
+    "number": "+50K",
+    "label": "متجر نشط",
+    "totalProducts": "إجمالي المنتجات",
+    "activeProducts": "المنتجات المتاحة",
+    "outOfStock": "نفد المخزون",
+    "lowStock": "مخزون منخفض"
+  },
+  "emptyState": {
+    "title": "لا توجد منتجات",
+    "description": "لم يتم العثور على منتجات تطابق معايير البحث المحددة",
+    "addFirstProduct": "إضافة منتج جديد",
+    "addProduct": "إضافة منتج",
+    "noProductsFound": "لا يوجد منتجات للعرض"
+  },
+  "filters": {
+    "search": "البحث في المنتجات...",
+    "category": "الفئة",
+    "status": "الحالة",
+    "allCategories": "جميع الفئات",
+    "allStatuses": "جميع الحالات"
+  },
+  "deleteModal": {
+    "title": "تأكيد الحذف",
+    "message": "هل أنت متأكد من حذف المنتج \"{{productName}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+    "confirmDelete": "حذف",
+    "cancel": "إلغاء"
+  },
+  "stockWarning": "متبقي {{count}}",
+  "info": {
+    "stock": "المخزون:",
+    "sales": "المبيعات:"
+  },
+  "headers": {
+    "product": "المنتج",
+    "price": "السعر",
+    "stock": "المخزون",
+    "status": "الحالة",
+    "rating": "التقييم",
+    "sales": "المبيعات",
+    "actions": "الإجراءات"
+  },
+  "search": {
+    "placeholder": "البحث في المنتجات..."
+  },
+  "buttons": {
+    "addProduct": "إضافة منتج جديد"
+  },
+  "viewModes": {
+    "grid": "عرض الشبكة",
+    "table": "عرض الجدول"
+  },
+  "placeholder": "البحث..."
 }
