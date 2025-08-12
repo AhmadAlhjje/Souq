@@ -4,7 +4,7 @@ import { Mail } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
 import PasswordField from '../../components/molecules/PasswordField';
 import AuthActionButtons from '../../components/molecules/AuthActionButtons';
-import useTranslation from '../../hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 
 interface SignInFormData {
   identifier: string;

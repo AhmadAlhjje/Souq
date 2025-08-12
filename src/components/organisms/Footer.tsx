@@ -1,10 +1,9 @@
-// components/organisms/Footer.tsx
 "use client";
 import React from "react";
 import Text from "../atoms/Text";
 import Heading from "../atoms/Heading";
 import Badge from "../atoms/Badge";
-import useTranslation from "../../hooks/useTranslation";
+import { useTranslation } from "react-i18next"; // استخدم مكتبة react-i18next
 import {
   FaFacebook,
   FaTwitter,
@@ -20,7 +19,10 @@ import {
 } from "react-icons/fa";
 
 const Footer = () => {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // تحديد الاتجاه بناء على اللغة
+  const isRTL = i18n.language === "ar" || i18n.language === "he"; // عدل حسب اللغات اللي تدعمها اتجاه RTL
 
   const paymentMethods = [
     { name: t('footer.paymentMethods.creditCards'), icon: <FaCreditCard />, color: "text-blue-400" },

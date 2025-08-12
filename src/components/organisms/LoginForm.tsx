@@ -6,7 +6,7 @@ import PasswordField from '../../components/molecules/PasswordField';
 import PhoneField from '../../components/molecules/PhoneField';
 import AuthActionButtons from '../../components/molecules/AuthActionButtons';
 import { SignUpFormData } from '../../types/FormData';
-import useTranslation from '../../hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 
 interface LoginFormProps {
   formData: SignUpFormData;

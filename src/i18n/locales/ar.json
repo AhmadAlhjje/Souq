@@ -480,5 +480,90 @@
     "invalid_date": "تاريخ غير صحيح",
     "max_file_size": "حجم الملف كبير جداً",
     "invalid_file_type": "نوع ملف غير مدعوم"
+  },
+
+  "products": "المنتجات",
+  "all_products": "جميع المنتجات",
+  "add_product": "إضافة منتج",
+  "categories": "الفئات",
+  "orders": "الطلبات",
+  "customers": "العملاء",
+  "analytics": "التحليلات",
+  "sales_report": "تقرير المبيعات",
+  "products_report": "تقرير المنتجات",
+  "shipping": "الشحن",
+  "payments": "المدفوعات",
+  "store_settings": "إعدادات المتجر",
+  "store_management": "إدارة المتجر",
+  "customerData": {
+    "customer1": {
+      "alt": "ثقة العملاء",
+      "title": "من العملاء تزداد ثقتهم في متاجر TMC",
+      "subtitle": "نسبة رضا عالية",
+      "percentage": "98%",
+      "features": {
+        "feature1": "أمان المدفوعات",
+        "feature2": "سرعة التسليم",
+        "feature3": "جودة المنتجات"
+      }
+    },
+    "customer2": {
+      "alt": "سهولة الشراء",
+      "title": "شراء مباشر دون تعقيد أو إنشاء حساب",
+      "subtitle": "تجربة سلسة",
+      "percentage": "3 خطوات",
+      "features": {
+        "feature1": "تسجيل سريع",
+        "feature2": "دفع مرن",
+        "feature3": "متابعة الطلبات"
+      }
+    },
+    "customer3": {
+      "alt": "انتشار واسع",
+      "title": "5 من أصل 5 في سوريا اشتروا من متاجر TMC",
+      "subtitle": "ثقة منتشرة",
+      "percentage": "100%",
+      "features": {
+        "feature1": "تغطية شاملة",
+        "feature2": "خدمة 24/7",
+        "feature3": "دعم محلي"
+      }
+    }
+  },
+  "buttonText": "أنشئ متجر الآن - مجاناً",
+  "images": {
+    "dashboard": {
+      "alt": "لوحة تحكم TMC"
+    },
+    "mobile": {
+      "alt": "تطبيق الجوال"
+    }
+  },
+  "stats": {
+    "number": "+50K",
+    "label": "متجر نشط"
+  },
+
+  "businessLaunchSection": {
+    "badgeText": "انطلق بأعمالك",
+    "heading": "ابدأ متجرك الإلكتروني اليوم",
+    "subtitle": "كل ما تحتاجه لبناء وتنمية أعمالك بسهولة.",
+    "featuresHeading": "الميزات الرئيسية",
+    "featuresDescription": "منصتنا تقدم ميزات قوية تساعد عملك على النجاح.",
+    "features": {
+      "feature1": {
+        "text": "تكامل المصنع",
+        "description": "اتصل بسهولة مع المصنعين لتبسيط سلسلة التوريد الخاصة بك."
+      },
+      "feature2": {
+        "text": "تسوق سهل",
+        "description": "قدم لعملائك تجربة تسوق سلسة وبسيطة."
+      },
+      "feature3": {
+        "text": "تحليلات متقدمة",
+        "description": "احصل على رؤى لحظية لاتخاذ قرارات تجارية مدروسة."
+      }
+    },
+    "ctaButton": "ابدأ الآن"
   }
 }

@@ -1,10 +1,10 @@
-// components/molecules/EnhancedCallToAction.tsx
 "use client";
 import React from "react";
-import useTranslation from "../../hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 
 export default function EnhancedCallToAction() {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === "rtl";
 
   const benefits = [
     t('enhancedCallToAction.benefits.benefit1'),
@@ -53,7 +53,7 @@ export default function EnhancedCallToAction() {
         {/* Visual Side */}
         <div className="relative p-8 lg:p-12 min-h-[300px]">
           <div className="relative h-full">
-                         
+                             
             {/* Main Dashboard Image */}
             <div className={`absolute top-0 ${isRTL ? 'right-0' : 'left-0'} w-4/5 h-3/4 group`}>
               <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
