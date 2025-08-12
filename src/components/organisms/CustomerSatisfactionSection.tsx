@@ -1,5 +1,5 @@
-// components/organisms/CustomerSatisfactionSection.tsx
 "use client";
+// components/organisms/CustomerSatisfactionSection.tsx
 import React from "react";
 import Section from "../molecules/Section";
 import Heading from "../atoms/Heading";
@@ -7,10 +7,11 @@ import Text from "../atoms/Text";
 import Badge from "../atoms/Badge";
 import CustomerCard from "../molecules/CustomerCard";
 import EnhancedCallToAction from "../molecules/EnhancedCallToAction";
-import useTranslation from "../../hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 
 export default function CustomerSatisfactionSection() {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
 
   const customerData = [
     {
@@ -23,7 +24,7 @@ export default function CustomerSatisfactionSection() {
       features: [
         t('customerSatisfactionSection.customerData.customer1.features.feature1'),
         t('customerSatisfactionSection.customerData.customer1.features.feature2'),
-        t('customerSatisfactionSection.customerData.customer1.features.feature3')
+        t('customerSatisfactionSection.customerData.customer1.features.feature3'),
       ],
     },
     {
@@ -36,7 +37,7 @@ export default function CustomerSatisfactionSection() {
       features: [
         t('customerSatisfactionSection.customerData.customer2.features.feature1'),
         t('customerSatisfactionSection.customerData.customer2.features.feature2'),
-        t('customerSatisfactionSection.customerData.customer2.features.feature3')
+        t('customerSatisfactionSection.customerData.customer2.features.feature3'),
       ],
     },
     {
@@ -49,7 +50,7 @@ export default function CustomerSatisfactionSection() {
       features: [
         t('customerSatisfactionSection.customerData.customer3.features.feature1'),
         t('customerSatisfactionSection.customerData.customer3.features.feature2'),
-        t('customerSatisfactionSection.customerData.customer3.features.feature3')
+        t('customerSatisfactionSection.customerData.customer3.features.feature3'),
       ],
     },
   ];

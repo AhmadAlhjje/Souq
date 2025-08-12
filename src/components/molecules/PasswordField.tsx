@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import Input from '../../components/atoms/Input';
 import Label from '../../components/atoms/Label';
-import useTranslation from '../../hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 
 interface PasswordFieldProps {
   label: string;

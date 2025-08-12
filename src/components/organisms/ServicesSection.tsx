@@ -1,4 +1,3 @@
-// components/organisms/ServicesSection.tsx
 "use client";
 
 import React from "react";
@@ -7,10 +6,11 @@ import Heading from "../atoms/Heading";
 import Text from "../atoms/Text";
 import Badge from "../atoms/Badge";
 import ServiceCard from "../molecules/ServiceCard";
-import useTranslation from "../../hooks/useTranslation";
+import { useTranslation } from "react-i18next";
 
 export default function ServicesSection() {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === "rtl";
 
   const services = [
     {

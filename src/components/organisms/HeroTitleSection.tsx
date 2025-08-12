@@ -1,4 +1,3 @@
-// components/organisms/HeroTitleSection.tsx
 "use client";
 
 import React from "react";
@@ -6,10 +5,13 @@ import Section from "../molecules/Section";
 import Heading from "../atoms/Heading";
 import Text from "../atoms/Text";
 import Badge from "../atoms/Badge";
-import useTranslation from "../../hooks/useTranslation";
+import { useTranslation } from "react-i18next";  // استخدم مكتبة react-i18next
 
 export default function HeroTitleSection() {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  // تحديد اتجاه النص بناءً على اللغة الحالية
+  const isRTL = i18n.language === "ar" || i18n.language === "he"; // عدل حسب اللغات التي تستخدم RTL
 
   return (
     <Section

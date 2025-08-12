@@ -1,14 +1,14 @@
 "use client";
 
-// components/molecules/HeroSection.tsx
 import React from 'react';
 import Heading from '../atoms/Heading';
 import Text from '../atoms/Text';
 import Button from '../atoms/Button';
-import useTranslation from '../../hooks/useTranslation';
+import { useTranslation } from 'react-i18next';
 
 const HeroSection: React.FC = () => {
-  const { t, isRTL } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
 
   // Dynamic classes based on direction
   const textAlign = isRTL ? 'text-right' : 'text-left';

@@ -188,6 +188,7 @@
       "buttonText": "Start Free Now"
     }
   },
+
   "customerSatisfactionSection": {
     "header": {
       "badge": "😊 Customer Satisfaction is Our Priority",
@@ -230,9 +231,11 @@
       }
     }
   },
+
   "customerCard": {
     "learnMore": "Learn More"
   },
+
   "enhancedCallToAction": {
     "title": "Own a Professional Store on TMC",
     "description": "Create your store now with flexible tools and integrated solutions that help you every step of the way",
@@ -256,6 +259,7 @@
       "label": "Active Store"
     }
   },
+
   "footer": {
     "description": "The leading e-commerce platform in Syria. We help merchants build their online stores and achieve success.",
     "followUs": "Follow us on:",
@@ -308,6 +312,7 @@
       "location": "in Syria"
     }
   },
+
   "loginForm": {
     "fullName": {
       "label": "Full Name",
@@ -328,16 +333,20 @@
       "createAccount": "Create Account"
     }
   },
+
   "phoneField": {
     "placeholder": "Enter phone number"
   },
+
   "passwordField": {
     "placeholder": "Enter password"
   },
+
   "authTabs": {
     "login": "Log In",
     "register": "Create Account"
   },
+
   "signInForm": {
     "identifier": {
       "label": "Email or Phone Number",
@@ -352,6 +361,7 @@
       "createAccount": "Create Account"
     }
   },
+
   "dashboard": "Dashboard",
   "search_placeholder": "Search products, orders...",
   "change_language": "Change Language",
@@ -482,5 +492,42 @@
     "invalid_date": "Invalid date",
     "max_file_size": "File size too large",
     "invalid_file_type": "Unsupported file type"
+  },
+
+  "products": "Products",
+  "all_products": "All Products",
+  "add_product": "Add Product",
+  "categories": "Categories",
+  "orders": "Orders",
+  "customers": "Customers",
+  "analytics": "Analytics",
+  "sales_report": "Sales Report",
+  "products_report": "Products Report",
+  "shipping": "Shipping",
+  "payments": "Payments",
+  "store_settings": "Store Settings",
+  "store_management": "Store Management",
+
+  "businessLaunchSection": {
+    "badgeText": "Launch Your Business",
+    "heading": "Start Your Online Store Today",
+    "subtitle": "Everything you need to build and grow your business with ease.",
+    "featuresHeading": "Key Features",
+    "featuresDescription": "Our platform offers powerful features designed to help your business succeed.",
+    "features": {
+      "feature1": {
+        "text": "Factory Integration",
+        "description": "Seamlessly connect with manufacturers to streamline your supply chain."
+      },
+      "feature2": {
+        "text": "Easy Shopping",
+        "description": "Provide your customers with a smooth and intuitive shopping experience."
+      },
+      "feature3": {
+        "text": "Advanced Analytics",
+        "description": "Get real-time insights to make informed business decisions."
+      }
+    },
+    "ctaButton": "Get Started Now"
   }
 }
