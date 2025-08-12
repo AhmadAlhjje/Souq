@@ -20,8 +20,11 @@ import {
   CreditCard,
   HelpCircle,
   LogOut,
+  FileText,
+  DollarSign,
+  Plus,
 } from "lucide-react";
-import { useTranslation } from "react-i18next"; // استيراد react-i18next
+import { useTranslation } from "react-i18next";
 import useTheme from "@/hooks/useTheme";
 import { SidebarMenuItem } from "@/types/admin";
 
@@ -31,7 +34,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onToggle }) => {
-  const { t } = useTranslation();  // استخدم الـ hook من react-i18next
+  const { t } = useTranslation();
   const { isDark } = useTheme();
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -47,123 +50,292 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onToggle }) => {
   const menuItems: SidebarMenuItem[] = [
     {
       id: "dashboard",
-      label: t("dashboard"),  // استخدم مفتاح الترجمة بدل النص الثابت
+      label: t("sidebar.dashboard"),
       icon: LayoutDashboard,
       href: "/admin/dashboard",
     },
     {
       id: "products",
-      label: t("products"),
+      label: t("sidebar.products.main"),
       icon: Package,
-      href: "/admin/products",
       children: [
         {
           id: "all-products",
-          label: t("all_products"),
+          label: t("sidebar.products.all"),
           icon: Package,
-          href: "/admin/products",
+          href: "/admin/dashboard/products",
         },
         {
           id: "add-product",
-          label: t("add_product"),
-          icon: Package,
+          label: t("sidebar.products.add"),
+          icon: Plus,
           href: "/admin/products/add",
         },
-        {
-          id: "categories",
-          label: t("categories"),
-          icon: Tag,
-          href: "/admin/products/categories",
-        },
+        // {
+        //   id: "categories",
+        //   label: t("sidebar.products.categories"),
+        //   icon: Tag,
+        //   href: "/admin/products/categories",
+        // },
+        // {
+        //   id: "inventory",
+        //   label: t("sidebar.products.inventory"),
+        //   icon: Package,
+        //   href: "/admin/products/inventory",
+        // },
       ],
     },
     {
       id: "orders",
-      label: t("orders"),
+      label: t("sidebar.orders.main"),
       icon: ShoppingCart,
-      href: "/admin/orders",
-      badge: 5,
+      badge: 12,
+      children: [
+        {
+          id: "all-orders",
+          label: t("sidebar.orders.all"),
+          icon: ShoppingCart,
+          href: "/admin/orders",
+        },
+        {
+          id: "pending-orders",
+          label: t("sidebar.orders.pending"),
+          icon: ShoppingCart,
+          href: "/admin/orders/pending",
+          badge: 5,
+        },
+        {
+          id: "shipped-orders",
+          label: t("sidebar.orders.shipped"),
+          icon: Truck,
+          href: "/admin/orders/shipped",
+        },
+        {
+          id: "completed-orders",
+          label: t("sidebar.orders.completed"),
+          icon: ShoppingCart,
+          href: "/admin/orders/completed",
+        },
+      ],
     },
     {
       id: "customers",
-      label: t("customers"),
+      label: t("sidebar.customers.main"),
       icon: Users,
-      href: "/admin/customers",
+      children: [
+        {
+          id: "all-customers",
+          label: t("sidebar.customers.all"),
+          icon: Users,
+          href: "/admin/customers",
+        },
+        {
+          id: "customer-groups",
+          label: t("sidebar.customers.groups"),
+          icon: Users,
+          href: "/admin/customers/groups",
+        },
+      ],
     },
     {
-      id: "analytics",
-      label: t("analytics"),
-      icon: BarChart3,
-      href: "/admin/analytics",
+      id: "financial-reports",
+      label: t("sidebar.financialReports.main"),
+      icon: FileText,
       children: [
         {
           id: "sales-report",
-          label: t("sales_report"),
+          label: t("sidebar.financialReports.sales"),
           icon: BarChart3,
-          href: "/admin/analytics/sales",
+          href: "/admin/financial-reports/sales",
         },
         {
-          id: "products-report",
-          label: t("products_report"),
+          id: "profit-loss",
+          label: t("sidebar.financialReports.profitLoss"),
+          icon: DollarSign,
+          href: "/admin/financial-reports/profit-loss",
+        },
+        {
+          id: "revenue-report",
+          label: t("sidebar.financialReports.revenue"),
+          icon: BarChart3,
+          href: "/admin/financial-reports/revenue",
+        },
+        {
+          id: "expense-report",
+          label: t("sidebar.financialReports.expenses"),
+          icon: CreditCard,
+          href: "/admin/financial-reports/expenses",
+        },
+        {
+          id: "tax-report",
+          label: t("sidebar.financialReports.tax"),
+          icon: FileText,
+          href: "/admin/financial-reports/tax",
+        },
+      ],
+    },
+    {
+      id: "analytics",
+      label: t("sidebar.analytics.main"),
+      icon: BarChart3,
+      children: [
+        {
+          id: "dashboard-analytics",
+          label: t("sidebar.analytics.general"),
+          icon: BarChart3,
+          href: "/admin/analytics/dashboard",
+        },
+        {
+          id: "products-analytics",
+          label: t("sidebar.analytics.products"),
           icon: Package,
           href: "/admin/analytics/products",
+        },
+        {
+          id: "customers-analytics",
+          label: t("sidebar.analytics.customers"),
+          icon: Users,
+          href: "/admin/analytics/customers",
+        },
+      ],
+    },
+    {
+      id: "payments",
+      label: t("sidebar.payments.main"),
+      icon: CreditCard,
+      children: [
+        {
+          id: "payment-methods",
+          label: t("sidebar.payments.methods"),
+          icon: CreditCard,
+          href: "/admin/payments/methods",
+        },
+        {
+          id: "transactions",
+          label: t("sidebar.payments.transactions"),
+          icon: DollarSign,
+          href: "/admin/payments/transactions",
+        },
+        {
+          id: "refunds",
+          label: t("sidebar.payments.refunds"),
+          icon: CreditCard,
+          href: "/admin/payments/refunds",
         },
       ],
     },
     {
       id: "shipping",
-      label: t("shipping"),
+      label: t("sidebar.shipping.main"),
       icon: Truck,
-      href: "/admin/shipping",
+      children: [
+        {
+          id: "shipping-methods",
+          label: t("sidebar.shipping.methods"),
+          icon: Truck,
+          href: "/admin/shipping/methods",
+        },
+        {
+          id: "shipping-zones",
+          label: t("sidebar.shipping.zones"),
+          icon: Truck,
+          href: "/admin/shipping/zones",
+        },
+      ],
     },
     {
-      id: "payments",
-      label: t("payments"),
-      icon: CreditCard,
-      href: "/admin/payments",
-    },
-    {
-      id: "store",
-      label: t("store_settings"),
+      id: "store-settings",
+      label: t("sidebar.storeSettings.main"),
       icon: Store,
-      href: "/admin/store",
+      children: [
+        {
+          id: "general-settings",
+          label: t("sidebar.storeSettings.general"),
+          icon: Settings,
+          href: "/admin/store-settings/general",
+        },
+        {
+          id: "theme-settings",
+          label: t("sidebar.storeSettings.theme"),
+          icon: Settings,
+          href: "/admin/store-settings/theme",
+        },
+        {
+          id: "seo-settings",
+          label: t("sidebar.storeSettings.seo"),
+          icon: Settings,
+          href: "/admin/store-settings/seo",
+        },
+        {
+          id: "currency-settings",
+          label: t("sidebar.storeSettings.currency"),
+          icon: DollarSign,
+          href: "/admin/store-settings/currency",
+        },
+      ],
     },
     {
       id: "settings",
-      label: t("settings"),
+      label: t("sidebar.settings.main"),
       icon: Settings,
-      href: "/admin/settings",
+      children: [
+        {
+          id: "user-settings",
+          label: t("sidebar.settings.users"),
+          icon: Users,
+          href: "/admin/settings/users",
+        },
+        {
+          id: "security-settings",
+          label: t("sidebar.settings.security"),
+          icon: Settings,
+          href: "/admin/settings/security",
+        },
+        {
+          id: "notification-settings",
+          label: t("sidebar.settings.notifications"),
+          icon: Bell,
+          href: "/admin/settings/notifications",
+        },
+        {
+          id: "backup-settings",
+          label: t("sidebar.settings.backup"),
+          icon: Settings,
+          href: "/admin/settings/backup",
+        },
+      ],
     },
   ];
 
   const bottomMenuItems = [
     {
       id: "notifications",
-      label: t("notifications"),
+      label: t("sidebar.bottom.notifications"),
       icon: Bell,
       href: "/admin/notifications",
-      badge: 3,
+      badge: 7,
     },
     {
       id: "help",
-      label: t("help"),
+      label: t("sidebar.bottom.help"),
       icon: HelpCircle,
       href: "/admin/help",
     },
     {
       id: "logout",
-      label: t("logout"),
+      label: t("sidebar.bottom.logout"),
       icon: LogOut,
       href: "/logout",
     },
   ];
 
-  const isActiveRoute = (href: string) => {
+  const isActiveRoute = (href?: string) => {
+    if (!href) return false;
     return pathname === href || pathname.startsWith(href + "/");
   };
 
   const renderMenuItem = (item: SidebarMenuItem, level = 0) => {
-    const isActive = isActiveRoute(item.href);
+    const isActive = item.href ? isActiveRoute(item.href) : false;
     const isExpanded = expandedItems.includes(item.id);
     const hasChildren = item.children && item.children.length > 0;
 
@@ -171,7 +343,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onToggle }) => {
       <div key={item.id} className="w-full">
         <div
           className={`
-            flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+            flex items-center justify-between w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer
             ${level > 0 ? "mr-4" : ""}
             ${isActive
               ? isDark
@@ -182,41 +354,80 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onToggle }) => {
               : "text-[#004D5A] hover:bg-[#CFF7EE] hover:text-[#004D5A]"
             }
           `}
-        >
-          <Link
-            href={item.href}
-            className="flex items-center flex-1 gap-3"
-            onClick={() => {
+          onClick={() => {
+            if (hasChildren) {
+              toggleExpanded(item.id);
+            } else {
               if (window.innerWidth < 768) {
                 onToggle();
               }
-            }}
-          >
-            <item.icon size={18} />
-            <span className={`${!isOpen && "hidden"} lg:block truncate`}>
-              {item.label}
-            </span>
-            {item.badge && (
-              <span
-                className={`
-                px-2 py-1 text-xs font-bold rounded-full min-w-[20px] text-center
-                ${isActive ? "bg-white text-[#004D5A]" : "bg-[#5CA9B5] text-white"}
-              `}
-              >
-                {item.badge}
+            }
+          }}
+        >
+          {hasChildren ? (
+            <div className="flex items-center flex-1 gap-3">
+              <item.icon size={18} />
+              <span className={`${!isOpen && "hidden"} lg:block truncate`}>
+                {item.label}
               </span>
-            )}
-          </Link>
+              {item.badge && (
+                <span
+                  className={`
+                  px-2 py-1 text-xs font-bold rounded-full min-w-[20px] text-center
+                  ${isActive ? "bg-white text-[#004D5A]" : "bg-[#5CA9B5] text-white"}
+                `}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </div>
+          ) : item.href ? (
+            <Link
+              href={item.href}
+              className="flex items-center flex-1 gap-3"
+            >
+              <item.icon size={18} />
+              <span className={`${!isOpen && "hidden"} lg:block truncate`}>
+                {item.label}
+              </span>
+              {item.badge && (
+                <span
+                  className={`
+                  px-2 py-1 text-xs font-bold rounded-full min-w-[20px] text-center
+                  ${isActive ? "bg-white text-[#004D5A]" : "bg-[#5CA9B5] text-white"}
+                `}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </Link>
+          ) : (
+            <div className="flex items-center flex-1 gap-3">
+              <item.icon size={18} />
+              <span className={`${!isOpen && "hidden"} lg:block truncate`}>
+                {item.label}
+              </span>
+              {item.badge && (
+                <span
+                  className={`
+                  px-2 py-1 text-xs font-bold rounded-full min-w-[20px] text-center
+                  ${isActive ? "bg-white text-[#004D5A]" : "bg-[#5CA9B5] text-white"}
+                `}
+                >
+                  {item.badge}
+                </span>
+              )}
+            </div>
+          )}
 
           {hasChildren && isOpen && (
-            <button
-              onClick={() => toggleExpanded(item.id)}
+            <div
               className={`p-1 rounded-md transition-transform duration-200 ${
                 isExpanded ? "rotate-90" : ""
               }`}
             >
               <ChevronRight size={16} />
-            </button>
+            </div>
           )}
         </div>
 
@@ -282,10 +493,10 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onToggle }) => {
                 <h2
                   className={`font-bold text-lg ${isDark ? "text-white" : "text-[#004D5A]"}`}
                 >
-                  {t("dashboard")}
+                  {t("sidebar.header.title")}
                 </h2>
                 <p className={`text-sm ${isDark ? "text-gray-400" : "text-[#666666]"}`}>
-                  {t("store_management")}
+                  {t("sidebar.header.subtitle")}
                 </p>
               </div>
             </div>

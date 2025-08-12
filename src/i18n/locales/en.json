@@ -529,5 +529,76 @@
       }
     },
     "ctaButton": "Get Started Now"
+  },
+
+  "sidebar": {
+    "header": {
+      "title": "Dashboard",
+      "subtitle": "Store Management"
+    },
+    "dashboard": "Dashboard",
+    "products": {
+      "main": "Products",
+      "all": "All Products",
+      "add": "Add Product",
+      "categories": "Categories",
+      "inventory": "Inventory Management"
+    },
+    "orders": {
+      "main": "Orders",
+      "all": "All Orders",
+      "pending": "Pending Orders",
+      "shipped": "Shipped Orders",
+      "completed": "Completed Orders"
+    },
+    "customers": {
+      "main": "Customers",
+      "all": "All Customers",
+      "groups": "Customer Groups"
+    },
+    "financialReports": {
+      "main": "Financial Reports",
+      "sales": "Sales Report",
+      "profitLoss": "Profit & Loss",
+      "revenue": "Revenue Report",
+      "expenses": "Expense Report",
+      "tax": "Tax Reports"
+    },
+    "analytics": {
+      "main": "Analytics",
+      "general": "General Analytics",
+      "products": "Product Analytics",
+      "customers": "Customer Analytics"
+    },
+    "payments": {
+      "main": "Payments",
+      "methods": "Payment Methods",
+      "transactions": "Transactions",
+      "refunds": "Refunds"
+    },
+    "shipping": {
+      "main": "Shipping",
+      "methods": "Shipping Methods",
+      "zones": "Shipping Zones"
+    },
+    "storeSettings": {
+      "main": "Store Settings",
+      "general": "General Settings",
+      "theme": "Theme Settings",
+      "seo": "SEO Settings",
+      "currency": "Currency Settings"
+    },
+    "settings": {
+      "main": "Settings",
+      "users": "User Settings",
+      "security": "Security Settings",
+      "notifications": "Notification Settings",
+      "backup": "Backup Settings"
+    },
+    "bottom": {
+      "notifications": "Notifications",
+      "help": "Help",
+      "logout": "Logout"
+    }
   }
 }
