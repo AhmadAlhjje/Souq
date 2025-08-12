@@ -351,5 +351,136 @@
       "login": "Log In",
       "createAccount": "Create Account"
     }
+  },
+  "dashboard": "Dashboard",
+  "search_placeholder": "Search products, orders...",
+  "change_language": "Change Language",
+  "notifications": "Notifications",
+  "unread": "unread",
+  "view_all_notifications": "View All Notifications",
+  "profile": "Profile",
+  "settings": "Settings",
+  "messages": "Messages",
+  "help": "Help",
+  "logout": "Logout",
+  "admin_name": "Ahmed Mohammed",
+  "store_manager": "Store Manager",
+  "new_order": "New Order",
+  "new_order_message": "New order received from customer Ahmed Mohammed",
+  "low_stock": "Low Stock",
+  "low_stock_message": "Product 'iPhone 15' is running low",
+  "payment_completed": "Payment Completed",
+  "payment_completed_message": "Payment of 500 SAR received",
+  "now": "now",
+  "minutes": "minutes",
+  "hours": "hours",
+  "days": "days",
+
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "add": "Add",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No"
+  },
+
+  "menu": {
+    "home": "Home",
+    "products": "Products",
+    "orders": "Orders",
+    "customers": "Customers",
+    "analytics": "Analytics",
+    "inventory": "Inventory",
+    "marketing": "Marketing",
+    "reports": "Reports",
+    "users": "Users",
+    "system": "System"
+  },
+
+  "time": {
+    "second": "second",
+    "seconds": "seconds",
+    "minute": "minute",
+    "minutes": "minutes",
+    "hour": "hour",
+    "hours": "hours",
+    "day": "day",
+    "days": "days",
+    "week": "week",
+    "weeks": "weeks",
+    "month": "month",
+    "months": "months",
+    "year": "year",
+    "years": "years",
+    "ago": "ago",
+    "from_now": "from now"
+  },
+
+  "actions": {
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "export": "Export",
+    "import": "Import",
+    "print": "Print",
+    "download": "Download",
+    "upload": "Upload",
+    "refresh": "Refresh",
+    "reset": "Reset"
+  },
+
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "processing": "Processing",
+    "shipped": "Shipped",
+    "delivered": "Delivered"
+  },
+
+  "notifications_types": {
+    "order_received": "New order received",
+    "payment_received": "Payment received",
+    "low_inventory": "Low inventory",
+    "user_registered": "New user registered",
+    "system_update": "System update",
+    "backup_completed": "Backup completed",
+    "security_alert": "Security alert"
+  },
+
+  "errors": {
+    "network_error": "Network error",
+    "server_error": "Server error",
+    "validation_error": "Validation error",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "not_found": "Not found",
+    "timeout": "Request timeout",
+    "unknown_error": "Unknown error"
+  },
+
+  "forms": {
+    "required": "Required",
+    "invalid_email": "Invalid email address",
+    "password_min_length": "Password must be at least 8 characters",
+    "passwords_not_match": "Passwords do not match",
+    "invalid_phone": "Invalid phone number",
+    "invalid_date": "Invalid date",
+    "max_file_size": "File size too large",
+    "invalid_file_type": "Unsupported file type"
   }
 }
