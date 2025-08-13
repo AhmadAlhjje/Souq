@@ -3,7 +3,7 @@ import ProductCard from '../../../molecules/admin/products/ProductCard';
 import { Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useTheme from '@/hooks/useTheme';
-import { Product, ProductsGridProps } from '../../../../types/Product';
+import { Product, ProductsGridProps } from '../../../../types/product';
 
 const ProductsGrid: React.FC<ProductsGridProps> = ({
   products,

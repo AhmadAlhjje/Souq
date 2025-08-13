@@ -2,7 +2,7 @@
 // components/molecules/StarRating.tsx
 import React from 'react';
 import { Star } from 'lucide-react';
-import { StarVariant } from '@/types/Product';
+import { StarVariant } from '@/types/product';
 
 interface StarIconProps {
   filled: boolean;

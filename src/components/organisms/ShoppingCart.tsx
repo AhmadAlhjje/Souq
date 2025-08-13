@@ -1,11 +1,10 @@
-
 // components/organisms/ShoppingCart.tsx
 import React from 'react';
 import { ShoppingCart } from 'lucide-react';
 import Card from '../atoms/Card';
 import Button from '../atoms/Button';
 import { QuantityCounter } from '../molecules/QuantityCounter';
-import { CartItem } from '@/types/Product';
+import { CartItem } from '@/types/product';
 
 interface ShoppingCartComponentProps {
   cartItems: CartItem[];
@@ -19,7 +18,15 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
   onRemoveItem 
 }) => {
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cartItems.reduce((sum, item) => sum + (item.salePrice || item.originalPrice) * item.quantity, 0);
+  
+  // إصلاح: التعامل مع إمكانية عدم وجود originalPrice وإضافة فحص للقيم
+  const totalPrice = cartItems.reduce((sum, item) => {
+    // فحص وجود العنصر وخصائصه
+    if (!item) return sum;
+    
+    const itemPrice = item.salePrice || item.price || 0; // استخدام price بدلاً من originalPrice مع قيمة افتراضية
+    return sum + itemPrice * (item.quantity || 0);
+  }, 0);
   
   if (cartItems.length === 0) {
     return (
@@ -41,9 +48,12 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
         {cartItems.map(item => (
           <div key={item.id} className="flex items-center justify-between p-3 rounded-lg" style={{ backgroundColor: '#FAFBFC' }}>
             <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" onClick={() => onRemoveItem(item.id)}>
-                ×
-              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => onRemoveItem(item.id)}
+                text="×"
+              />
               <QuantityCounter
                 quantity={item.quantity}
                 onIncrease={() => onUpdateQuantity(item.id, item.quantity + 1)}
@@ -53,7 +63,10 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
             </div>
             <div className="flex-1 text-right">
               <h4 className="font-medium text-gray-900">{item.name}</h4>
-              <p className="text-sm text-gray-600">{(item.salePrice || item.originalPrice)} ر.س</p>
+              {/* إصلاح: فحص وجود السعر قبل العرض */}
+              <p className="text-sm text-gray-600">
+                {(item.salePrice || item.price || 0)} ر.س
+              </p>
             </div>
           </div>
         ))}
@@ -64,9 +77,11 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
           <span>{totalPrice.toFixed(2)} ر.س</span>
           <span>المجموع:</span>
         </div>
-        <Button className="w-full mt-4" size="lg">
-          إتمام الشراء
-        </Button>
+        <Button 
+          className="w-full mt-4" 
+          size="lg"
+          text="إتمام الشراء"
+        />
       </div>
     </Card>
   );

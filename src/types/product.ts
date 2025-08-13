@@ -6,16 +6,18 @@ export interface Product {
   category: string;
   categoryAr: string;
   price: number;
-  salePrice?: number;         // ✅ إضافة للعروض والخصومات
-  originalPrice?: number;     // ✅ إضافة للسعر الأصلي
+  salePrice?: number; // ✅ إضافة للعروض والخصومات
+  originalPrice?: number; // ✅ إضافة للسعر الأصلي
   stock: number;
   status: "active" | "out_of_stock" | "low_stock";
   image: string;
   rating: number;
-  reviewCount: number;        // ✅ إضافة عدد التقييمات
+  reviewCount: number; // ✅ إضافة عدد التقييمات
   sales: number;
-  isNew?: boolean;           // ✅ إضافة للمنتجات الجديدة
-  inStock: boolean;          // ✅ إضافة حالة التوفر
+  isNew?: boolean; // ✅ إضافة للمنتجات الجديدة
+  inStock: boolean; // ✅ إضافة حالة التوفر
+  brand: string; // إضافة brand
+  brandAr: string; // إضافة brandAr
   createdAt: string;
   updatedAt?: string;
   description?: string;
@@ -34,6 +36,7 @@ export interface Product {
 // نوع عنصر السلة - ✅ إضافة المفقود
 export interface CartItem {
   id: number;
+  nameAr?: string;
   productId: number;
   name: string;
   price: number;
@@ -42,10 +45,18 @@ export interface CartItem {
   quantity: number;
   selectedSize?: string;
   selectedColor?: string;
+  originalPrice?: number;
 }
 
 // أنواع متغيرات النجوم - ✅ إضافة المفقود
-export type StarVariant = 'filled' | 'outlined' | 'half' | 'empty';
+export type StarVariant =
+  | "filled"
+  | "outlined"
+  | "half"
+  | "empty"
+  | "string"
+  | "default"
+  | "new";
 
 export interface ProductFilters {
   search: string;
@@ -171,6 +182,7 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   type?: "button" | "submit" | "reset";
+  children?: React.ReactNode;
 }
 
 // Input Props
@@ -212,7 +224,7 @@ export interface ProductCreateRequest {
   category: string;
   categoryAr: string;
   price: number;
-  salePrice?: number;        // ✅ إضافة للطلبات
+  salePrice?: number; // ✅ إضافة للطلبات
   stock: number;
   image: string;
   description?: string;
@@ -226,7 +238,7 @@ export interface ProductCreateRequest {
   };
   tags?: string[];
   tagsAr?: string[];
-  isNew?: boolean;           // ✅ إضافة للطلبات
+  isNew?: boolean; // ✅ إضافة للطلبات
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
@@ -240,7 +252,7 @@ export interface ProductFormErrors {
   category?: string;
   categoryAr?: string;
   price?: string;
-  salePrice?: string;        // ✅ إضافة للتحقق
+  salePrice?: string; // ✅ إضافة للتحقق
   stock?: string;
   image?: string;
   description?: string;

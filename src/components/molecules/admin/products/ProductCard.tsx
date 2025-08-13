@@ -2,7 +2,7 @@ import React from "react";
 import { Star, Package, TrendingUp} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useTheme from "@/hooks/useTheme";
-import { ProductCardProps } from "../../../../types/Product";
+import { ProductCardProps } from "../../../../types/product";
 import { DeleteButton, EditButton, ViewButton } from "@/components/common/ActionButtons";
 
 const Badge: React.FC<{

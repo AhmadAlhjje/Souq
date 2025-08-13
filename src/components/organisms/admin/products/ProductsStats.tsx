@@ -4,7 +4,7 @@ import React from 'react';
 import { Package, Check, X, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import useTheme from '@/hooks/useTheme';
-import { Product, ProductsStatsProps } from '@/types/Product';
+import { Product, ProductsStatsProps } from '@/types/product';
 
 interface StatsCardProps {
   title: string;

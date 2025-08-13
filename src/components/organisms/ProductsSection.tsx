@@ -3,7 +3,7 @@ import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import Badge from '../atoms/Badge';
 import ProductCard from './ProductCard';
-import { Product } from '@/types/Product';
+import { Product } from '@/types/product';
 
 interface ProductsSectionProps {
   products: Product[];
