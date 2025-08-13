@@ -4,7 +4,8 @@
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProductDetailsPage from '@/components/templates/ProductDetailsPage';
-import { Product } from '../../../types/Product';
+// إصلاح مسار الاستيراد - استخدام نفس المسار كباقي الملفات
+import { Product } from '@/types/product'; // تغيير من '../../../types/Product' إلى '@/types/product'
 
 // بيانات المنتجات المحدثة - متوافقة مع البنية الجديدة
 const PRODUCTS: Product[] = [
@@ -13,47 +14,58 @@ const PRODUCTS: Product[] = [
     name: "Premium Wireless Headphones",
     nameAr: "سماعات لاسلكية عالية الجودة",
     description: "High-quality wireless headphones with noise cancellation",
+    descriptionAr: "سماعات لاسلكية عالية الجودة مع إلغاء الضوضاء", // إضافة الوصف بالعربي
     category: "Electronics",
     categoryAr: "إلكترونيات",
     price: 299,
-    salePrice: 199,           // سعر العرض
+    salePrice: 199,
+    originalPrice: 299, // إضافة السعر الأصلي
     stock: 50,
     status: "active",
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
     rating: 4.5,
-    reviewCount: 128,         // عدد التقييمات
+    reviewCount: 128,
     sales: 324,
-    isNew: false,             // ليس منتج جديد
-    inStock: true,            // متوفر
-    createdAt: "2024-01-01T00:00:00Z"
+    isNew: false,
+    inStock: true,
+    createdAt: "2024-01-01T00:00:00Z",
+    // إضافة الخصائص المفقودة
+    brand: "TechPro",
+    brandAr: "تيك برو"
   },
   {
     id: 2,
     name: "Smart Sports Watch",
     nameAr: "ساعة ذكية رياضية مقاومة للماء",
     description: "Advanced smartwatch with fitness tracking",
+    descriptionAr: "ساعة ذكية متقدمة مع تتبع اللياقة البدنية",
     category: "Accessories",
     categoryAr: "إكسسوارات",
     price: 599,
+    originalPrice: 599,
     stock: 30,
     status: "active",
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
     rating: 4.8,
     reviewCount: 89,
     sales: 156,
-    isNew: true,              // منتج جديد
+    isNew: true,
     inStock: true,
-    createdAt: "2024-02-01T00:00:00Z"
+    createdAt: "2024-02-01T00:00:00Z",
+    brand: "SmartTech",
+    brandAr: "سمارت تيك"
   },
   {
     id: 7,
     name: "High Performance Laptop",
     nameAr: "لابتوب محمول عالي الأداء",
     description: "Powerful laptop for work and gaming",
+    descriptionAr: "لابتوب قوي للعمل والألعاب",
     category: "Computers",
     categoryAr: "حاسوب",
     price: 2999,
-    salePrice: 2499,          // سعر العرض
+    salePrice: 2499,
+    originalPrice: 2999,
     stock: 15,
     status: "active",
     image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop",
@@ -62,9 +74,10 @@ const PRODUCTS: Product[] = [
     sales: 89,
     isNew: false,
     inStock: true,
-    createdAt: "2024-01-15T00:00:00Z"
-  },
-  // يمكن إضافة المزيد من المنتجات هنا
+    createdAt: "2024-01-15T00:00:00Z",
+    brand: "ProLaptop",
+    brandAr: "برو لابتوب"
+  }
 ];
 
 export default function ProductPage() {

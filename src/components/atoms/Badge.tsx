@@ -5,7 +5,7 @@ import React from 'react';
 interface BadgeProps {
   children?: React.ReactNode;
   text?: string; // إضافة text property
-  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary'; // إضافة primary
+  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary' | 'hero'; 
   className?: string; // إضافة className للمرونة
 }
 
@@ -22,7 +22,8 @@ const Badge: React.FC<BadgeProps> = ({
     saleNew: "bg-[#96EDD9] text-[#004D5A]",
     defaultNew: "bg-[#CFF7EE] text-[#004D5A]",
     newNew: "bg-[#BAF3E6] text-[#004D5A]",
-    primary: "bg-[#004D5A] text-white" // إضافة primary variant
+    primary: "bg-[#004D5A] text-white",
+    hero: "bg-gradient-to-r from-[#96EDD9] to-[#7dd3bf] text-[#004D5A] font-semibold"
   };
 
   // تحديد المحتوى - إما text أو children
