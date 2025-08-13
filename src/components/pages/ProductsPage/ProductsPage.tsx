@@ -11,7 +11,7 @@ import ProductsGrid from '../../organisms/admin/products/ProductsGrid';
 import ProductsTable from '../../organisms/admin/products/ProductsTable';
 import DeleteConfirmModal from '../../molecules/admin/products/DeleteConfirmModal';
 import { mockProducts } from '../../../data/mockProducts';
-import { Product, ViewMode } from '../../../types/product';
+import { Product, ViewMode } from '../../../types/Product';
 
 const ProductsPage: React.FC = () => {
   const { t, i18n } = useTranslation('products');
@@ -210,6 +210,55 @@ const ProductsPage: React.FC = () => {
           <section aria-label={t('page.title')}>
             {renderProductsContent()}
           </section>
+
+          {/* Empty State */}
+          {filteredProducts.length === 0 && !loading && (
+            <div className={emptyStateClasses.container}>
+              <div className={`w-20 h-20 ${emptyStateClasses.icon} rounded-full flex items-center justify-center mx-auto mb-6`}>
+                <Package className={`w-10 h-10 ${emptyStateClasses.iconColor}`} />
+              </div>
+              
+              <h3 className={`text-xl font-semibold ${emptyStateClasses.title} mb-3`}>
+                {t('emptyState.title')}
+              </h3>
+              
+              <p className={`${emptyStateClasses.description} mb-6 max-w-md mx-auto leading-relaxed`}>
+                {t('emptyState.description')}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <button
+                  onClick={handleAddProduct}
+                  className={`
+                    ${emptyStateClasses.button} 
+                    px-6 py-3 rounded-lg font-medium transition-all duration-200 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2
+                    transform hover:scale-105 active:scale-95
+                  `}
+                  aria-label={t('buttons.addProduct')}
+                >
+                  {hasActiveFilters ? t('emptyState.addProduct') : t('emptyState.addFirstProduct')}
+                </button>
+                
+                {hasActiveFilters && (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCategory('all');
+                      setSelectedStatus('all');
+                    }}
+                    className={`
+                      ${emptyStateClasses.clearFilters}
+                      px-4 py-2 font-medium transition-colors duration-200
+                      hover:underline focus:outline-none focus:underline
+                    `}
+                  >
+                    {t('actions.reset')}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Delete Confirmation Modal */}
           <DeleteConfirmModal
