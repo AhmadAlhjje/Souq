@@ -6,11 +6,16 @@ export interface Product {
   category: string;
   categoryAr: string;
   price: number;
+  salePrice?: number;         // ✅ إضافة للعروض والخصومات
+  originalPrice?: number;     // ✅ إضافة للسعر الأصلي
   stock: number;
-  status: 'active' | 'out_of_stock' | 'low_stock';
+  status: "active" | "out_of_stock" | "low_stock";
   image: string;
   rating: number;
+  reviewCount: number;        // ✅ إضافة عدد التقييمات
   sales: number;
+  isNew?: boolean;           // ✅ إضافة للمنتجات الجديدة
+  inStock: boolean;          // ✅ إضافة حالة التوفر
   createdAt: string;
   updatedAt?: string;
   description?: string;
@@ -25,6 +30,22 @@ export interface Product {
   tags?: string[];
   tagsAr?: string[];
 }
+
+// نوع عنصر السلة - ✅ إضافة المفقود
+export interface CartItem {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  salePrice?: number;
+  image: string;
+  quantity: number;
+  selectedSize?: string;
+  selectedColor?: string;
+}
+
+// أنواع متغيرات النجوم - ✅ إضافة المفقود
+export type StarVariant = 'filled' | 'outlined' | 'half' | 'empty';
 
 export interface ProductFilters {
   search: string;
@@ -42,16 +63,26 @@ export interface ProductStats {
   totalValue: number;
 }
 
-export type ProductStatus = 'active' | 'out_of_stock' | 'low_stock' | 'discontinued';
+export type ProductStatus =
+  | "active"
+  | "out_of_stock"
+  | "low_stock"
+  | "discontinued";
 
 // ViewMode types - مع دعم أفضل للأنواع المختلفة
-export type ViewMode = 'grid' | 'table' | 'list';
-export type SupportedViewMode = 'grid' | 'table'; // الأنواع المدعومة حالياً
-export type FutureViewMode = 'list'; // الأنواع المخططة للمستقبل
+export type ViewMode = "grid" | "table" | "list";
+export type SupportedViewMode = "grid" | "table"; // الأنواع المدعومة حالياً
+export type FutureViewMode = "list"; // الأنواع المخططة للمستقبل
 
-export type SortBy = 'name' | 'price' | 'stock' | 'sales' | 'rating' | 'createdAt';
+export type SortBy =
+  | "name"
+  | "price"
+  | "stock"
+  | "sales"
+  | "rating"
+  | "createdAt";
 
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 export interface ProductSorting {
   sortBy: SortBy;
@@ -116,10 +147,10 @@ export interface SearchBoxProps {
 
 // Badge Props
 export interface BadgeProps {
-  variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  variant: "success" | "warning" | "danger" | "info" | "neutral";
   children: React.ReactNode;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 // Button Props (Updated to match current Button component)
@@ -129,22 +160,28 @@ export interface ButtonProps {
   className?: string;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?:
+    | "primary"
+    | "secondary"
+    | "danger"
+    | "success"
+    | "ghost"
+    | "outline";
+  size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
 }
 
 // Input Props
 export interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url';
+  type?: "text" | "email" | "password" | "number" | "search" | "tel" | "url";
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;
   onChangeEvent?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   icon?: React.ComponentType<any>;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   error?: string;
   disabled?: boolean;
   required?: boolean;
@@ -175,6 +212,7 @@ export interface ProductCreateRequest {
   category: string;
   categoryAr: string;
   price: number;
+  salePrice?: number;        // ✅ إضافة للطلبات
   stock: number;
   image: string;
   description?: string;
@@ -188,6 +226,7 @@ export interface ProductCreateRequest {
   };
   tags?: string[];
   tagsAr?: string[];
+  isNew?: boolean;           // ✅ إضافة للطلبات
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
@@ -201,6 +240,7 @@ export interface ProductFormErrors {
   category?: string;
   categoryAr?: string;
   price?: string;
+  salePrice?: string;        // ✅ إضافة للتحقق
   stock?: string;
   image?: string;
   description?: string;
@@ -237,7 +277,7 @@ export interface PaginationProps {
 }
 
 // Loading states
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type LoadingState = "idle" | "loading" | "success" | "error";
 
 // Error handling
 export interface ApiError {
@@ -252,10 +292,47 @@ export interface ErrorState {
   errors?: ApiError[];
 }
 
-// ViewMode utilities
-export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ['grid', 'table'];
-export const ALL_VIEW_MODES: ViewMode[] = ['grid', 'table', 'list'];
+// ✅ إضافة واجهات جديدة للمكونات المحدثة
+export interface ProductDetails extends Product {
+  longDescription?: string;
+  features?: string[];
+  warranty?: string;
+  shippingInfo?: string;
+  returnPolicy?: string;
+}
 
-export const isViewModeSupported = (mode: ViewMode): mode is SupportedViewMode => {
+export interface ProductReview {
+  id: number;
+  productId: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  comment: string;
+  verified: boolean;
+  helpful: number;
+  createdAt: Date;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
+// ViewMode utilities
+export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ["grid", "table"];
+export const ALL_VIEW_MODES: ViewMode[] = ["grid", "table", "list"];
+
+export const isViewModeSupported = (
+  mode: ViewMode
+): mode is SupportedViewMode => {
   return SUPPORTED_VIEW_MODES.includes(mode as SupportedViewMode);
 };
+
+export default Product;

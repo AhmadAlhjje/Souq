@@ -1,43 +1,70 @@
-
 // app/products/[id]/page.tsx
 'use client';
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProductDetailsPage from '@/components/templates/ProductDetailsPage';
-import { Product } from '@/types/Product';
+import { Product } from '../../../types/Product';
 
-// بيانات المنتجات (نفس البيانات من ProductLayout)
+// بيانات المنتجات المحدثة - متوافقة مع البنية الجديدة
 const PRODUCTS: Product[] = [
   {
     id: 1,
-    name: "سماعات لاسلكية عالية الجودة",
-    rating: 4.5,
-    reviewCount: 128,
-    originalPrice: 299,
-    salePrice: 199,
+    name: "Premium Wireless Headphones",
+    nameAr: "سماعات لاسلكية عالية الجودة",
+    description: "High-quality wireless headphones with noise cancellation",
+    category: "Electronics",
+    categoryAr: "إلكترونيات",
+    price: 299,
+    salePrice: 199,           // سعر العرض
+    stock: 50,
+    status: "active",
     image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
-    isNew: false
+    rating: 4.5,
+    reviewCount: 128,         // عدد التقييمات
+    sales: 324,
+    isNew: false,             // ليس منتج جديد
+    inStock: true,            // متوفر
+    createdAt: "2024-01-01T00:00:00Z"
   },
   {
     id: 2,
-    name: "ساعة ذكية رياضية مقاومة للماء",
+    name: "Smart Sports Watch",
+    nameAr: "ساعة ذكية رياضية مقاومة للماء",
+    description: "Advanced smartwatch with fitness tracking",
+    category: "Accessories",
+    categoryAr: "إكسسوارات",
+    price: 599,
+    stock: 30,
+    status: "active",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
     rating: 4.8,
     reviewCount: 89,
-    originalPrice: 599,
-    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
-    isNew: true
-  },  {
+    sales: 156,
+    isNew: true,              // منتج جديد
+    inStock: true,
+    createdAt: "2024-02-01T00:00:00Z"
+  },
+  {
     id: 7,
-    name: "لابتوب محمول عالي الأداء",
+    name: "High Performance Laptop",
+    nameAr: "لابتوب محمول عالي الأداء",
+    description: "Powerful laptop for work and gaming",
+    category: "Computers",
+    categoryAr: "حاسوب",
+    price: 2999,
+    salePrice: 2499,          // سعر العرض
+    stock: 15,
+    status: "active",
+    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop",
     rating: 4.9,
     reviewCount: 156,
-    originalPrice: 2999,
-    salePrice: 2499,
-    image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop",
-    isNew: false
+    sales: 89,
+    isNew: false,
+    inStock: true,
+    createdAt: "2024-01-15T00:00:00Z"
   },
-  // ... باقي المنتجات
+  // يمكن إضافة المزيد من المنتجات هنا
 ];
 
 export default function ProductPage() {
@@ -64,8 +91,8 @@ export default function ProductPage() {
   }
 
   const handleAddToCart = (product: Product, quantity: number) => {
-    console.log(`إضافة ${quantity} من ${product.name} للسلة`);
-    alert(`تم إضافة ${quantity} × ${product.name} للسلة!`);
+    console.log(`إضافة ${quantity} من ${product.nameAr} للسلة`);
+    alert(`تم إضافة ${quantity} × ${product.nameAr} للسلة!`);
   };
 
   const handleBackToProducts = () => {

@@ -27,8 +27,18 @@ const ProductsPage: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
+  // تحويل mockProducts لتتوافق مع Product interface الجديد
+  const convertedProducts: Product[] = mockProducts.map((product: any) => ({
+    ...product,
+    reviewCount: product.reviewCount || Math.floor(Math.random() * 200) + 10, // إضافة قيمة افتراضية
+    inStock: product.inStock !== undefined ? product.inStock : product.stock > 0, // تحديد حالة التوفر
+    salePrice: product.salePrice || undefined, // الحفاظ على سعر العرض إذا كان موجود
+    originalPrice: product.originalPrice || undefined, // الحفاظ على السعر الأصلي
+    isNew: product.isNew || false, // تحديد المنتجات الجديدة
+  }));
+
   // Filter products based on search criteria
-  const filteredProducts: Product[] = mockProducts.filter((product: Product) => {
+  const filteredProducts: Product[] = convertedProducts.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.nameAr.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -185,7 +195,7 @@ const ProductsPage: React.FC = () => {
           {/* Stats Section */}
           <section aria-label={t('stats.totalProducts')}>
             <ProductsStats 
-              products={mockProducts} 
+              products={convertedProducts} 
               loading={loading}
             />
           </section>
