@@ -7,7 +7,7 @@ export interface Product {
   categoryAr: string;
   price: number;
   stock: number;
-  status: 'active' | 'out_of_stock' | 'low_stock';
+  status: "active" | "out_of_stock" | "low_stock";
   image: string;
   rating: number;
   sales: number;
@@ -42,16 +42,26 @@ export interface ProductStats {
   totalValue: number;
 }
 
-export type ProductStatus = 'active' | 'out_of_stock' | 'low_stock' | 'discontinued';
+export type ProductStatus =
+  | "active"
+  | "out_of_stock"
+  | "low_stock"
+  | "discontinued";
 
 // ViewMode types - مع دعم أفضل للأنواع المختلفة
-export type ViewMode = 'grid' | 'table' | 'list';
-export type SupportedViewMode = 'grid' | 'table'; // الأنواع المدعومة حالياً
-export type FutureViewMode = 'list'; // الأنواع المخططة للمستقبل
+export type ViewMode = "grid" | "table" | "list";
+export type SupportedViewMode = "grid" | "table"; // الأنواع المدعومة حالياً
+export type FutureViewMode = "list"; // الأنواع المخططة للمستقبل
 
-export type SortBy = 'name' | 'price' | 'stock' | 'sales' | 'rating' | 'createdAt';
+export type SortBy =
+  | "name"
+  | "price"
+  | "stock"
+  | "sales"
+  | "rating"
+  | "createdAt";
 
-export type SortOrder = 'asc' | 'desc';
+export type SortOrder = "asc" | "desc";
 
 export interface ProductSorting {
   sortBy: SortBy;
@@ -116,10 +126,10 @@ export interface SearchBoxProps {
 
 // Badge Props
 export interface BadgeProps {
-  variant: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+  variant: "success" | "warning" | "danger" | "info" | "neutral";
   children: React.ReactNode;
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 // Button Props (Updated to match current Button component)
@@ -129,22 +139,28 @@ export interface ButtonProps {
   className?: string;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
+  variant?:
+    | "primary"
+    | "secondary"
+    | "danger"
+    | "success"
+    | "ghost"
+    | "outline";
+  size?: "sm" | "md" | "lg";
   disabled?: boolean;
   loading?: boolean;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
 }
 
 // Input Props
 export interface InputProps {
-  type?: 'text' | 'email' | 'password' | 'number' | 'search' | 'tel' | 'url';
+  type?: "text" | "email" | "password" | "number" | "search" | "tel" | "url";
   placeholder?: string;
   value?: string;
   onChange?: (value: string) => void;
   onChangeEvent?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   icon?: React.ComponentType<any>;
-  iconPosition?: 'left' | 'right';
+  iconPosition?: "left" | "right";
   error?: string;
   disabled?: boolean;
   required?: boolean;
@@ -237,7 +253,7 @@ export interface PaginationProps {
 }
 
 // Loading states
-export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
+export type LoadingState = "idle" | "loading" | "success" | "error";
 
 // Error handling
 export interface ApiError {
@@ -253,9 +269,11 @@ export interface ErrorState {
 }
 
 // ViewMode utilities
-export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ['grid', 'table'];
-export const ALL_VIEW_MODES: ViewMode[] = ['grid', 'table', 'list'];
+export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ["grid", "table"];
+export const ALL_VIEW_MODES: ViewMode[] = ["grid", "table", "list"];
 
-export const isViewModeSupported = (mode: ViewMode): mode is SupportedViewMode => {
+export const isViewModeSupported = (
+  mode: ViewMode
+): mode is SupportedViewMode => {
   return SUPPORTED_VIEW_MODES.includes(mode as SupportedViewMode);
 };

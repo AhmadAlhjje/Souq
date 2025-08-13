@@ -2,7 +2,7 @@ import React from "react";
 import { Star, Package } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useTheme from "@/hooks/useTheme";
-import { Product, ProductsTableProps } from "../../../../types/product";
+import { Product, ProductsTableProps } from "../../../../types/Product";
 import { DeleteButton, EditButton, ViewButton } from "@/components/common/ActionButtons";
 
 const ProductsTable: React.FC<ProductsTableProps> = ({
