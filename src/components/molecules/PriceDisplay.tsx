@@ -2,7 +2,7 @@
 // components/molecules/PriceDisplay.tsx
 import React from 'react';
 import Badge from '../atoms/Badge';
-import { StarVariant } from '@/types/Product';
+import { StarVariant } from '@/types/product';
 
 interface PriceDisplayProps {
   originalPrice: number;

@@ -4,7 +4,7 @@ import Button from "../../../atoms/Button";
 import SearchBox from "../../../molecules/admin/products/SearchBox";
 import { useTranslation } from "react-i18next";
 import useTheme from "@/hooks/useTheme";
-import { ViewMode } from "../../../../types/Product";
+import { ViewMode } from "../../../../types/product";
 
 export interface ProductsFilterProps {
   searchTerm: string;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Plus, Minus } from 'lucide-react';
 import Button from '../atoms/Button';
-import { StarVariant } from '@/types/Product';
+import { StarVariant } from '@/types/product';
 
 interface QuantityCounterProps {
   quantity: number;

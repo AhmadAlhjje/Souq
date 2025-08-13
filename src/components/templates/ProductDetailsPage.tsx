@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
-import { Product } from '@/types/Product';
+import { Product } from '@/types/product';
 
 interface ProductDetailsPageProps {
   product: Product;
@@ -70,9 +70,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               {/* السعر */}
               <div className="font-bold text-teal-600 py-2 text-base">
-                <span>{product.salePrice ? product.salePrice : product.originalPrice}</span>
+                <span>{product.salePrice ? product.salePrice : (product.originalPrice || product.price)}</span>
                 <span className="text-gray-500 mr-1">ر.س</span>
-                {product.salePrice && (
+                {product.salePrice && product.originalPrice && (
                   <span className="text-gray-400 line-through text-sm mr-2">
                     {product.originalPrice} ر.س
                   </span>
@@ -136,7 +136,8 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     fill
                     className="object-cover w-full h-full"
                   />
-                  {product.salePrice && (
+                  {/* إصلاح حساب نسبة الخصم */}
+                  {product.salePrice && product.originalPrice && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded">
                       -{Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
                     </div>

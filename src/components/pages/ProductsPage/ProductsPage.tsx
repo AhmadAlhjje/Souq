@@ -11,7 +11,7 @@ import ProductsGrid from '../../organisms/admin/products/ProductsGrid';
 import ProductsTable from '../../organisms/admin/products/ProductsTable';
 import DeleteConfirmModal from '../../molecules/admin/products/DeleteConfirmModal';
 import { mockProducts } from '../../../data/mockProducts';
-import { Product, ViewMode } from '../../../types/Product';
+import { Product, ViewMode } from '../../../types/product';
 
 const ProductsPage: React.FC = () => {
   const { t, i18n } = useTranslation('products');

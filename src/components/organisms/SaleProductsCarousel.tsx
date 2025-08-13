@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, ShoppingCart, Star, Tag } from 'lucide-react';
-import { Product } from '@/types/Product';
+import { Product } from '@/types/product';
 
 interface SaleProductsCarouselProps {
   saleProducts: Product[];

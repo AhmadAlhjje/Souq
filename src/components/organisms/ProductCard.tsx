@@ -1,4 +1,3 @@
-// components/organisms/ProductCard.tsx
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -7,7 +6,7 @@ import Card from '../atoms/Card';
 import { SimpleStarRating } from '../molecules/StarRating';
 import { SimplePriceDisplay } from '../molecules/PriceDisplay';
 import { CompactQuantityCounter } from '../molecules/QuantityCounter';
-import { Product } from '@/types/Product';
+import { Product } from '@/types/product';
 
 interface ProductCardProps {
   product: Product;
@@ -48,6 +47,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
     // التنقل إلى صفحة المنتج
     router.push(`/products/${product.id}`);
   };
+
+  // دالة مساعدة لحساب نسبة الخصم بشكل آمن
+  const calculateDiscountPercentage = (originalPrice?: number, salePrice?: number): number => {
+    if (!originalPrice || !salePrice || salePrice >= originalPrice) {
+      return 0;
+    }
+    return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
+  };
   
   return (
     <Card hover className="overflow-hidden group">
@@ -61,10 +68,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
           priority={false}
         />
         
-        {/* شارة الخصم */}
-        {product.salePrice && (
+        {/* شارة الخصم - مع فحص للقيم */}
+        {product.salePrice && product.originalPrice && calculateDiscountPercentage(product.originalPrice, product.salePrice) > 0 && (
           <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            -{Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
+            -{calculateDiscountPercentage(product.originalPrice, product.salePrice)}%
           </div>
         )}
         
@@ -87,7 +94,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         
         <div className="mb-2">
           <SimplePriceDisplay 
-            originalPrice={product.originalPrice} 
+            originalPrice={product.originalPrice || product.price} // إصلاح: استخدام price كبديل
             salePrice={product.salePrice}
           />
         </div>

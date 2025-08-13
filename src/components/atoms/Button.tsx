@@ -1,21 +1,22 @@
-// components/atoms/Button/Button.tsx
 import React from 'react';
 
 interface ButtonProps {
-  text: string;
+  text?: string; // جعلها اختيارية
+  children?: React.ReactNode; // إضافة children
   onClick?: () => void;
   className?: string;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
-  disabled?: boolean; // إضافة disabled
-  loading?: boolean; // إضافة loading
+  disabled?: boolean;
+  loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
   variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 }
 
 const Button: React.FC<ButtonProps> = ({ 
-  text, 
+  text,
+  children, // إضافة children
   onClick, 
   className = '', 
   startIcon, 
@@ -76,6 +77,9 @@ const Button: React.FC<ButtonProps> = ({
     ${className}
   `.trim();
 
+  // تحديد المحتوى - إما text أو children
+  const content = children || text;
+
   return (
     <button
       onClick={isDisabled ? undefined : onClick}
@@ -95,8 +99,12 @@ const Button: React.FC<ButtonProps> = ({
         )
       )}
       
-      {/* Button text */}
-      <span className="whitespace-nowrap">{text}</span>
+      {/* Button content - إما text أو children */}
+      {typeof content === 'string' ? (
+        <span className="whitespace-nowrap">{content}</span>
+      ) : (
+        content
+      )}
       
       {/* End icon (only if not loading) */}
       {!loading && endIcon && (
