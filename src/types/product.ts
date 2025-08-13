@@ -6,11 +6,16 @@ export interface Product {
   category: string;
   categoryAr: string;
   price: number;
+  salePrice?: number;         // ✅ إضافة للعروض والخصومات
+  originalPrice?: number;     // ✅ إضافة للسعر الأصلي
   stock: number;
   status: "active" | "out_of_stock" | "low_stock";
   image: string;
   rating: number;
+  reviewCount: number;        // ✅ إضافة عدد التقييمات
   sales: number;
+  isNew?: boolean;           // ✅ إضافة للمنتجات الجديدة
+  inStock: boolean;          // ✅ إضافة حالة التوفر
   createdAt: string;
   updatedAt?: string;
   description?: string;
@@ -25,6 +30,22 @@ export interface Product {
   tags?: string[];
   tagsAr?: string[];
 }
+
+// نوع عنصر السلة - ✅ إضافة المفقود
+export interface CartItem {
+  id: number;
+  productId: number;
+  name: string;
+  price: number;
+  salePrice?: number;
+  image: string;
+  quantity: number;
+  selectedSize?: string;
+  selectedColor?: string;
+}
+
+// أنواع متغيرات النجوم - ✅ إضافة المفقود
+export type StarVariant = 'filled' | 'outlined' | 'half' | 'empty';
 
 export interface ProductFilters {
   search: string;
@@ -191,6 +212,7 @@ export interface ProductCreateRequest {
   category: string;
   categoryAr: string;
   price: number;
+  salePrice?: number;        // ✅ إضافة للطلبات
   stock: number;
   image: string;
   description?: string;
@@ -204,6 +226,7 @@ export interface ProductCreateRequest {
   };
   tags?: string[];
   tagsAr?: string[];
+  isNew?: boolean;           // ✅ إضافة للطلبات
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
@@ -217,6 +240,7 @@ export interface ProductFormErrors {
   category?: string;
   categoryAr?: string;
   price?: string;
+  salePrice?: string;        // ✅ إضافة للتحقق
   stock?: string;
   image?: string;
   description?: string;
@@ -268,6 +292,39 @@ export interface ErrorState {
   errors?: ApiError[];
 }
 
+// ✅ إضافة واجهات جديدة للمكونات المحدثة
+export interface ProductDetails extends Product {
+  longDescription?: string;
+  features?: string[];
+  warranty?: string;
+  shippingInfo?: string;
+  returnPolicy?: string;
+}
+
+export interface ProductReview {
+  id: number;
+  productId: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  comment: string;
+  verified: boolean;
+  helpful: number;
+  createdAt: Date;
+}
+
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
 // ViewMode utilities
 export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ["grid", "table"];
 export const ALL_VIEW_MODES: ViewMode[] = ["grid", "table", "list"];
@@ -277,3 +334,5 @@ export const isViewModeSupported = (
 ): mode is SupportedViewMode => {
   return SUPPORTED_VIEW_MODES.includes(mode as SupportedViewMode);
 };
+
+export default Product;

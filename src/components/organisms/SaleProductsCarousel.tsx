@@ -176,7 +176,7 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
                       {product.salePrice && (
                         <>
                           <div className="text-lg font-bold text-gray-800">
-                            {calculateDiscount(product.originalPrice, product.salePrice)}%
+                            {calculateDiscount(product.price, product.salePrice)}%
                           </div>
                           <div className="text-xs text-gray-600">خصم</div>
                         </>
@@ -223,12 +223,12 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
                             {product.salePrice} ر.س
                           </span>
                           <span className="text-xs text-gray-500 line-through">
-                            {product.originalPrice}
+                            {product.price}
                           </span>
                         </>
                       ) : (
                         <span className="text-base font-bold text-teal-700">
-                          {product.originalPrice} ر.س
+                          {product.price} ر.س
                         </span>
                       )}
                     </div>
