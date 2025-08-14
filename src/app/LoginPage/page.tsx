@@ -5,12 +5,14 @@ import AuthTabs from "../../components/molecules/AuthTabs";
 import LoginForm from "../../components/organisms/LoginForm";
 import SignInForm from "../../components/organisms/SignInForm";
 import { registerUser, loginUser } from "../../api/auth";
-import { useToast } from "../../contexts/ToastContext";
-import { useRouter } from 'next/navigation';
+import { useToast } from "@/hooks/useToast";
+import { useRouter } from "next/navigation";
+import { saveTokens } from "@/api/api";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const LoginPage = () => {
-  const { showToast } = useToast();
   const router = useRouter();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -28,6 +30,7 @@ const LoginPage = () => {
     password: "",
   });
 
+  /** تغيير قيم حقول نموذج التسجيل */
   const handleSignUpChange = (field: string, value: string) => {
     setSignUpData((prev) => ({
       ...prev,
@@ -35,6 +38,7 @@ const LoginPage = () => {
     }));
   };
 
+  /** تغيير قيم حقول نموذج تسجيل الدخول */
   const handleSignInChange = (field: string, value: string) => {
     setSignInData((prev) => ({
       ...prev,
@@ -42,16 +46,15 @@ const LoginPage = () => {
     }));
   };
 
+  /** إرسال بيانات إنشاء الحساب إلى الـ API */
   const handleSignUpSubmit = async () => {
-    console.log("handleSignUpSubmit called with data:", signUpData);
-    
     if (!signUpData.username || !signUpData.phoneNumber || !signUpData.password) {
       showToast("يرجى ملء جميع الحقول المطلوبة", "warning");
       return;
     }
 
     setIsLoading(true);
-    
+
     try {
       const registerData = {
         username: signUpData.username,
@@ -59,23 +62,17 @@ const LoginPage = () => {
         whatsapp_number: `${signUpData.countryCode}${signUpData.phoneNumber}`,
       };
 
-      console.log("Sending data to API:", registerData);
-      console.log("API URL:", `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/users/register`);
-
       const result = await registerUser(registerData);
-      
-      console.log("API Response:", result);
-      
+
       if (result.success) {
+        saveTokens(result.access_token, result.refresh_token);
+
         showToast(result.message, "success");
-        
-        // تبديل إلى تاب تسجيل الدخول بعد التسجيل الناجح
         setTimeout(() => {
           setActiveTab("login");
           showToast("يمكنك الآن تسجيل الدخول بحسابك الجديد", "info");
         }, 1500);
-        
-        // إعادة تعيين البيانات
+
         setSignUpData({
           username: "",
           phoneNumber: "",
@@ -83,17 +80,16 @@ const LoginPage = () => {
           password: "",
         });
       } else {
-        console.error("Registration failed:", result);
         showToast(result.message, "error");
       }
     } catch (error) {
-      console.error("Registration error:", error);
       showToast("حدث خطأ غير متوقع", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
+  /** إرسال بيانات تسجيل الدخول إلى الـ API */
   const handleSignInSubmit = async () => {
     if (!signInData.username || !signInData.password) {
       showToast("يرجى إدخال اسم المستخدم وكلمة المرور", "warning");
@@ -101,28 +97,23 @@ const LoginPage = () => {
     }
 
     setIsLoading(true);
-    
+
     try {
       const loginData = {
         username: signInData.username,
         password: signInData.password,
       };
 
-      console.log("Sending login data to API:", loginData);
-      
       const result = await loginUser(loginData);
-      
-      console.log("Login API Response:", result);
-      
+
       if (result.success) {
+        saveTokens(result.access_token, result.refresh_token);
+
         showToast(result.message, "success");
-        
-        // توجيه المستخدم إلى صفحة الأدمن بعد تسجيل الدخول الناجح
         setTimeout(() => {
-          router.push('/admin');
+          router.push("/admin");
         }, 1500);
-        
-        // إعادة تعيين البيانات
+
         setSignInData({
           username: "",
           password: "",
@@ -131,7 +122,6 @@ const LoginPage = () => {
         showToast(result.message, "error");
       }
     } catch (error) {
-      console.error("Login error:", error);
       showToast("حدث خطأ غير متوقع", "error");
     } finally {
       setIsLoading(false);
@@ -140,6 +130,17 @@ const LoginPage = () => {
 
   return (
     <LoginTemplate showSlider={activeTab === "login"}>
+      {isLoading && (
+        <LoadingSpinner
+          size="lg"
+          color="green"
+          pulse
+          dots
+          overlay
+          message="جارٍ المعالجة..."
+        />
+      )}
+
       <AuthTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {activeTab === "register" ? (

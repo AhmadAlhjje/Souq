@@ -4,7 +4,7 @@ import "./globals.css";
 import ConditionalHeader from "../components/ConditionalHeader";
 import ConditionalFooter from "../components/ConditionalFooter";
 import Providers from "../components/providers/Providers";
-import { ToastProvider } from "@/contexts/ToastContext";
+import { ToastProvider } from "@/hooks/useToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
