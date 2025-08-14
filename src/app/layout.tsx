@@ -4,6 +4,7 @@ import "./globals.css";
 import ConditionalHeader from "../components/ConditionalHeader";
 import ConditionalFooter from "../components/ConditionalFooter";
 import Providers from "../components/providers/Providers";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,18 +29,21 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-cairo`}
-        style={{ fontFamily: 'Cairo, sans-serif' }}
+        style={{ fontFamily: "Cairo, sans-serif" }}
         suppressHydrationWarning
       >
         <Providers>
           <ConditionalHeader />
-          <main>
-            {children}
-          </main>
+          <ToastProvider>
+            <main>{children}</main>
+          </ToastProvider>
           <ConditionalFooter />
         </Providers>
       </body>

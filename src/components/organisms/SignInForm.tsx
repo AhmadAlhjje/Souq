@@ -1,13 +1,12 @@
 "use client";
 import React from 'react';
-import { Mail } from 'lucide-react';
+import { User, Loader2 } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
 import PasswordField from '../../components/molecules/PasswordField';
-import AuthActionButtons from '../../components/molecules/AuthActionButtons';
 import { useTranslation } from 'react-i18next';
 
 interface SignInFormData {
-  identifier: string;
+  username: string;
   password: string;
 }
 
@@ -15,42 +14,81 @@ interface SignInFormProps {
   formData: SignInFormData;
   handleInputChange: (field: keyof SignInFormData, value: string) => void;
   onSubmit: () => void;
+  isLoading?: boolean;
 }
 
-const SignInForm: React.FC<SignInFormProps> = ({ formData, handleInputChange, onSubmit }) => {
+const SignInForm: React.FC<SignInFormProps> = ({ 
+  formData, 
+  handleInputChange, 
+  onSubmit, 
+  isLoading = false 
+}) => {
   const { t } = useTranslation();
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("SignIn form submitted - calling onSubmit");
+    onSubmit();
+  };
+
+  const handleButtonClick = () => {
+    console.log("SignIn button clicked - calling onSubmit");
+    onSubmit();
+  };
+
   return (
-    <div className="space-y-2 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
       <InputField
-        label={t("signInForm.identifier.label")}
+        label="اسم المستخدم"
         type="text"
-        placeholder={t("signInForm.identifier.placeholder")}
-        value={formData.identifier}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('identifier', e.target.value)}
-        icon={Mail}
+        placeholder="أدخل اسم المستخدم"
+        value={formData.username}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('username', e.target.value)}
+        icon={User}
+        required={true}
+        disabled={isLoading}
       />
       
       <PasswordField
-        label={t("signInForm.password.label")}
+        label="كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
+        required={true}
+        disabled={isLoading}
       />
       
       {/* رابط نسيت كلمة المرور */}
       <div className="text-left mb-4">
         <a href="#" className="text-xs sm:text-sm text-teal-500 hover:text-teal-600 transition-colors">
-          {t("signInForm.forgotPassword")}
+          نسيت كلمة المرور؟
         </a>
       </div>
       
-      <AuthActionButtons
-        onLogin={onSubmit}
-        onCreateAccount={() => console.log('Create account')}
-        loginText={t("signInForm.actions.login")}
-        createAccountText={t("signInForm.actions.createAccount")}
-      />
-    </div>
+      <div className="pt-2">
+        <button
+          type="submit"
+          onClick={handleButtonClick}
+          disabled={isLoading}
+          className={`
+            w-full py-3 px-4 rounded-lg font-medium text-white
+            transition-all duration-200 flex items-center justify-center
+            ${isLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-teal-500 hover:bg-teal-600 active:bg-teal-700'
+            }
+          `}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              جاري تسجيل الدخول...
+            </>
+          ) : (
+            "تسجيل الدخول"
+          )}
+        </button>
+      </div>
+    </form>
   );
 };
 
