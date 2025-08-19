@@ -2,20 +2,16 @@
 import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import Badge from '../atoms/Badge';
-import ProductCard from './ProductCard';
+import ProductCard from './ProductCard'; // تأكد من المسار الصحيح
 import { Product } from '@/types/product';
 
 interface ProductsSectionProps {
   products: Product[];
-  onQuantityChange: (productId: number, quantity: number) => void;
-  onAddToCart: (product: Product, quantity: number) => void;
   onViewDetails: (product: Product) => void;
 }
 
 const ProductsSection: React.FC<ProductsSectionProps> = ({ 
   products, 
-  onQuantityChange, 
-  onAddToCart, 
   onViewDetails 
 }) => {
   return (
@@ -23,7 +19,7 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
       {/* خلفية القسم الكاملة */}
       <div 
         className="p-6 rounded-2xl shadow-lg"
-        style={{ backgroundColor: '#CFF7EE ' }}
+        style={{ backgroundColor: '#CFF7EE' }}
       >
         {/* العنوان والشارة */}
         <div className="flex items-center justify-center mb-8">
@@ -37,20 +33,16 @@ const ProductsSection: React.FC<ProductsSectionProps> = ({
             </Badge>
           </div>
         </div>
-        
-          <div className="grid grid-cols-4 gap-4">
-          {products.map(product => (
+
+        <div className="grid grid-cols-4 gap-4">
+          {products.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
-              onQuantityChange={onQuantityChange}
-              onAddToCart={onAddToCart}
               onViewDetails={onViewDetails}
             />
           ))}
         </div>
-
-      
       </div>
     </div>
   );
