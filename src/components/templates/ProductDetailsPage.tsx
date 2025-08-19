@@ -1,33 +1,110 @@
 // components/templates/ProductDetailsPage.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Star, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { Star, ShoppingCart, Plus, Minus, Check } from 'lucide-react';
 import { Product } from '@/types/product';
+import { useCart, useCartNotifications } from '@/contexts/CartContext';
 
 interface ProductDetailsPageProps {
   product: Product;
-  onAddToCart: (product: Product, quantity: number) => void;
   onBackToProducts: () => void;
 }
 
 const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   product,
-  onAddToCart,
   onBackToProducts,
 }) => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [isAdding, setIsAdding] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
-  const productImages = [product.image, product.image, product.image, product.image, product.image, product.image, product.image, product.image];
+  const { 
+    addToCart, 
+    isItemInCart, 
+    getItemQuantity, 
+    openCart,
+    updateQuantity 
+  } = useCart();
+  const { showAddToCartSuccess } = useCartNotifications();
+
+  const productImages = [
+    product.image, 
+    product.image, 
+    product.image, 
+    product.image, 
+    product.image, 
+    product.image, 
+    product.image, 
+    product.image
+  ];
+
+  // تحديث الكمية عند تغيير المنتج أو كمية السلة
+  useEffect(() => {
+    const cartQuantity = getItemQuantity(product.id);
+    if (cartQuantity > 0) {
+      setQuantity(cartQuantity);
+    }
+  }, [product.id, getItemQuantity]);
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= 20) setQuantity(newQuantity);
+    if (newQuantity >= 1 && newQuantity <= 20) {
+      setQuantity(newQuantity);
+      
+      // إذا كان المنتج في السلة، حدث الكمية مباشرة
+      if (isItemInCart(product.id)) {
+        updateQuantity(product.id, newQuantity);
+      }
+    }
   };
 
-  const handleAddToCart = () => {
-    onAddToCart(product, quantity);
+
+const handleAddToCart = async () => {
+  try {
+    setIsAdding(true);
+    
+    if (isItemInCart(product.id)) {
+      // إذا كان المنتج موجود، استبدل الكمية بالكمية المحددة
+      updateQuantity(product.id, quantity);
+      showAddToCartSuccess(product.name, quantity);
+    } else {
+      // إذا لم يكن موجود، أضفه بالكمية المحددة
+      addToCart(product, quantity);
+      showAddToCartSuccess(product.name, quantity);
+    }
+    
+    // إظهار أيقونة النجاح
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
+    
+  } catch (error) {
+    console.error('خطأ في إضافة المنتج للسلة:', error);
+  } finally {
+    setIsAdding(false);
+  }
+};
+  const handleBuyNow = async () => {
+    try {
+      setIsAdding(true);
+      
+      // إضافة المنتج للسلة إذا لم يكن موجوداً
+      if (!isItemInCart(product.id)) {
+        addToCart(product, quantity);
+      } else {
+        // أو تحديث الكمية إذا كان موجوداً
+        updateQuantity(product.id, quantity);
+      }
+      
+      // فتح السلة للشراء المباشر
+      setTimeout(() => openCart(), 500);
+      
+    } catch (error) {
+      console.error('خطأ في الشراء المباشر:', error);
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const renderStars = (rating: number) =>
@@ -38,30 +115,46 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       />
     ));
 
-  return (
-    <div className="min-h-screen mt-10 text-gray-800 font-cairo " dir="rtl">
-      <div className="mx-auto px-6 py-12 max-w-6xl">
-       
+  // تحديد حالة المنتج في السلة
+  const productInCart = isItemInCart(product.id);
+  const cartQuantity = getItemQuantity(product.id);
 
-        {/* الحاوية الرئيسية مع الشادو الأخف والأعرض */}
+  return (
+    <div className="min-h-screen mt-10 text-gray-800 font-cairo" dir="rtl">
+      <div className="mx-auto px-6 py-12 max-w-6xl">
+        {/* الحاوية الرئيسية */}
         <div className="rounded-2xl shadow-lg shadow-gray-200/50 p-8">
-         <button
-          onClick={onBackToProducts}
-          className="text-teal-600 mb-8 flex items-center gap-1 text-lg hover:text-teal-700 transition-colors duration-200"
-        >
-          ← عودة
-        </button>
-          <div className="grid grid-cols-2 gap-16 items-start relative">
-               {/* خط فاصل أخضر متدرج بين الأقسام */}
-            <div className="absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2" 
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={onBackToProducts}
+              className="text-teal-600 flex items-center gap-1 text-lg hover:text-teal-700 transition-colors duration-200"
+            >
+              ← عودة
+            </button>
+
+            {/* مؤشر المنتج في السلة */}
+            {productInCart && (
+              <div className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+                <Check className="w-4 h-4" />
+                المنتج في السلة ({cartQuantity} قطعة)
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start relative">
+            {/* خط فاصل أخضر متدرج بين الأقسام */}
+            <div className="absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 hidden lg:block" 
                  style={{
                    background: 'linear-gradient(to bottom, transparent 0%, #0d9488 10%, #0d9488 50%, #0d9488 90%, transparent 100%)',
                    width: '1px',
                    backgroundSize: '100% 100%'
                  }}></div>
-            {/* القسم 1: التفاصيل - على اليسار في الشاشات الكبيرة */}
+
+            {/* القسم 1: التفاصيل */}
             <div className="space-y-3 lg:order-1 pr-4">
-              <h1 className="font-bold text-gray-900 text-lg leading-relaxed">{product.name}</h1>
+              <div className="flex items-start justify-between">
+                <h1 className="font-bold text-gray-900 text-lg leading-relaxed flex-1">{product.name}</h1>
+              </div>
 
               <div className="flex items-center gap-1 text-sm">
                 <div className="flex">{renderStars(product.rating)}</div>
@@ -73,9 +166,14 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <span>{product.salePrice ? product.salePrice : (product.originalPrice || product.price)}</span>
                 <span className="text-gray-500 mr-1">ر.س</span>
                 {product.salePrice && product.originalPrice && (
-                  <span className="text-gray-400 line-through text-sm mr-2">
-                    {product.originalPrice} ر.س
-                  </span>
+                  <>
+                    <span className="text-gray-400 line-through text-sm mr-2">
+                      {product.originalPrice} ر.س
+                    </span>
+                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
+                      وفر {Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
+                    </span>
+                  </>
                 )}
               </div>
               
@@ -103,30 +201,63 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="px-2 py-1 bg-gray-50 w-8 text-sm">{quantity}</span>
-                    <button onClick={() => handleQuantityChange(quantity + 1)} className="p-1 hover:bg-gray-100 transition-colors duration-200">
+                    <button 
+                      onClick={() => handleQuantityChange(quantity + 1)} 
+                      disabled={quantity >= 20}
+                      className="p-1 disabled:opacity-50 hover:bg-gray-100 transition-colors duration-200"
+                    >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
+                  {productInCart && (
+                    <span className="text-xs text-teal-600">
+                      (في السلة: {cartQuantity})
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* أزرار */}
-              <div className="flex gap-3 py-2">
+              <div className="space-y-3 py-2">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-teal-600 text-white py-3 rounded flex items-center justify-center gap-2 text-sm font-medium hover:bg-teal-700 transition-colors duration-200"
+                  disabled={isAdding}
+                  className={`w-full py-3 rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
+                    showSuccess 
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-teal-600 hover:bg-teal-700 text-white'
+                  } ${isAdding ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  إضافة للسلة
+                  {showSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      تمت الإضافة
+                    </>
+                  ) : isAdding ? (
+                    <>
+                      <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
+                      جاري الإضافة
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4" />
+                      إضافة للسلة
+                    </>
+                  )}
                 </button>
-                <button className="flex-1 border border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200">
-                  اشتري الآن
+
+                <button 
+                  onClick={handleBuyNow}
+                  disabled={isAdding}
+                  className="w-full border-2 border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isAdding ? 'جاري التحضير...' : 'اشتري الآن'}
                 </button>
               </div>
             </div>
 
-            {/* القسم 2: الصور - على اليمين في الشاشات الكبيرة */}
-            <div className="mt-10 space-y-6 lg:order-2 pl-4">
+            {/* القسم 2: الصور */}
+            <div className="space-y-6 lg:order-2 pl-4">
               {/* الصورة الرئيسية */}
               <div className="bg-white rounded-xl overflow-hidden shadow-lg w-full">
                 <div className="aspect-square relative bg-gray-100 w-full" style={{ minHeight: '250px', maxHeight: '250px' }}>
@@ -136,12 +267,13 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     fill
                     className="object-cover w-full h-full"
                   />
-                  {/* إصلاح حساب نسبة الخصم */}
+                  {/* شارة الخصم */}
                   {product.salePrice && product.originalPrice && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded">
                       -{Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
                     </div>
                   )}
+                  {/* شارة جديد */}
                   {product.isNew && !product.salePrice && (
                     <div className="absolute top-2 right-2 bg-green-700 text-white text-[10px] px-2 py-0.5 rounded">
                       جديد

@@ -1,14 +1,14 @@
 // components/organisms/SaleProductsCarousel.tsx
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, ShoppingCart, Star, Tag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, Star, Tag, Check } from 'lucide-react';
 import { Product } from '@/types/product';
+import { useCart, useCartNotifications } from '@/contexts/CartContext';
 
 interface SaleProductsCarouselProps {
   saleProducts: Product[];
   onNavigateLeft?: () => void;
   onNavigateRight?: () => void;
-  onAddToCart?: (product: Product) => void;
   onViewDetails?: (product: Product) => void;
 }
 
@@ -16,11 +16,16 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
   saleProducts,
   onNavigateLeft,
   onNavigateRight,
-  onAddToCart,
-  
+  onViewDetails
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(1);
+  const [addingProduct, setAddingProduct] = useState<number | null>(null);
+  const [successProducts, setSuccessProducts] = useState<Set<number>>(new Set());
+
+  // استخدام CartContext
+  const { addToCart, isItemInCart } = useCart();
+  const { showAddToCartSuccess } = useCartNotifications();
 
   // تحديد عدد الشرائح المعروضة حسب حجم الشاشة
   useEffect(() => {
@@ -71,13 +76,45 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
     setCurrentIndex(Math.min(index, maxIndex));
   };
 
-  const handleAddToCart = (product: Product) => {
-    onAddToCart?.(product);
-    // تأثير بصري بسيط
-    const button = document.querySelector(`[data-product-id="${product.id}"]`);
-    if (button) {
-      button.classList.add('animate-bounce');
-      setTimeout(() => button.classList.remove('animate-bounce'), 600);
+  const handleAddToCart = async (product: Product) => {
+    // التحقق من وجود المنتج في السلة
+    if (isItemInCart(product.id)) {
+      console.log('المنتج موجود بالفعل في السلة');
+      return; // لا تفعل شيء إذا كان موجود
+    }
+
+    try {
+      setAddingProduct(product.id);
+      
+      // إضافة المنتج للسلة بكمية 1 فقط
+      addToCart(product, 1);
+      
+      // إظهار رسالة النجاح
+      showAddToCartSuccess(product.name, 1);
+      
+      // إظهار أيقونة النجاح
+      setSuccessProducts(prev => new Set([...prev, product.id]));
+      
+      // تأثير بصري
+      const button = document.querySelector(`[data-product-id="${product.id}"]`);
+      if (button) {
+        button.classList.add('animate-bounce');
+        setTimeout(() => button.classList.remove('animate-bounce'), 600);
+      }
+      
+      // إخفاء أيقونة النجاح بعد ثانيتين
+      setTimeout(() => {
+        setSuccessProducts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(product.id);
+          return newSet;
+        });
+      }, 2000);
+      
+    } catch (error) {
+      console.error('خطأ في إضافة المنتج للسلة:', error);
+    } finally {
+      setAddingProduct(null);
     }
   };
 
@@ -185,7 +222,10 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
                   </div>
 
                   {/* الصورة */}
-                  <div className="mb-3 rounded-lg overflow-hidden">
+                  <div 
+                    className="mb-3 rounded-lg overflow-hidden cursor-pointer"
+                    onClick={() => onViewDetails?.(product)}
+                  >
                     <Image
                       src={product.image}
                       alt={product.name}
@@ -198,7 +238,10 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
 
                   {/* المحتوى */}
                   <div className="mb-3">
-                    <h3 className="text-sm font-bold text-gray-800 mb-2 text-right line-clamp-2 min-h-[2.5rem] leading-tight">
+                    <h3 
+                      className="text-sm font-bold text-gray-800 mb-2 text-right line-clamp-2 min-h-[2.5rem] leading-tight cursor-pointer hover:text-teal-600 transition-colors"
+                      onClick={() => onViewDetails?.(product)}
+                    >
                       {product.name}
                     </h3>
                     
@@ -238,10 +281,36 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
                   <button 
                     onClick={() => handleAddToCart(product)}
                     data-product-id={product.id}
-                    className="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 px-2 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md text-xs flex items-center justify-center gap-1"
+                    disabled={addingProduct === product.id || isItemInCart(product.id)}
+                    className={`w-full py-2 px-2 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md text-xs flex items-center justify-center gap-1 ${
+                      isItemInCart(product.id)
+                        ? 'bg-gray-500 text-white cursor-not-allowed'
+                        : successProducts.has(product.id)
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-teal-600 hover:bg-teal-700 text-white'
+                    } ${addingProduct === product.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    <ShoppingCart className="w-3 h-3" />
-                    أضف للسلة
+                    {isItemInCart(product.id) ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        في السلة
+                      </>
+                    ) : successProducts.has(product.id) ? (
+                      <>
+                        <Check className="w-3 h-3" />
+                        تمت الإضافة
+                      </>
+                    ) : addingProduct === product.id ? (
+                      <>
+                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                        جاري الإضافة
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="w-3 h-3" />
+                        أضف للسلة
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -266,8 +335,6 @@ const SaleProductsCarousel: React.FC<SaleProductsCarouselProps> = ({
             ))}
           </div>
         )}
-
-      
       </div>
     </div>
   );
