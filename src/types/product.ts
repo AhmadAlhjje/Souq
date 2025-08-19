@@ -192,7 +192,7 @@ export interface InputProps {
   value?: string;
   onChange?: (value: string) => void;
   onChangeEvent?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  icon?: React.ComponentType<any>;
+  icon?: React.ComponentType<unknown>;
   iconPosition?: "left" | "right";
   error?: string;
   disabled?: boolean;

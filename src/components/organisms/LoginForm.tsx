@@ -1,62 +1,102 @@
+// components/organisms/LoginForm.tsx
 "use client";
 import React from 'react';
-import { User } from 'lucide-react';
+import { User, Loader2 } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
 import PasswordField from '../../components/molecules/PasswordField';
 import PhoneField from '../../components/molecules/PhoneField';
-import AuthActionButtons from '../../components/molecules/AuthActionButtons';
-import { SignUpFormData } from '../../types/FormData';
 import { useTranslation } from 'react-i18next';
+
+interface SignUpFormData {
+  username: string;
+  phoneNumber: string; // الآن سيحتوي على رقم الهاتف الكامل مع رمز البلد
+  password: string;
+}
 
 interface LoginFormProps {
   formData: SignUpFormData;
   handleInputChange: (field: keyof SignUpFormData, value: string) => void;
   onSubmit: () => void;
+  isLoading?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ formData, handleInputChange, onSubmit }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ 
+  formData, 
+  handleInputChange, 
+  onSubmit, 
+  isLoading = false 
+}) => {
   const { t } = useTranslation();
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Form submitted - calling onSubmit");
+    onSubmit();
+  };
+
+  const handleButtonClick = () => {
+    console.log("Button clicked - calling onSubmit");
+    onSubmit();
+  };
+
+  const handlePhoneChange = (value: string | undefined) => {
+    handleInputChange('phoneNumber', value || '');
+  };
+
   return (
-    <div className="space-y-2 sm:space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
       <InputField
-        label={t("loginForm.fullName.label")}
+        label="اسم المستخدم"
         type="text"
-        placeholder={t("loginForm.fullName.placeholder")}
-        value={formData.fullName}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('fullName', e.target.value)}
+        placeholder="أدخل اسم المستخدم"
+        value={formData.username}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('username', e.target.value)}
         icon={User}
-      />
-      
-      <InputField
-        label={t("loginForm.email.label")}
-        type="email"
-        placeholder={t("loginForm.email.placeholder")}
-        value={formData.email}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('email', e.target.value)}
+        required={true}
+        disabled={isLoading}
       />
       
       <PhoneField
-        label={t("loginForm.phone.label")}
-        countryCode={formData.countryCode}
-        setCountryCode={(value: string) => handleInputChange('countryCode', value)}
-        phoneNumber={formData.phoneNumber}
-        setPhoneNumber={(value: string) => handleInputChange('phoneNumber', value)}
+        label="رقم الهاتف"
+        value={formData.phoneNumber}
+        onChange={handlePhoneChange}
+        required={true}
+        disabled={isLoading}
       />
       
       <PasswordField
-        label={t("loginForm.password.label")}
+        label="كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
+        required={true}
+        disabled={isLoading}
       />
       
-      <AuthActionButtons
-        onLogin={onSubmit}
-        onCreateAccount={() => console.log('Create account')}
-        loginText={t("loginForm.actions.login")}
-        createAccountText={t("loginForm.actions.createAccount")}
-      />
-    </div>
+      <div className="pt-4">
+        <button
+          type="submit"
+          onClick={handleButtonClick}
+          disabled={isLoading}
+          className={`
+            w-full py-3 px-4 rounded-lg font-medium text-white
+            transition-all duration-200 flex items-center justify-center
+            ${isLoading 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-teal-500 hover:bg-teal-600 active:bg-teal-700'
+            }
+          `}
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              جاري إنشاء الحساب...
+            </>
+          ) : (
+            "إنشاء حساب"
+          )}
+        </button>
+      </div>
+    </form>
   );
 };
 

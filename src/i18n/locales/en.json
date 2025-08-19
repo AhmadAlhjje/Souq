@@ -453,7 +453,11 @@
     "addProduct": "Add New Product",
     "view": "View",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "close": "Close",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel"
   },
 
   "status": {
@@ -679,5 +683,53 @@
     "grid": "Grid View",
     "table": "Table View"
   },
-  "placeholder": "Search..."
+  "placeholder": "Search...",
+  "productDetails": {
+    "title": "Product Details",
+    "description": "Description",
+    "price": "Price",
+    "rating": "Rating",
+    "reviews": "reviews",
+    "stock": "Stock",
+    "sales": "Sales",
+    "units": "units",
+    "sku": "SKU",
+    "brand": "Brand",
+    "tags": "Tags",
+    "createdAt": "Created At"
+  },
+  "productEdit": {
+    "title": "Edit Product",
+    "basicInfo": "Basic Information",
+    "image": "Product Image",
+    "uploadImage": "Upload Image",
+    "imageUrl": "Image URL",
+    "name": "Product Name",
+    "nameAr": "Product Name (Arabic)",
+    "namePlaceholder": "Enter product name",
+    "nameArPlaceholder": "أدخل اسم المنتج بالعربية",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter product description",
+    "category": "Category",
+    "selectCategory": "Select Category",
+    "status": "Status",
+    "selectStatus": "Select Status",
+    "price": "Price",
+    "stock": "Stock Quantity",
+    "rating": "Rating",
+    "sales": "Sales Count",
+    "brand": "Brand",
+    "brandPlaceholder": "Enter brand name",
+    "tags": "Tags",
+    "tagsPlaceholder": "tag1, tag2, tag3",
+    "tagsHelp": "Separate tags with commas"
+  },
+  "validation": {
+    "nameRequired": "Product name is required",
+    "nameArRequired": "Arabic name is required",
+    "priceRequired": "Price must be greater than 0",
+    "stockRequired": "Stock quantity is required",
+    "categoryRequired": "Category is required",
+    "statusRequired": "Status is required"
+  }
 }
