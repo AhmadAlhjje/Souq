@@ -441,7 +441,11 @@
     "addProduct": "إضافة منتج جديد",
     "view": "عرض",
     "edit": "تعديل",
-    "delete": "حذف"
+    "delete": "حذف",
+    "close": "إغلاق",
+    "save": "حفظ التغييرات",
+    "saving": "جاري الحفظ...",
+    "cancel": "إلغاء"
   },
 
   "status": {
@@ -723,5 +727,54 @@
     "grid": "عرض الشبكة",
     "table": "عرض الجدول"
   },
-  "placeholder": "البحث..."
+  "placeholder": "البحث...",
+
+  "productDetails": {
+    "title": "تفاصيل المنتج",
+    "description": "الوصف",
+    "price": "السعر",
+    "rating": "التقييم",
+    "reviews": "مراجعة",
+    "stock": "المخزون",
+    "sales": "المبيعات",
+    "units": "وحدة",
+    "sku": "رقم المنتج",
+    "brand": "العلامة التجارية",
+    "tags": "العلامات",
+    "createdAt": "تاريخ الإنشاء"
+  },
+  "productEdit": {
+    "title": "تعديل المنتج",
+    "basicInfo": "المعلومات الأساسية",
+    "image": "صورة المنتج",
+    "uploadImage": "رفع صورة",
+    "imageUrl": "رابط الصورة",
+    "name": "اسم المنتج",
+    "nameAr": "اسم المنتج (بالعربية)",
+    "namePlaceholder": "أدخل اسم المنتج",
+    "nameArPlaceholder": "أدخل اسم المنتج بالعربية",
+    "description": "الوصف",
+    "descriptionPlaceholder": "أدخل وصف المنتج",
+    "category": "الفئة",
+    "selectCategory": "اختر الفئة",
+    "status": "الحالة",
+    "selectStatus": "اختر الحالة",
+    "price": "السعر",
+    "stock": "كمية المخزون",
+    "rating": "التقييم",
+    "sales": "عدد المبيعات",
+    "brand": "العلامة التجارية",
+    "brandPlaceholder": "أدخل اسم العلامة التجارية",
+    "tags": "العلامات",
+    "tagsPlaceholder": "علامة1، علامة2، علامة3",
+    "tagsHelp": "افصل العلامات بفواصل"
+  },
+  "validation": {
+    "nameRequired": "اسم المنتج مطلوب",
+    "nameArRequired": "الاسم بالعربية مطلوب",
+    "priceRequired": "يجب أن يكون السعر أكبر من 0",
+    "stockRequired": "كمية المخزون مطلوبة",
+    "categoryRequired": "الفئة مطلوبة",
+    "statusRequired": "الحالة مطلوبة"
+  }
 }

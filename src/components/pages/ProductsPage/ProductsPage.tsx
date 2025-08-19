@@ -10,6 +10,8 @@ import ProductsFilter from '../../organisms/admin/products/ProductsFilter';
 import ProductsGrid from '../../organisms/admin/products/ProductsGrid';
 import ProductsTable from '../../organisms/admin/products/ProductsTable';
 import DeleteConfirmModal from '../../molecules/admin/products/DeleteConfirmModal';
+import ProductViewModal from '../../molecules/admin/products/ProductViewModal';
+import ProductEditModal from '../../molecules/admin/products/ProductEditModal';
 import { mockProducts } from '../../../data/mockProducts';
 import { Product, ViewMode } from '../../../types/product';
 
@@ -24,21 +26,28 @@ const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [showViewModal, setShowViewModal] = useState<boolean>(false);
+  const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [productToView, setProductToView] = useState<Product | null>(null);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [editLoading, setEditLoading] = useState<boolean>(false);
 
   // تحويل mockProducts لتتوافق مع Product interface الجديد
-  const convertedProducts: Product[] = mockProducts.map((product: any) => ({
-    ...product,
-    reviewCount: product.reviewCount || Math.floor(Math.random() * 200) + 10, // إضافة قيمة افتراضية
-    inStock: product.inStock !== undefined ? product.inStock : product.stock > 0, // تحديد حالة التوفر
-    salePrice: product.salePrice || undefined, // الحفاظ على سعر العرض إذا كان موجود
-    originalPrice: product.originalPrice || undefined, // الحفاظ على السعر الأصلي
-    isNew: product.isNew || false, // تحديد المنتجات الجديدة
-  }));
+  const [products, setProducts] = useState<Product[]>(
+    mockProducts.map((product: any) => ({
+      ...product,
+      reviewCount: product.reviewCount || Math.floor(Math.random() * 200) + 10,
+      inStock: product.inStock !== undefined ? product.inStock : product.stock > 0,
+      salePrice: product.salePrice || undefined,
+      originalPrice: product.originalPrice || undefined,
+      isNew: product.isNew || false,
+    }))
+  );
 
   // Filter products based on search criteria
-  const filteredProducts: Product[] = convertedProducts.filter((product: Product) => {
+  const filteredProducts: Product[] = products.filter((product: Product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.nameAr.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
@@ -62,11 +71,16 @@ const ProductsPage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       console.log('Deleting product:', productToDelete);
       
-      // Here you would make the actual API call to delete the product
-      // await deleteProduct(productToDelete.id);
+      // Update products list by removing the deleted product
+      setProducts(prevProducts => 
+        prevProducts.filter(p => p.id !== productToDelete.id)
+      );
       
       setShowDeleteModal(false);
       setProductToDelete(null);
+      
+      // Show success message (you can implement toast notification here)
+      console.log('Product deleted successfully');
     } catch (error) {
       console.error('Error deleting product:', error);
     } finally {
@@ -76,14 +90,40 @@ const ProductsPage: React.FC = () => {
 
   const handleViewProduct = (product: Product): void => {
     console.log('Viewing product:', product);
-    // Navigate to product details page
-    // router.push(`/admin/products/${product.id}`);
+    setProductToView(product);
+    setShowViewModal(true);
   };
 
   const handleEditProduct = (product: Product): void => {
     console.log('Editing product:', product);
-    // Navigate to product edit page
-    // router.push(`/admin/products/${product.id}/edit`);
+    setProductToEdit(product);
+    setShowEditModal(true);
+  };
+
+  const handleSaveProduct = async (updatedProduct: Product): Promise<void> => {
+    setEditLoading(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Saving product:', updatedProduct);
+      
+      // Update products list with the edited product
+      setProducts(prevProducts => 
+        prevProducts.map(p => 
+          p.id === updatedProduct.id ? { ...updatedProduct } : p
+        )
+      );
+      
+      setShowEditModal(false);
+      setProductToEdit(null);
+      
+      // Show success message (you can implement toast notification here)
+      console.log('Product updated successfully');
+    } catch (error) {
+      console.error('Error updating product:', error);
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleAddProduct = (): void => {
@@ -112,9 +152,19 @@ const ProductsPage: React.FC = () => {
     setSelectedStatus(value);
   };
 
-  const handleCloseModal = (): void => {
+  const handleCloseDeleteModal = (): void => {
     setShowDeleteModal(false);
     setProductToDelete(null);
+  };
+
+  const handleCloseViewModal = (): void => {
+    setShowViewModal(false);
+    setProductToView(null);
+  };
+
+  const handleCloseEditModal = (): void => {
+    setShowEditModal(false);
+    setProductToEdit(null);
   };
 
   // دالة لرندر المحتوى حسب نوع العرض
@@ -195,7 +245,7 @@ const ProductsPage: React.FC = () => {
           {/* Stats Section */}
           <section aria-label={t('stats.totalProducts')}>
             <ProductsStats 
-              products={convertedProducts} 
+              products={products} 
               loading={loading}
             />
           </section>
@@ -270,14 +320,32 @@ const ProductsPage: React.FC = () => {
             </div>
           )}
 
+          {/* Modals */}
+          
           {/* Delete Confirmation Modal */}
           <DeleteConfirmModal
             isOpen={showDeleteModal}
-            onClose={handleCloseModal}
+            onClose={handleCloseDeleteModal}
             onConfirm={confirmDelete}
             title={t('deleteModal.title')}
             message={getDeleteMessage()}
             loading={loading}
+          />
+
+          {/* Product View Modal */}
+          <ProductViewModal
+            isOpen={showViewModal}
+            onClose={handleCloseViewModal}
+            product={productToView}
+          />
+
+          {/* Product Edit Modal */}
+          <ProductEditModal
+            isOpen={showEditModal}
+            onClose={handleCloseEditModal}
+            onSave={handleSaveProduct}
+            product={productToEdit}
+            loading={editLoading}
           />
         </div>
       </div>

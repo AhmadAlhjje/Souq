@@ -1,3 +1,4 @@
+// components/organisms/LoginForm.tsx
 "use client";
 import React from 'react';
 import { User, Loader2 } from 'lucide-react';
@@ -8,8 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 interface SignUpFormData {
   username: string;
-  phoneNumber: string;
-  countryCode: string;
+  phoneNumber: string; // الآن سيحتوي على رقم الهاتف الكامل مع رمز البلد
   password: string;
 }
 
@@ -39,6 +39,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
     onSubmit();
   };
 
+  const handlePhoneChange = (value: string | undefined) => {
+    handleInputChange('phoneNumber', value || '');
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
       <InputField
@@ -54,10 +58,8 @@ const LoginForm: React.FC<LoginFormProps> = ({
       
       <PhoneField
         label="رقم الهاتف"
-        countryCode={formData.countryCode}
-        setCountryCode={(value: string) => handleInputChange('countryCode', value)}
-        phoneNumber={formData.phoneNumber}
-        setPhoneNumber={(value: string) => handleInputChange('phoneNumber', value)}
+        value={formData.phoneNumber}
+        onChange={handlePhoneChange}
         required={true}
         disabled={isLoading}
       />

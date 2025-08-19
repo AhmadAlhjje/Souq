@@ -1,3 +1,4 @@
+// pages/login/LoginPage.tsx
 "use client";
 import React, { useState } from "react";
 import LoginTemplate from "../../components/templates/LoginTemplate";
@@ -16,11 +17,10 @@ const LoginPage = () => {
   const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
 
-  // بيانات إنشاء الحساب
+  // بيانات إنشاء الحساب - تم إزالة countryCode لأن phoneNumber سيحتوي على رقم الهاتف الكامل
   const [signUpData, setSignUpData] = useState({
     username: "",
-    phoneNumber: "",
-    countryCode: "+963",
+    phoneNumber: "", // سيحتوي على رقم الهاتف الكامل مع رمز البلد
     password: "",
   });
 
@@ -48,7 +48,11 @@ const LoginPage = () => {
 
   /** إرسال بيانات إنشاء الحساب إلى الـ API */
   const handleSignUpSubmit = async () => {
-    if (!signUpData.username || !signUpData.phoneNumber || !signUpData.password) {
+    if (
+      !signUpData.username ||
+      !signUpData.phoneNumber ||
+      !signUpData.password
+    ) {
       showToast("يرجى ملء جميع الحقول المطلوبة", "warning");
       return;
     }
@@ -59,31 +63,42 @@ const LoginPage = () => {
       const registerData = {
         username: signUpData.username,
         password: signUpData.password,
-        whatsapp_number: `${signUpData.countryCode}${signUpData.phoneNumber}`,
+        whatsapp_number: signUpData.phoneNumber,
       };
 
       const result = await registerUser(registerData);
 
-      if (result.success) {
-        saveTokens(result.access_token, result.refresh_token);
+      // ✅ التحقق من وجود الرسالة و التوكن بدلاً من success
+      if (result.message && result.token) {
+        // حفظ التوكن
+        saveTokens(result.token, result.token); // يمكن استخدام نفس التوكن للاثنين مؤقتاً
 
+        // عرض رسالة النجاح
         showToast(result.message, "success");
+
         setTimeout(() => {
           setActiveTab("login");
           showToast("يمكنك الآن تسجيل الدخول بحسابك الجديد", "info");
         }, 1500);
 
+        // إعادة تعيين النموذج
         setSignUpData({
           username: "",
           phoneNumber: "",
-          countryCode: "+963",
           password: "",
         });
       } else {
-        showToast(result.message, "error");
+        showToast(result.message || "حدث خطأ أثناء إنشاء الحساب", "error");
       }
-    } catch (error) {
-      showToast("حدث خطأ غير متوقع", "error");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      // التحقق من نوع الخطأ
+      if (error.response?.data?.message) {
+        showToast(error.response.data.message, "error");
+      } else {
+        showToast("حدث خطأ غير متوقع", "error");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -106,10 +121,14 @@ const LoginPage = () => {
 
       const result = await loginUser(loginData);
 
-      if (result.success) {
-        saveTokens(result.access_token, result.refresh_token);
+      // ✅ التحقق من وجود الرسالة و التوكن بدلاً من success
+      if (result.message && result.token) {
+        // حفظ التوكن
+        saveTokens(result.token, result.token); // نفس التوكن للاثنين
 
+        // عرض رسالة النجاح باللون الأخضر
         showToast(result.message, "success");
+
         setTimeout(() => {
           router.push("/admin");
         }, 1500);
@@ -119,10 +138,17 @@ const LoginPage = () => {
           password: "",
         });
       } else {
-        showToast(result.message, "error");
+        showToast(result.message || "فشل في تسجيل الدخول", "error");
       }
-    } catch (error) {
-      showToast("حدث خطأ غير متوقع", "error");
+    } catch (error: any) {
+      console.error("Login error:", error);
+
+      // التحقق من نوع الخطأ
+      if (error.response?.data?.message) {
+        showToast(error.response.data.message, "error");
+      } else {
+        showToast("حدث خطأ غير متوقع", "error");
+      }
     } finally {
       setIsLoading(false);
     }
