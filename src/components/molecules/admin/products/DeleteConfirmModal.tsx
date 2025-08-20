@@ -35,9 +35,28 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
   const { isDark } = useTheme();
   const isRTL = i18n.language === 'ar';
 
+  // Handle escape key and body scroll - MOVED BEFORE RETURN
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !loading) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose, loading]);
+
   if (!isOpen) return null;
 
-  // Get translated texts
+  // باقي الكود كما هو بدون تغيير...
   const getTitle = () => {
     if (title) return title;
     return variant === 'danger' 
@@ -69,25 +88,6 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
       onClose();
     }
   };
-
-  // Handle escape key and body scroll
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !loading) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose, loading]);
 
   // Handle confirm action
   const handleConfirm = async () => {

@@ -3,19 +3,23 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Star, ShoppingCart, Plus, Minus, Check } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Star, ShoppingCart, Plus, Minus, Check, ArrowRight } from 'lucide-react';
 import { Product } from '@/types/product';
 import { useCart, useCartNotifications } from '@/contexts/CartContext';
 
 interface ProductDetailsPageProps {
   product: Product;
-  onBackToProducts: () => void;
+  onAddToCart?: (product: Product, quantity: number) => void;
+  onBackToProducts?: () => void;
 }
 
 const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   product,
+  onAddToCart,
   onBackToProducts,
 }) => {
+  const router = useRouter();
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -60,31 +64,34 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     }
   };
 
-
-const handleAddToCart = async () => {
-  try {
-    setIsAdding(true);
-    
-    if (isItemInCart(product.id)) {
-      // إذا كان المنتج موجود، استبدل الكمية بالكمية المحددة
-      updateQuantity(product.id, quantity);
-      showAddToCartSuccess(product.name, quantity);
-    } else {
-      // إذا لم يكن موجود، أضفه بالكمية المحددة
-      addToCart(product, quantity);
-      showAddToCartSuccess(product.name, quantity);
+  const handleAddToCart = async () => {
+    try {
+      setIsAdding(true);
+      
+      // استخدام onAddToCart إذا تم تمريرها، وإلا استخدم الـ context
+      if (onAddToCart) {
+        onAddToCart(product, quantity);
+      } else {
+        if (isItemInCart(product.id)) {
+          updateQuantity(product.id, quantity);
+          showAddToCartSuccess(product.name, quantity);
+        } else {
+          addToCart(product, quantity);
+          showAddToCartSuccess(product.name, quantity);
+        }
+      }
+      
+      // إظهار أيقونة النجاح
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+      
+    } catch (error) {
+      console.error('خطأ في إضافة المنتج للسلة:', error);
+    } finally {
+      setIsAdding(false);
     }
-    
-    // إظهار أيقونة النجاح
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
-    
-  } catch (error) {
-    console.error('خطأ في إضافة المنتج للسلة:', error);
-  } finally {
-    setIsAdding(false);
-  }
-};
+  };
+
   const handleBuyNow = async () => {
     try {
       setIsAdding(true);
@@ -107,6 +114,15 @@ const handleAddToCart = async () => {
     }
   };
 
+  // دالة العودة للمنتجات - استخدام onBackToProducts إذا تم تمريرها
+  const handleBackToProducts = () => {
+    if (onBackToProducts) {
+      onBackToProducts();
+    } else {
+      router.push('/products');
+    }
+  };
+
   const renderStars = (rating: number) =>
     Array.from({ length: 5 }, (_, i) => (
       <Star
@@ -119,6 +135,10 @@ const handleAddToCart = async () => {
   const productInCart = isItemInCart(product.id);
   const cartQuantity = getItemQuantity(product.id);
 
+  // تحديد ما إذا كان الزر معطل
+  const isMaxQuantityReached = quantity >= 20 || Boolean(product.stock && quantity >= product.stock);
+  const isMinQuantityReached = quantity <= 1;
+
   return (
     <div className="min-h-screen mt-10 text-gray-800 font-cairo" dir="rtl">
       <div className="mx-auto px-6 py-12 max-w-6xl">
@@ -126,10 +146,11 @@ const handleAddToCart = async () => {
         <div className="rounded-2xl shadow-lg shadow-gray-200/50 p-8">
           <div className="flex items-center justify-between mb-8">
             <button
-              onClick={onBackToProducts}
-              className="text-teal-600 flex items-center gap-1 text-lg hover:text-teal-700 transition-colors duration-200"
+              onClick={handleBackToProducts}
+              className="text-teal-600 flex items-center gap-2 text-lg hover:text-teal-700 transition-colors duration-200"
             >
-              ← عودة
+              <ArrowRight className="w-5 h-5" />
+              عودة للمنتجات
             </button>
 
             {/* مؤشر المنتج في السلة */}
@@ -153,7 +174,7 @@ const handleAddToCart = async () => {
             {/* القسم 1: التفاصيل */}
             <div className="space-y-3 lg:order-1 pr-4">
               <div className="flex items-start justify-between">
-                <h1 className="font-bold text-gray-900 text-lg leading-relaxed flex-1">{product.name}</h1>
+                <h1 className="font-bold text-gray-900 text-lg leading-relaxed flex-1">{product.nameAr || product.name}</h1>
               </div>
 
               <div className="flex items-center gap-1 text-sm">
@@ -181,12 +202,25 @@ const handleAddToCart = async () => {
               <div className="py-3">
                 <h3 className="font-semibold text-gray-900 mb-2 text-sm">وصف المنتج</h3>
                 <p className="text-gray-600 leading-relaxed text-sm">
-                  منتج عالي الجودة مصنوع من أفضل المواد المتاحة في السوق، مصمم خصيصاً ليلبي احتياجاتك اليومية بكفاءة عالية. 
-                  يتميز هذا المنتج بالمتانة والأناقة في التصميم، مع الحرص على توفير تجربة استخدام مريحة وآمنة. 
-                  يأتي مع ضمان شامل لمدة سنة كاملة ضد عيوب الصناعة، بالإضافة إلى خدمة عملاء متميزة تعمل على مدار الساعة لضمان رضاكم التام. 
-                  هذا المنتج مناسب للاستخدام المنزلي والمهني على حد سواء، ويوفر قيمة ممتازة مقابل السعر المدفوع.
+                  {product.descriptionAr || product.description || 
+                    `منتج عالي الجودة مصنوع من أفضل المواد المتاحة في السوق، مصمم خصيصاً ليلبي احتياجاتك اليومية بكفاءة عالية. 
+                    يتميز هذا المنتج بالمتانة والأناقة في التصميم، مع الحرص على توفير تجربة استخدام مريحة وآمنة. 
+                    يأتي مع ضمان شامل لمدة سنة كاملة ضد عيوب الصناعة، بالإضافة إلى خدمة عملاء متميزة تعمل على مدار الساعة لضمان رضاكم التام.`
+                  }
                 </p>
               </div>
+              
+              {/* المخزون */}
+              {product.stock && product.stock > 0 && (
+                <div className="py-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-600">المتوفر في المخزون:</span>
+                    <span className={`font-medium ${product.stock > 10 ? 'text-green-600' : product.stock > 5 ? 'text-yellow-600' : 'text-red-600'}`}>
+                      {product.stock} قطعة
+                    </span>
+                  </div>
+                </div>
+              )}
               
               {/* الكمية */}
               <div className="py-2">
@@ -195,7 +229,7 @@ const handleAddToCart = async () => {
                   <div className="flex items-center border border-gray-300 rounded text-center w-24">
                     <button
                       onClick={() => handleQuantityChange(quantity - 1)}
-                      disabled={quantity <= 1}
+                      disabled={isMinQuantityReached}
                       className="p-1 disabled:opacity-50 hover:bg-gray-100 transition-colors duration-200"
                     >
                       <Minus className="w-3 h-3" />
@@ -203,7 +237,7 @@ const handleAddToCart = async () => {
                     <span className="px-2 py-1 bg-gray-50 w-8 text-sm">{quantity}</span>
                     <button 
                       onClick={() => handleQuantityChange(quantity + 1)} 
-                      disabled={quantity >= 20}
+                      disabled={isMaxQuantityReached}
                       className="p-1 disabled:opacity-50 hover:bg-gray-100 transition-colors duration-200"
                     >
                       <Plus className="w-3 h-3" />
@@ -221,14 +255,18 @@ const handleAddToCart = async () => {
               <div className="space-y-3 py-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={isAdding}
+                  disabled={isAdding || !product.inStock}
                   className={`w-full py-3 rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
-                    showSuccess 
-                      ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : 'bg-teal-600 hover:bg-teal-700 text-white'
+                    !product.inStock
+                      ? 'bg-gray-400 cursor-not-allowed text-white'
+                      : showSuccess 
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-teal-600 hover:bg-teal-700 text-white'
                   } ${isAdding ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  {showSuccess ? (
+                  {!product.inStock ? (
+                    'غير متوفر'
+                  ) : showSuccess ? (
                     <>
                       <Check className="w-4 h-4" />
                       تمت الإضافة
@@ -241,17 +279,17 @@ const handleAddToCart = async () => {
                   ) : (
                     <>
                       <ShoppingCart className="w-4 h-4" />
-                      إضافة للسلة
+                      {productInCart ? 'تحديث الكمية' : 'إضافة للسلة'}
                     </>
                   )}
                 </button>
 
                 <button 
                   onClick={handleBuyNow}
-                  disabled={isAdding}
+                  disabled={isAdding || !product.inStock}
                   className="w-full border-2 border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isAdding ? 'جاري التحضير...' : 'اشتري الآن'}
+                  {!product.inStock ? 'غير متوفر' : isAdding ? 'جاري التحضير...' : 'اشتري الآن'}
                 </button>
               </div>
             </div>
@@ -263,7 +301,7 @@ const handleAddToCart = async () => {
                 <div className="aspect-square relative bg-gray-100 w-full" style={{ minHeight: '250px', maxHeight: '250px' }}>
                   <Image
                     src={productImages[selectedImage]}
-                    alt={product.name}
+                    alt={product.nameAr || product.name}
                     fill
                     className="object-cover w-full h-full"
                   />
@@ -277,6 +315,14 @@ const handleAddToCart = async () => {
                   {product.isNew && !product.salePrice && (
                     <div className="absolute top-2 right-2 bg-green-700 text-white text-[10px] px-2 py-0.5 rounded">
                       جديد
+                    </div>
+                  )}
+                  {/* شارة نفاد المخزون */}
+                  {!product.inStock && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <span className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium">
+                        نفد المخزون
+                      </span>
                     </div>
                   )}
                 </div>
@@ -295,6 +341,24 @@ const handleAddToCart = async () => {
                     <Image src={img} alt="" width={80} height={80} className="w-full h-full object-cover" />
                   </button>
                 ))}
+              </div>
+
+              {/* معلومات إضافية */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">العلامة التجارية:</span>
+                  <span className="font-medium">{product.brandAr || product.brand || 'غير محدد'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">التصنيف:</span>
+                  <span className="font-medium">{product.categoryAr || product.category}</span>
+                </div>
+                {product.sales && (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">عدد المبيعات:</span>
+                    <span className="font-medium">{product.sales}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

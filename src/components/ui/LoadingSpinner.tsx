@@ -119,7 +119,7 @@ export default function LoadingSpinner({
       }, 2800);
       return () => clearInterval(interval);
     }
-  }, [message]);
+  }, [message,messages]);
 
   const spinnerContent = (
     <div className="flex flex-col items-center justify-center">
