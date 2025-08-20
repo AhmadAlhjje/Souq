@@ -47,7 +47,7 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
           id: "add-product",
           label: t("sidebar.products.add"),
           icon: Plus,
-          href: "/admin/products/add",
+          href: "/admin/dashboard/addproducts",
         },
       ],
     },
