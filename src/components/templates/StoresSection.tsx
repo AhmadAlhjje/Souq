@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
-import Button from '../atoms/Button';
 import Typography from '../atoms/Typography';
-import Icon from '../atoms/Icon';
 import StoreCard from '../organisms/StoreCard';
 import OffersSlider from '../organisms/OffersSlider';
-import SearchInput from '../molecules/SearchInput';
 
 interface Store {
   id: number;
