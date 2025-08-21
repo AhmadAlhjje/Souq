@@ -551,6 +551,7 @@
       "subtitle": "Store Management"
     },
     "dashboard": "Dashboard",
+    "createStore": "Create Store",
     "products": {
       "main": "Products",
       "all": "All Products",
