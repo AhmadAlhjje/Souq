@@ -4,7 +4,7 @@ import Button from "../atoms/Button";
 import StatItem from "../molecules/StatItem";
 import HeroImageCard from "./HeroImageCard";
 
-const HeroSection = () => {
+const HeroSection: React.FC = () => {
   return (
     <div className="mt-2 relative min-h-screen bg-gradient-to-br from-[#96EDD9] via-[#A8F0DC] to-[#B8F3E0] overflow-hidden">
       {/* Background Elements */}
@@ -26,7 +26,7 @@ const HeroSection = () => {
               </div>
 
               <div className="space-y-6 animate-in slide-in-from-right duration-1000 delay-300">
-                <Text size="xl" className="font-bold leading-relaxed text-[#003940]">
+                <div className="font-bold leading-relaxed text-[#003940] text-xl">
                   شركة 
                   <span className="relative inline-block mx-2">
                     <span className="text-[#004D5A] font-black">TMC</span>
@@ -36,23 +36,22 @@ const HeroSection = () => {
                   <span className="block text-lg sm:text-xl lg:text-2xl text-[#004D5A]/80 font-medium mt-2">
                     هي شركة متخصصة في التقنية والتجارة الإلكترونية
                   </span>
-                </Text>
+                </div>
                 
-                <Text color="secondary" className="leading-loose">
-                  نوفر منصة متكاملة لبناء المتاجر الإلكترونية بسهولة وأمان، 
-                  مع حلول تقنية متقدمة تشمل إدارة المحتوى الشامل والدفع الرقمي، 
-                  بالإضافة إلى أدوات تسويقية ذكية تساعد على زيادة التفاعل والمبيعات
-                </Text>
+                <Text 
+                  text="نوفر منصة متكاملة لبناء المتاجر الإلكترونية بسهولة وأمان، مع حلول تقنية متقدمة تشمل إدارة المحتوى الشامل والدفع الرقمي، بالإضافة إلى أدوات تسويقية ذكية تساعد على زيادة التفاعل والمبيعات"
+                  variant="subtitle"
+                  className="leading-loose"
+                />
               </div>
 
               <div className="pt-6 animate-in slide-in-from-right duration-1000 delay-500">
                 <Button 
+                  text="ابدأ الآن مجاناً"
                   variant="primary" 
                   size="lg"
                   className="hover:border-[#96EDD9]/30 border-2 border-transparent"
-                >
-                  ابدأ الآن مجاناً
-                </Button>
+                />
               </div>
 
               {/* Stats Section */}

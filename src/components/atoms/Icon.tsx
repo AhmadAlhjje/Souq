@@ -18,11 +18,15 @@ import {
   FaHeadphones,
   FaChevronRight,
   FaPercent,
-  FaEnvelope,     // ✅ تم استيراده
-  FaMobile        // ✅ تم استيراده
+  FaEnvelope,
+  FaMobile,
+  FaRocket,
+  FaBolt,
+  FaGlobe
 } from 'react-icons/fa';
-export interface IconProps { // ✅ أضف `export`
-  name: 
+
+export interface IconProps {
+  name:
     | 'search'
     | 'facebook'
     | 'twitter'
@@ -42,7 +46,10 @@ export interface IconProps { // ✅ أضف `export`
     | 'chevron-right'
     | 'percent'
     | 'envelope'
-    | 'phone';
+    | 'phone'
+    | 'rocket'   // ✅ جديد
+    | 'bolt'     // ✅ جديد
+    | 'globe';   // ✅ جديد
 
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -74,8 +81,11 @@ const Icon: React.FC<IconProps> = ({
     headphones: FaHeadphones,
     'chevron-right': FaChevronRight,
     percent: FaPercent,
-    phone: FaMobile,       // ✅ أيقونة الهاتف
-    envelope: FaEnvelope   // ✅ أيقونة البريد الإلكتروني (تم إضافتها هنا)
+    phone: FaMobile,
+    envelope: FaEnvelope,
+    rocket: FaRocket,   // ✅ جديد
+    bolt: FaBolt,       // ✅ جديد
+    globe: FaGlobe      // ✅ جديد
   };
 
   const sizes = {
