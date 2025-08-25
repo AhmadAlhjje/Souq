@@ -39,7 +39,11 @@ export function middleware(request: NextRequest) {
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
 
-      if (payload.exp && payload.exp >= Date.now() / 1000 && payload.role === "merchant") {
+      if (
+        payload.exp &&
+        payload.exp >= Date.now() / 1000 &&
+        payload.role === "merchant"
+      ) {
         return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
     } catch {
@@ -55,6 +59,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)",
   ],
 };

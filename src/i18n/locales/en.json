@@ -552,6 +552,7 @@
     },
     "dashboard": "Dashboard",
     "createStore": "Create Store",
+    "profile": "Profile",
     "products": {
       "main": "Products",
       "all": "All Products",

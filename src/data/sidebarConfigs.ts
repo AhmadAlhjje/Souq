@@ -15,6 +15,7 @@ import {
   FileText,
   DollarSign,
   Plus,
+  User,
 } from "lucide-react";
 import { SidebarConfig } from "@/types/admin";
 
@@ -272,12 +273,17 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
     //   ],
     // },
     {
-      id: "create-store", 
-      label: t("sidebar.createStore"), 
-      icon: Store, 
+      id: "profile",
+      label: t("sidebar.profile"),
+      icon: User, // أو User2, UserCircle, Settings
+      href: "/admin/dashboard/profile",
+    },
+    {
+      id: "create-store",
+      label: t("sidebar.createStore"),
+      icon: Store,
       href: "/admin/dashboard/creatingStore",
     },
-     
   ],
   bottomMenuItems: [
     {
