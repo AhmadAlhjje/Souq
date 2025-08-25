@@ -1,4 +1,3 @@
-
 // types/index.ts
 export interface IconProps {
   name: 
@@ -90,3 +89,6 @@ export interface SolutionCardProps {
 export interface AboutPageTemplateProps {
   solutions: Solution[];
 }
+export * from './common';
+export * from './profile';
+

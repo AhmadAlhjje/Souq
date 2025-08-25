@@ -35,6 +35,7 @@ const SidebarMenuItemComponent: React.FC<SidebarMenuItemProps> = ({
   const isActive = item.href ? isActiveRoute(item.href) : false;
   const isExpanded = expandedItems.includes(item.id);
   const hasChildren = Boolean(item.children && item.children.length > 0);
+  
   return (
     <div className="w-full">
       <div
@@ -43,9 +44,11 @@ const SidebarMenuItemComponent: React.FC<SidebarMenuItemProps> = ({
           ${level > 0 ? "mr-4" : ""}
           ${
             isActive
-              ? isDark
-                ? "bg-blue-600 text-white shadow-lg"
-                : "bg-[#004D5A] text-white shadow-lg"
+              ? item.id === "dashboard"
+                ? isDark
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "bg-[#004D5A] text-white shadow-lg"
+                : "bg-teal-500 text-white shadow-lg"
               : isDark
               ? "text-gray-300 hover:bg-gray-700 hover:text-white"
               : "text-[#004D5A] hover:bg-[#CFF7EE] hover:text-[#004D5A]"
