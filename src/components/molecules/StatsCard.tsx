@@ -1,27 +1,98 @@
-    import React from 'react';
-import { Text, Heading } from '../atoms';
+
+// src/components/molecules/StatsCard.tsx
+import React from 'react';
+import { LucideIcon } from 'lucide-react';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface StatsCardProps {
-  value: string | number;
-  label: string;
-  themeClasses: {
-    textPrimary: string;
-    textMuted: string;
-  };
+  title: string;
+  value: number | string;
+  icon: LucideIcon;
+  color: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
+  loading?: boolean;
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
+  title,
   value,
-  label,
-  themeClasses
+  icon: Icon,
+  color,
+  loading = false
 }) => {
-  return (
-    <div className="text-center">
-      <div className={`text-2xl font-bold ${themeClasses.textPrimary}`}>
-        {value}
+  const { isDark } = useThemeContext();
+
+  const colorClasses = {
+    blue: {
+      bg: isDark ? 'bg-blue-900/20' : 'bg-blue-50',
+      icon: isDark ? 'text-blue-400' : 'text-blue-500',
+      border: isDark ? 'border-blue-800' : 'border-blue-200'
+    },
+    green: {
+      bg: isDark ? 'bg-green-900/20' : 'bg-green-50',
+      icon: isDark ? 'text-green-400' : 'text-green-500',
+      border: isDark ? 'border-green-800' : 'border-green-200'
+    },
+    red: {
+      bg: isDark ? 'bg-red-900/20' : 'bg-red-50',
+      icon: isDark ? 'text-red-400' : 'text-red-500',
+      border: isDark ? 'border-red-800' : 'border-red-200'
+    },
+    yellow: {
+      bg: isDark ? 'bg-yellow-900/20' : 'bg-yellow-50',
+      icon: isDark ? 'text-yellow-400' : 'text-yellow-500',
+      border: isDark ? 'border-yellow-800' : 'border-yellow-200'
+    },
+    purple: {
+      bg: isDark ? 'bg-purple-900/20' : 'bg-purple-50',
+      icon: isDark ? 'text-purple-400' : 'text-purple-500',
+      border: isDark ? 'border-purple-800' : 'border-purple-200'
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`rounded-lg border p-6 animate-pulse ${
+        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className={`h-4 rounded w-20 mb-2 ${
+              isDark ? 'bg-gray-700' : 'bg-gray-200'
+            }`}></div>
+            <div className={`h-8 rounded w-16 ${
+              isDark ? 'bg-gray-700' : 'bg-gray-200'
+            }`}></div>
+          </div>
+          <div className={`w-12 h-12 rounded-lg ${
+            isDark ? 'bg-gray-700' : 'bg-gray-200'
+          }`}></div>
+        </div>
       </div>
-      <div className={`text-sm ${themeClasses.textMuted}`}>
-        {label}
+    );
+  }
+
+  return (
+    <div className={`rounded-lg border p-6 hover:shadow-md transition-shadow ${
+      isDark 
+        ? 'bg-gray-800 border-gray-700 hover:shadow-gray-900/50' 
+        : 'bg-white border-gray-200'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`text-sm font-medium mb-1 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {title}
+          </p>
+          <p className={`text-2xl font-bold ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            {value}
+          </p>
+        </div>
+        <div className={`w-12 h-12 rounded-lg border flex items-center justify-center ${colorClasses[color].bg} ${colorClasses[color].border}`}>
+          <Icon className={`w-6 h-6 ${colorClasses[color].icon}`} />
+        </div>
       </div>
     </div>
   );

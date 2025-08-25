@@ -52,39 +52,39 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
         },
       ],
     },
-    // {
-    //   id: "orders",
-    //   label: t("sidebar.orders.main"),
-    //   icon: ShoppingCart,
-    //   badge: 12,
-    //   children: [
-    //     {
-    //       id: "all-orders",
-    //       label: t("sidebar.orders.all"),
-    //       icon: ShoppingCart,
-    //       href: "/admin/orders",
-    //     },
-    //     {
-    //       id: "pending-orders",
-    //       label: t("sidebar.orders.pending"),
-    //       icon: ShoppingCart,
-    //       href: "/admin/orders/pending",
-    //       badge: 5,
-    //     },
-    //     {
-    //       id: "shipped-orders",
-    //       label: t("sidebar.orders.shipped"),
-    //       icon: Truck,
-    //       href: "/admin/orders/shipped",
-    //     },
-    //     {
-    //       id: "completed-orders",
-    //       label: t("sidebar.orders.completed"),
-    //       icon: ShoppingCart,
-    //       href: "/admin/orders/completed",
-    //     },
-    //   ],
-    // },
+    {
+      id: "orders",
+      label: t("sidebar.orders.main"),
+      icon: ShoppingCart,
+      // badge: 12,
+      children: [
+        {
+          id: "all-orders",
+          label: t("sidebar.orders.all"),
+          icon: ShoppingCart,
+          href: "/admin/dashboard/orders",
+        },
+        // {
+        //   id: "pending-orders",
+        //   label: t("sidebar.orders.pending"),
+        //   icon: ShoppingCart,
+        //   href: "/admin/dashboard/orders/pending",
+        //   badge: 5,
+        // },
+        // {
+        //   id: "shipped-orders",
+        //   label: t("sidebar.orders.shipped"),
+        //   icon: Truck,
+        //   href: "/admin/dashboard/orders/shipped",
+        // },
+        // {
+        //   id: "completed-orders",
+        //   label: t("sidebar.orders.completed"),
+        //   icon: ShoppingCart,
+        //   href: "/admin/dashboard/orders/completed",
+        // },
+      ],
+    },
     // {
     //   id: "customers",
     //   label: t("sidebar.customers.main"),
@@ -291,7 +291,7 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       label: t("sidebar.bottom.notifications"),
       icon: Bell,
       href: "/admin/notifications",
-      badge: 7,
+      // badge: 7,
     },
     {
       id: "help",
@@ -327,7 +327,7 @@ export const getCustomerSidebarConfig = (t: any): SidebarConfig => ({
       label: t("customer.sidebar.orders"),
       icon: ShoppingCart,
       href: "/customer/orders",
-      badge: 3,
+      // badge: 3,
     },
     {
       id: "profile",

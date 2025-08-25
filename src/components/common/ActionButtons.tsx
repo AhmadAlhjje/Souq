@@ -1,24 +1,14 @@
 "use client";
 
 import React from "react";
-import { 
-  Eye, 
-  Edit, 
-  Trash2, 
-  Plus, 
-  Download, 
-  Upload, 
-  Search, 
-  Filter,
-  Check,
-  X
-} from "lucide-react";
-import { useThemeContext } from '@/contexts/ThemeContext';
+import { Eye, Edit, Trash2, Plus, Download, Upload, Search, Filter, Truck } from "lucide-react";
+import useTheme from "@/hooks/useTheme";
+
 
 interface BaseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   size?: "sm" | "md" | "lg";
-  variant?: "primary" | "success" | "danger" | "secondary" | "icon-only" | "confirm" | "cancel";
+  variant?: "primary" | "success" | "danger" | "secondary" | "icon-only" | "confirm" | "cancel" | "ship";
   tooltip?: string;
   text?: string;
   icon: React.ReactNode;
@@ -61,6 +51,8 @@ export function ActionButton({
           return "text-red-400 hover:bg-red-900/20 focus:ring-red-500";
         case "secondary":
           return "text-gray-400 hover:bg-gray-800 focus:ring-gray-500";
+        case "ship":
+          return "text-teal-400 hover:bg-teal-900/20 focus:ring-teal-500 hover:shadow-lg hover:shadow-teal-500/20";
         case "icon-only":
           return "text-gray-300 hover:bg-gray-700 focus:ring-gray-500";
         case "confirm":
@@ -80,6 +72,8 @@ export function ActionButton({
           return "text-red-500 hover:bg-red-50 focus:ring-red-500";
         case "secondary":
           return "text-gray-600 hover:bg-gray-100 focus:ring-gray-500";
+        case "ship":
+          return "text-teal-600 hover:bg-teal-50 focus:ring-teal-500 hover:shadow-lg hover:shadow-teal-500/20";
         case "icon-only":
           return "text-gray-700 hover:bg-gray-200 focus:ring-gray-500";
         case "confirm":
@@ -118,14 +112,25 @@ export function ActionButton({
       aria-label={tooltip || text}
       {...props}
     >
+      {/* Special effect for ship button */}
+      {variant === "ship" && !disabled && !loading && (
+        <div className="absolute inset-0 bg-gradient-to-r from-teal-400/0 via-teal-400/10 to-teal-400/0 animate-pulse"></div>
+      )}
+      
       {loading ? (
         <div
           className={`animate-spin rounded-full border-2 border-current border-t-transparent ${iconSizes[size]}`}
         />
       ) : (
         <>
-          <span className={iconSizes[size]}>{icon}</span>
-          {text && variant !== "icon-only" && <span>{text}</span>}
+          <span className={`${iconSizes[size]} ${variant === "ship" ? "relative z-10" : ""}`}>
+            {icon}
+          </span>
+          {text && variant !== "icon-only" && (
+            <span className={variant === "ship" ? "relative z-10" : ""}>
+              {text}
+            </span>
+          )}
         </>
       )}
     </button>
@@ -167,6 +172,18 @@ export function DeleteButton(props: Omit<BaseButtonProps, "icon" | "variant" | "
       text={props.text}
       tooltip={props.tooltip ?? (props.text ? undefined : "حذف / Delete")}
       loading={props.loading}
+    />
+  );
+}
+
+export function ShipButton(props: Omit<BaseButtonProps, "icon" | "variant" | "text"> & { text?: string }) {
+  return (
+    <ActionButton
+      {...props}
+      icon={<Truck />}
+      variant="ship"
+      text={props.text}
+      tooltip={props.tooltip ?? (props.text ? undefined : "تم الشحن / Ship")}
     />
   );
 }
