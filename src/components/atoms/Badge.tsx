@@ -1,19 +1,17 @@
-// الحل الأول: تحديث Badge component ليدعم كلاً من text وchildren وإضافة primary
-// components/atoms/Badge.tsx
 import React from 'react';
 
 interface BadgeProps {
   children?: React.ReactNode;
   text?: string; // إضافة text property
-  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary' | 'hero'; 
+  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary' | 'hero';
   className?: string; // إضافة className للمرونة
 }
 
-const Badge: React.FC<BadgeProps> = ({ 
-  children, 
-  text, 
-  variant = 'default', 
-  className = '' 
+const Badge: React.FC<BadgeProps> = ({
+  children,
+  text,
+  variant = 'default',
+  className = ''
 }) => {
   const variants = {
     default: "bg-gray-100 text-gray-800",

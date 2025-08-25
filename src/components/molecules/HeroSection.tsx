@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 const HeroSection: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const isRTL = i18n.dir() === 'rtl';
+  const isRTL = i18n.dir() === 'rtl'; 
 
   // Dynamic classes based on direction
   const textAlign = isRTL ? 'text-right' : 'text-left';

@@ -1,8 +1,26 @@
 import React from 'react';
 
+// تعريف الألوان الأساسية
+const COLORS = {
+  light: {
+    primary: '#004D5A',
+    secondary: '#96EDD9',
+    success: '#10B981',
+    info: '#3B82F6',
+    warning: '#F59E0B',
+    text: {
+      primary: '#004D5A',
+      inverse: '#FFFFFF'
+    },
+    border: {
+      light: '#E5E7EB'
+    }
+  }
+};
+
 interface ButtonProps {
-  text?: string; // جعلها اختيارية
-  children?: React.ReactNode; // إضافة children
+  text?: string;
+  children?: React.ReactNode;
   onClick?: () => void;
   className?: string;
   startIcon?: React.ReactNode;
@@ -10,13 +28,13 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
+  variant?: 'primary' | 'secondary' | 'success' | 'info' | 'warning' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg';
 }
 
 const Button: React.FC<ButtonProps> = ({ 
   text,
-  children, // إضافة children
+  children,
   onClick, 
   className = '', 
   startIcon, 
@@ -27,37 +45,29 @@ const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'md'
 }) => {
-  // Base classes
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const colors = COLORS.light;
   
-  // Variant classes
-  const variantClasses = {
-    primary: 'bg-[#004D5A] text-white hover:bg-[#003a44] focus:ring-[#5CA9B5]',
-    secondary: 'bg-[#5CA9B5] text-white hover:bg-[#4a8b94] focus:ring-[#5CA9B5]',
-    danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
-    success: 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500',
-    ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-500',
-    outline: 'bg-transparent border-2 border-[#004D5A] text-[#004D5A] hover:bg-[#004D5A] hover:text-white focus:ring-[#5CA9B5]'
-  };
+  // Base classes
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 transform hover:scale-105 active:scale-95';
   
   // Size classes
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
+    sm: 'px-3 py-1.5 text-xs sm:text-sm',
+    md: 'px-4 py-2 text-sm sm:text-base',
+    lg: 'px-6 py-3 text-base sm:text-lg'
   };
 
   // Icon size based on button size
   const iconSize = {
-    sm: '16px',
-    md: '18px',
-    lg: '20px'
+    sm: '14px',
+    md: '16px',
+    lg: '18px'
   };
 
   // Loading spinner component
   const LoadingSpinner = () => (
     <div 
-      className="animate-spin rounded-full border-2 border-white border-t-transparent"
+      className="animate-spin rounded-full border-2 border-current border-t-transparent"
       style={{ 
         width: iconSize[size], 
         height: iconSize[size] 
@@ -65,28 +75,102 @@ const Button: React.FC<ButtonProps> = ({
     />
   );
 
+  // Get variant styles
+  const getVariantStyles = () => {
+    const baseStyle = {
+      transition: 'all 0.3s ease'
+    };
+
+    switch (variant) {
+      case 'primary':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.primary,
+          color: colors.text.inverse,
+          boxShadow: `0 4px 15px ${colors.primary}30`
+        };
+      case 'secondary':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.secondary,
+          color: colors.text.primary,
+          border: `1px solid ${colors.border.light}`
+        };
+      case 'success':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.success,
+          color: colors.text.inverse
+        };
+      case 'info':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.info,
+          color: colors.text.inverse
+        };
+      case 'warning':
+        return {
+          ...baseStyle,
+          backgroundColor: colors.warning,
+          color: colors.text.inverse
+        };
+      case 'outline':
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          color: colors.primary,
+          border: `2px solid ${colors.primary}`
+        };
+      case 'ghost':
+        return {
+          ...baseStyle,
+          backgroundColor: 'transparent',
+          color: colors.text.primary
+        };
+      default:
+        return baseStyle;
+    }
+  };
+
   // Determine if button should be disabled
   const isDisabled = disabled || loading;
 
   // Build final className
   const finalClassName = `
     ${baseClasses}
-    ${variantClasses[variant]}
     ${sizeClasses[size]}
     ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
     ${className}
   `.trim();
 
-  // تحديد المحتوى - إما text أو children
+  // Determine content - either text or children
   const content = children || text;
+
+  // Enhanced hover effects
+  const handleMouseEnter = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isDisabled && variant === 'primary') {
+      e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
+      e.currentTarget.style.boxShadow = `0 6px 20px ${colors.primary}40`;
+    }
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!isDisabled && variant === 'primary') {
+      e.currentTarget.style.transform = 'scale(1)';
+      e.currentTarget.style.boxShadow = `0 4px 15px ${colors.primary}30`;
+    }
+  };
 
   return (
     <button
       onClick={isDisabled ? undefined : onClick}
       className={finalClassName}
+      style={getVariantStyles()}
       type={type}
       disabled={isDisabled}
       aria-disabled={isDisabled}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {/* Loading state */}
       {loading ? (
@@ -99,7 +183,7 @@ const Button: React.FC<ButtonProps> = ({
         )
       )}
       
-      {/* Button content - إما text أو children */}
+      {/* Button content */}
       {typeof content === 'string' ? (
         <span className="whitespace-nowrap">{content}</span>
       ) : (
