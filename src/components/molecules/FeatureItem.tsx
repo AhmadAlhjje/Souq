@@ -1,21 +1,28 @@
-import React from "react";
-import Heading from "../atoms/Heading";
-import Text from "../atoms/Text";
+'use client';
+// molecules/FeatureItem.tsx - تم تعديله ليستخدم مكونات الـ atoms الجديدة
+import React from 'react';
+import Typography from '../atoms/Typography';
 
-const FeatureItem = ({ icon, title, description }) => {
+export interface FeatureItemProps {
+  icon: React.ReactNode;
+  title: string;
+  description?: string;
+}
+
+const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => {
   return (
     <div className="flex items-start space-x-4 space-x-reverse group">
       <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
         {icon}
       </div>
       <div className="flex-1">
-        <Heading level={4} className="leading-tight mb-1">
+        <Typography variant="h3" className="leading-tight mb-1">
           {title}
-        </Heading>
+        </Typography>
         {description && (
-          <Text size="sm" color="muted">
+          <Typography variant="caption">
             {description}
-          </Text>
+          </Typography>
         )}
       </div>
     </div>
