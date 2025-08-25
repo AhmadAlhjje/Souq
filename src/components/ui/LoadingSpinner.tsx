@@ -80,6 +80,15 @@ export default function LoadingSpinner({
     gray: 'gray'
   };
 
+  // رسائل محسنة ومخصصة للمتاجر الإلكترونية - useMemo لحل مشكلة التحديث المستمر
+  const messages = React.useMemo(() => [
+    '🛒 جاري تحميل أحدث المنتجات...',
+    '💫 نحضر لك تجربة تسوق مميزة...',
+    '🔄 معالجة طلبك بعناية...',
+    '🎯 البحث عن أفضل العروض...',
+    '✨ تحديث الكتالوج...',
+  ], []);
+
   // النقاط المتحركة محسنة مع تأثيرات أكثر
   const DotsAnimation = () => (
     <div className="flex items-center justify-center space-x-1.5 mt-4" style={{ direction: 'ltr' }}>
@@ -96,15 +105,6 @@ export default function LoadingSpinner({
     </div>
   );
 
-  // رسائل محسنة ومخصصة للمتاجر الإلكترونية
-  const messages = [
-    '🛒 جاري تحميل أحدث المنتجات...',
-    '💫 نحضر لك تجربة تسوق مميزة...',
-    '🔄 معالجة طلبك بعناية...',
-    '🎯 البحث عن أفضل العروض...',
-    '✨ تحديث الكتالوج...',
-  ];
-
   const [currentMessage, setCurrentMessage] = React.useState(message || messages[0]);
   const [messageIndex, setMessageIndex] = React.useState(0);
 
@@ -119,7 +119,7 @@ export default function LoadingSpinner({
       }, 2800);
       return () => clearInterval(interval);
     }
-  }, [message,messages]);
+  }, [message, messages]); // إضافة messages للـ dependencies بعد useMemo
 
   const spinnerContent = (
     <div className="flex flex-col items-center justify-center">
@@ -171,9 +171,6 @@ export default function LoadingSpinner({
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 animate-shimmer"></div>
         </div>
       </div>
-
-      {/* قسم المعلومات المحسن */}
- 
     </div>
   );
 

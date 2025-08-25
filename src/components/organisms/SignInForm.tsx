@@ -2,7 +2,6 @@
 import React from 'react';
 import { User, Loader2 } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
-import PasswordField from '../../components/molecules/PasswordField';
 import { useTranslation } from 'react-i18next';
 
 interface SignInFormData {
@@ -49,8 +48,11 @@ const SignInForm: React.FC<SignInFormProps> = ({
         disabled={isLoading}
       />
       
-      <PasswordField
+      {/* استبدال PasswordField بـ InputField مع type="password" */}
+      <InputField
         label="كلمة المرور"
+        type="password"
+        placeholder="أدخل كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
         required={true}
