@@ -1,13 +1,24 @@
 "use client";
 
 import React from "react";
-import { Eye, Edit, Trash2, Plus, Download, Upload, Search, Filter } from "lucide-react";
-import useTheme from "@/hooks/useTheme";
+import { 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Plus, 
+  Download, 
+  Upload, 
+  Search, 
+  Filter,
+  Check,
+  X
+} from "lucide-react";
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 interface BaseButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
   size?: "sm" | "md" | "lg";
-  variant?: "primary" | "success" | "danger" | "secondary" | "icon-only";
+  variant?: "primary" | "success" | "danger" | "secondary" | "icon-only" | "confirm" | "cancel";
   tooltip?: string;
   text?: string;
   icon: React.ReactNode;
@@ -36,7 +47,7 @@ export function ActionButton({
   onClick,
   ...props
 }: BaseButtonProps) {
-  const { isDark } = useTheme();
+  const { isDark } = useThemeContext();
 
   // Dynamic variant classes based on theme
   const getVariantClasses = (variant: string) => {
@@ -52,6 +63,10 @@ export function ActionButton({
           return "text-gray-400 hover:bg-gray-800 focus:ring-gray-500";
         case "icon-only":
           return "text-gray-300 hover:bg-gray-700 focus:ring-gray-500";
+        case "confirm":
+          return "text-emerald-400 hover:bg-emerald-900/30 focus:ring-emerald-500 bg-emerald-900/20 border border-emerald-800/50 shadow-emerald-900/25";
+        case "cancel":
+          return "text-rose-400 hover:bg-rose-900/30 focus:ring-rose-500 bg-rose-900/20 border border-rose-800/50 shadow-rose-900/25";
         default:
           return "text-gray-300 hover:bg-gray-700 focus:ring-gray-500";
       }
@@ -67,6 +82,10 @@ export function ActionButton({
           return "text-gray-600 hover:bg-gray-100 focus:ring-gray-500";
         case "icon-only":
           return "text-gray-700 hover:bg-gray-200 focus:ring-gray-500";
+        case "confirm":
+          return "text-emerald-700 hover:bg-emerald-100 focus:ring-emerald-500 bg-emerald-50/80 border border-emerald-200 shadow-emerald-100/50 hover:shadow-emerald-200";
+        case "cancel":
+          return "text-rose-700 hover:bg-rose-100 focus:ring-rose-500 bg-rose-50/80 border border-rose-200 shadow-rose-100/50 hover:shadow-rose-200";
         default:
           return "text-gray-700 hover:bg-gray-200 focus:ring-gray-500";
       }
@@ -77,14 +96,16 @@ export function ActionButton({
 
   const baseClasses = `
     inline-flex items-center justify-center
-    rounded-md
-    transition-all duration-200
+    rounded-lg
+    transition-all duration-300 ease-in-out
     focus:outline-none focus:ring-2 focus:ring-offset-2
-    transform hover:scale-105 active:scale-95
+    transform hover:scale-105 active:scale-95 active:duration-75
+    shadow-sm hover:shadow-md
     ${variantClass}
     ${sizeClasses[size]}
-    ${disabled || loading ? "opacity-50 cursor-not-allowed scale-100" : "cursor-pointer"}
+    ${disabled || loading ? "opacity-50 cursor-not-allowed scale-100 hover:shadow-sm" : "cursor-pointer"}
     ${text ? "gap-2" : ""}
+    ${variant === "confirm" || variant === "cancel" ? "font-medium" : ""}
   `;
 
   return (
@@ -201,6 +222,56 @@ export function FilterButton(props: Omit<BaseButtonProps, "icon" | "variant"> & 
       icon={<Filter />}
       variant="secondary"
       tooltip={props.tooltip ?? (props.text ? undefined : "تصفية / Filter")}
+    />
+  );
+}
+
+// أزرار الصح والغلط الجديدة
+export function ConfirmButton(props: Omit<BaseButtonProps, "icon" | "variant" | "text"> & { text?: string }) {
+  return (
+    <ActionButton
+      {...props}
+      icon={<Check />}
+      variant="confirm"
+      text={props.text}
+      tooltip={props.tooltip ?? (props.text ? undefined : "تأكيد / Confirm")}
+    />
+  );
+}
+
+export function CancelButton(props: Omit<BaseButtonProps, "icon" | "variant" | "text"> & { text?: string }) {
+  return (
+    <ActionButton
+      {...props}
+      icon={<X />}
+      variant="cancel"
+      text={props.text}
+      tooltip={props.tooltip ?? (props.text ? undefined : "إلغاء / Cancel")}
+    />
+  );
+}
+
+// أزرار للحفظ والرفض (أشكال بديلة)
+export function SaveButton(props: Omit<BaseButtonProps, "icon" | "variant" | "text"> & { text?: string }) {
+  return (
+    <ActionButton
+      {...props}
+      icon={<Check />}
+      variant="success"
+      text={props.text ?? "حفظ"}
+      tooltip={props.tooltip ?? "حفظ التغييرات / Save"}
+    />
+  );
+}
+
+export function RejectButton(props: Omit<BaseButtonProps, "icon" | "variant" | "text"> & { text?: string }) {
+  return (
+    <ActionButton
+      {...props}
+      icon={<X />}
+      variant="danger"
+      text={props.text ?? "رفض"}
+      tooltip={props.tooltip ?? "رفض / Reject"}
     />
   );
 }
