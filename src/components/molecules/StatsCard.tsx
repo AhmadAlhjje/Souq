@@ -1,4 +1,3 @@
-
 // src/components/molecules/StatsCard.tsx
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
@@ -23,9 +22,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const colorClasses = {
     blue: {
-      bg: isDark ? 'bg-blue-900/20' : 'bg-blue-50',
-      icon: isDark ? 'text-blue-400' : 'text-blue-500',
-      border: isDark ? 'border-blue-800' : 'border-blue-200'
+      bg: isDark ? 'bg-[#5CA9B5]/15' : 'bg-[#5CA9B5]/10', // خلفية فاتحة
+      icon: isDark ? 'text-[#004D5A]' : 'text-[#004D5A]', // أيقونة داكنة
+      border: isDark ? 'border-[#5CA9B5]/40' : 'border-[#5CA9B5]/30'
     },
     green: {
       bg: isDark ? 'bg-green-900/20' : 'bg-green-50',
@@ -43,9 +42,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
       border: isDark ? 'border-yellow-800' : 'border-yellow-200'
     },
     purple: {
-      bg: isDark ? 'bg-purple-900/20' : 'bg-purple-50',
-      icon: isDark ? 'text-purple-400' : 'text-purple-500',
-      border: isDark ? 'border-purple-800' : 'border-purple-200'
+      bg: isDark ? 'bg-[#004D5A]/15' : 'bg-[#004D5A]/8', // خلفية داكنة
+      icon: isDark ? 'text-[#5CA9B5]' : 'text-[#5CA9B5]', // أيقونة فاتحة
+      border: isDark ? 'border-[#004D5A]/40' : 'border-[#004D5A]/25'
     }
   };
 
