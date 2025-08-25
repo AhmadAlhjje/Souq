@@ -1,8 +1,8 @@
 import React from 'react';
-import { 
-  FaFacebook, 
-  FaTwitter, 
-  FaLinkedin, 
+import {
+  FaFacebook,
+  FaTwitter,
+  FaLinkedin,
   FaInstagram,
   FaSearch,
   FaHeart,
@@ -12,28 +12,55 @@ import {
   FaMapMarkerAlt,
   FaClock,
   FaUsers,
-  FaShieldAlt, // استخدم FaShieldAlt بدلاً من FaShield
+  FaShieldAlt,
   FaCreditCard,
   FaTruck,
   FaHeadphones,
   FaChevronRight,
-  FaPercent
+  FaPercent,
+  FaEnvelope,
+  FaMobile,
+  FaRocket,
+  FaBolt,
+  FaGlobe
 } from 'react-icons/fa';
 
-interface IconProps {
-  name: 'facebook' | 'twitter' | 'linkedin' | 'instagram' | 'search' | 'heart' | 
-        'share' | 'cart' | 'star' | 'location' | 'clock' | 'users' | 'shield' | 
-        'credit-card' | 'truck' | 'headphones' | 'chevron-right' | 'percent';
+export interface IconProps {
+  name:
+    | 'search'
+    | 'facebook'
+    | 'twitter'
+    | 'linkedin'
+    | 'instagram'
+    | 'heart'
+    | 'share'
+    | 'cart'
+    | 'star'
+    | 'location'
+    | 'clock'
+    | 'users'
+    | 'shield'
+    | 'credit-card'
+    | 'truck'
+    | 'headphones'
+    | 'chevron-right'
+    | 'percent'
+    | 'envelope'
+    | 'phone'
+    | 'rocket'   // ✅ جديد
+    | 'bolt'     // ✅ جديد
+    | 'globe';   // ✅ جديد
+
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;
 }
 
-const Icon: React.FC<IconProps> = ({ 
-  name, 
-  className = '', 
+const Icon: React.FC<IconProps> = ({
+  name,
+  className = '',
   size = 'md',
-  color 
+  color
 }) => {
   const iconMap = {
     facebook: FaFacebook,
@@ -48,12 +75,17 @@ const Icon: React.FC<IconProps> = ({
     location: FaMapMarkerAlt,
     clock: FaClock,
     users: FaUsers,
-    shield: FaShieldAlt, // هنا الإصلاح
+    shield: FaShieldAlt,
     'credit-card': FaCreditCard,
     truck: FaTruck,
     headphones: FaHeadphones,
     'chevron-right': FaChevronRight,
-    percent: FaPercent
+    percent: FaPercent,
+    phone: FaMobile,
+    envelope: FaEnvelope,
+    rocket: FaRocket,   // ✅ جديد
+    bolt: FaBolt,       // ✅ جديد
+    globe: FaGlobe      // ✅ جديد
   };
 
   const sizes = {
