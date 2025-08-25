@@ -2,6 +2,34 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
 import { useCart, useCartNotifications } from "@/contexts/CartContext";
 import { Product } from "@/types/product";
+import { api } from "@/api/api";
+
+interface StoreProduct {
+  product_id: number;
+  store_id: number;
+  name: string;
+  description: string;
+  price: string;
+  stock_quantity: number;
+  images: string;
+  created_at: string;
+}
+
+interface StoreData {
+  store_id: number;
+  user_id: number;
+  store_name: string;
+  store_address: string;
+  description: string;
+  images: string;
+  logo_image: string;
+  created_at: string;
+  User: {
+    username: string;
+    whatsapp_number: string;
+  };
+  Products: StoreProduct[];
+}
 
 interface Offer {
   id: number;
@@ -11,7 +39,7 @@ interface Offer {
   discount: string;
   bgColor: string;
   icon: React.ReactNode;
-  product: Product; // إضافة منتج لكل عرض
+  product: Product;
 }
 
 const OffersSlider: React.FC = () => {
@@ -20,191 +48,213 @@ const OffersSlider: React.FC = () => {
   const [addingStates, setAddingStates] = useState<{ [key: number]: boolean }>(
     {}
   );
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // استخدام Cart Context
-  const { addToCart  } = useCart();
+  const { addToCart } = useCart();
   const { showAddToCartSuccess } = useCartNotifications();
 
-  // منتجات تجريبية للعروض
-  const offerProducts: Product[] = [
-    {
-      id: 201,
-      name: "Electronics Offer Product",
-      nameAr: "منتج عرض الإلكترونيات",
-      category: "electronics",
-      categoryAr: "إلكترونيات",
-      price: 400,
-      salePrice: 200,
-      originalPrice: 400,
-      rating: 4.8,
-      reviewCount: 150,
-      image:
-        "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop",
-      isNew: false,
-      stock: 50,
-      status: "active",
-      description: "منتج إلكتروني مميز مع خصم 50%",
-      descriptionAr: "منتج إلكتروني مميز مع خصم 50%",
-      brand: "ElectroOffer",
-      brandAr: "عرض إلكترو",
-      sales: 100,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 202,
-      name: "Free Shipping Product",
-      nameAr: "منتج الشحن المجاني",
-      category: "accessories",
-      categoryAr: "إكسسوارات",
-      price: 250,
-      originalPrice: 250,
-      rating: 4.5,
-      reviewCount: 89,
-      image:
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
-      isNew: true,
-      stock: 30,
-      status: "active",
-      description: "منتج مميز مع شحن مجاني",
-      descriptionAr: "منتج مميز مع شحن مجاني",
-      brand: "FreeShip",
-      brandAr: "الشحن المجاني",
-      sales: 60,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 203,
-      name: "Black Friday Deal",
-      nameAr: "عرض الجمعة البيضاء",
-      category: "fashion",
-      categoryAr: "أزياء",
-      price: 300,
-      salePrice: 90,
-      originalPrice: 300,
-      rating: 4.9,
-      reviewCount: 200,
-      image:
-        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-      isNew: false,
-      stock: 25,
-      status: "active",
-      description: "منتج الجمعة البيضاء مع خصم 70%",
-      descriptionAr: "منتج الجمعة البيضاء مع خصم 70%",
-      brand: "BlackFriday",
-      brandAr: "الجمعة البيضاء",
-      sales: 150,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 204,
-      name: "Summer Fashion",
-      nameAr: "أزياء الصيف",
-      category: "fashion",
-      categoryAr: "أزياء",
-      price: 180,
-      salePrice: 108,
-      originalPrice: 180,
-      rating: 4.6,
-      reviewCount: 75,
-      image:
-        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
-      isNew: false,
-      stock: 40,
-      status: "active",
-      description: "ملابس صيفية أنيقة مع خصم 40%",
-      descriptionAr: "ملابس صيفية أنيقة مع خصم 40%",
-      brand: "SummerStyle",
-      brandAr: "ستايل الصيف",
-      sales: 80,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 205,
-      name: "Welcome Coupon Item",
-      nameAr: "منتج كوبون الترحيب",
-      category: "home",
-      categoryAr: "منزل ومطبخ",
-      price: 120,
-      salePrice: 90,
-      originalPrice: 120,
-      rating: 4.4,
-      reviewCount: 45,
-      image:
-        "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=300&fit=crop",
-      isNew: true,
-      stock: 35,
-      status: "active",
-      description: "منتج ترحيبي للعملاء الجدد مع خصم 25%",
-      descriptionAr: "منتج ترحيبي للعملاء الجدد مع خصم 25%",
-      brand: "Welcome",
-      brandAr: "الترحيب",
-      sales: 30,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  // دالة تحويل منتج المتجر إلى منتج للنظام
+  const convertStoreProductToProduct = (
+    storeProduct: StoreProduct,
+    storeData: StoreData
+  ): Product => {
+    let images: string[] = [];
+    try {
+      // تنظيف وتحليل صور المنتج
+      const cleanImages = storeProduct.images.replace(/\\"/g, '"');
+      images = JSON.parse(cleanImages);
+    } catch (e) {
+      console.warn("خطأ في تحليل صور المنتج:", e);
+      images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
+    }
 
-  const offers: Offer[] = [
-    {
-      id: 1,
-      title: "خصم 50%",
-      description: "على جميع المنتجات الإلكترونية",
-      image:
-        "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=250&fit=crop",
-      discount: "50%",
-      bgColor: "bg-teal-50",
-      icon: <Tag className="w-5 h-5 text-teal-600" />,
-      product: offerProducts[0],
-    },
-    {
-      id: 2,
-      title: "شحن مجاني",
-      description: "للطلبات فوق 200 ريال",
-      image:
-        "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=250&fit=crop",
-      discount: "مجاني",
-      bgColor: "bg-emerald-50",
-      icon: <Truck className="w-5 h-5 text-emerald-600" />,
-      product: offerProducts[1],
-    },
-    {
-      id: 3,
-      title: "الجمعة البيضاء",
-      description: "خصومات تصل إلى 70%",
-      image:
-        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop",
-      discount: "70%",
-      bgColor: "bg-cyan-50",
-      icon: <Gift className="w-5 h-5 text-cyan-600" />,
-      product: offerProducts[2],
-    },
-    {
-      id: 4,
-      title: "عروض الصيف",
-      description: "تخفيضات على الملابس الصيفية",
-      image:
-        "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=250&fit=crop",
-      discount: "40%",
-      bgColor: "bg-blue-50",
-      icon: <Tag className="w-5 h-5 text-blue-600" />,
-      product: offerProducts[3],
-    },
-    {
-      id: 5,
-      title: "كوبون ترحيب",
-      description: "للعملاء الجدد فقط",
-      image:
-        "https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=400&h=250&fit=crop",
-      discount: "25%",
-      bgColor: "bg-indigo-50",
-      icon: <Gift className="w-5 h-5 text-indigo-600" />,
-      product: offerProducts[4],
-    },
-  ];
+    // تحديد السعر والخصم
+    const originalPrice = parseFloat(storeProduct.price);
+    const salePrice = originalPrice * 0.8; // خصم 20% كمثال
+
+    return {
+      id: storeProduct.product_id,
+      name: storeProduct.name,
+      nameAr: storeProduct.name,
+      category: "store-product",
+      categoryAr: "منتجات المتاجر",
+      price: originalPrice,
+      salePrice: salePrice,
+      originalPrice: originalPrice,
+      rating: 4.5,
+      reviewCount: Math.floor(Math.random() * 100) + 10,
+      image: images[0] || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+      isNew: false,
+      stock: storeProduct.stock_quantity,
+      status: "active",
+      description: storeProduct.description,
+      descriptionAr: storeProduct.description,
+      brand: storeData.store_name,
+      brandAr: storeData.store_name,
+      sales: Math.floor(Math.random() * 50) + 10,
+      inStock: storeProduct.stock_quantity > 0,
+      createdAt: storeProduct.created_at,
+    };
+  };
+
+  // دالة إنشاء العروض من بيانات المتاجر
+  const createOffersFromStores = (storeData: StoreData[]): Offer[] => {
+    const offerTypes = [
+      {
+        title: "خصم مميز",
+        description: "على منتجات مختارة",
+        discount: "20%",
+        bgColor: "bg-teal-50",
+        icon: <Tag className="w-5 h-5 text-teal-600" />,
+      },
+      {
+        title: "شحن مجاني",
+        description: "للطلبات فوق 200 ريال",
+        discount: "مجاني",
+        bgColor: "bg-emerald-50",
+        icon: <Truck className="w-5 h-5 text-emerald-600" />,
+      },
+      {
+        title: "عرض خاص",
+        description: "لفترة محدودة فقط",
+        discount: "30%",
+        bgColor: "bg-cyan-50",
+        icon: <Gift className="w-5 h-5 text-cyan-600" />,
+      },
+      {
+        title: "تخفيضات الصيف",
+        description: "على تشكيلة واسعة",
+        discount: "25%",
+        bgColor: "bg-blue-50",
+        icon: <Tag className="w-5 h-5 text-blue-600" />,
+      },
+      {
+        title: "عرض ترحيبي",
+        description: "للعملاء الجدد",
+        discount: "15%",
+        bgColor: "bg-indigo-50",
+        icon: <Gift className="w-5 h-5 text-indigo-600" />,
+      },
+    ];
+
+    const createdOffers: Offer[] = [];
+    let offerIdCounter = 1;
+
+    storeData.forEach((store) => {
+      store.Products.forEach((storeProduct, index) => {
+        if (createdOffers.length >= 8) return; // حد أقصى 8 عروض
+
+        const offerType = offerTypes[index % offerTypes.length];
+        const product = convertStoreProductToProduct(storeProduct, store);
+
+        let storeImages: string[] = [];
+        try {
+          storeImages = JSON.parse(store.images);
+        } catch (e) {
+          storeImages = [product.image];
+        }
+
+        createdOffers.push({
+          id: offerIdCounter++,
+          title: `${offerType.title} - ${store.store_name}`,
+          description: `${offerType.description} من ${store.store_name}`,
+          image: storeImages[0] || product.image,
+          discount: offerType.discount,
+          bgColor: offerType.bgColor,
+          icon: offerType.icon,
+          product: product,
+        });
+      });
+    });
+
+    return createdOffers;
+  };
+
+  // دالة جلب بيانات المتاجر
+  const fetchStoresData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // جلب بيانات عدة متاجر (يمكنك تعديل هذا حسب API الخاص بك)
+      const storeIds = [1, 2, 3]; // معرفات المتاجر التي تريد جلبها
+      const storePromises = storeIds.map(id => 
+        api.get<StoreData>(`/stores/${id}`).catch(err => {
+          console.warn(`فشل في جلب بيانات المتجر ${id}:`, err);
+          return null;
+        })
+      );
+
+      const storeResponses = await Promise.all(storePromises);
+      const validStores = storeResponses
+        .filter(response => response !== null)
+        .map(response => response!.data);
+
+      if (validStores.length === 0) {
+        throw new Error("لم يتم العثور على أي متاجر");
+      }
+
+      const generatedOffers = createOffersFromStores(validStores);
+      setOffers(generatedOffers);
+
+    } catch (err: any) {
+      console.error("خطأ في جلب بيانات المتاجر:", err);
+      setError(err.message || "حدث خطأ أثناء جلب البيانات");
+      
+      // استخدام بيانات تجريبية في حالة الخطأ
+      setOffers(getDefaultOffers());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // دالة للحصول على عروض افتراضية في حالة الخطأ
+  const getDefaultOffers = (): Offer[] => {
+    const defaultProduct: Product = {
+      id: 999,
+      name: "منتج تجريبي",
+      nameAr: "منتج تجريبي",
+      category: "general",
+      categoryAr: "عام",
+      price: 200,
+      salePrice: 150,
+      originalPrice: 200,
+      rating: 4.5,
+      reviewCount: 50,
+      image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+      isNew: false,
+      stock: 10,
+      status: "active",
+      description: "منتج تجريبي للعرض",
+      descriptionAr: "منتج تجريبي للعرض",
+      brand: "متجر تجريبي",
+      brandAr: "متجر تجريبي",
+      sales: 25,
+      inStock: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    return [
+      {
+        id: 1,
+        title: "عرض تجريبي",
+        description: "منتج تجريبي للاختبار",
+        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop",
+        discount: "25%",
+        bgColor: "bg-teal-50",
+        icon: <Tag className="w-5 h-5 text-teal-600" />,
+        product: defaultProduct,
+      },
+    ];
+  };
+
+  // جلب البيانات عند تحميل المكون
+  useEffect(() => {
+    fetchStoresData();
+  }, []);
 
   // تحديد عدد الشرائح المعروضة حسب حجم الشاشة
   useEffect(() => {
@@ -277,6 +327,53 @@ const OffersSlider: React.FC = () => {
     }
   };
 
+  // عرض حالة التحميل
+  if (loading) {
+    return (
+      <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+            العروض المميزة
+            <span className="text-orange-500">🔥</span>
+          </h2>
+        </div>
+        <div className="flex justify-center items-center py-20">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600"></div>
+          <span className="mr-4 text-gray-600">جاري تحميل العروض...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // عرض حالة الخطأ
+  if (error) {
+    return (
+      <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+            العروض المميزة
+            <span className="text-orange-500">🔥</span>
+          </h2>
+        </div>
+        <div className="text-center py-20">
+          <div className="text-red-500 mb-4">❌</div>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={fetchStoresData}
+            className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg transition-colors"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // عدم عرض المكون إذا لم توجد عروض
+  if (offers.length === 0) {
+    return null;
+  }
+
   return (
     <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
       {/* العنوان */}
@@ -285,6 +382,13 @@ const OffersSlider: React.FC = () => {
           العروض المميزة
           <span className="text-orange-500">🔥</span>
         </h2>
+        <button
+          onClick={fetchStoresData}
+          className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors"
+        >
+          تحديث العروض
+          <span className="text-xs">🔄</span>
+        </button>
       </div>
 
       {/* الحاوية الرئيسية */}
@@ -354,6 +458,10 @@ const OffersSlider: React.FC = () => {
                       alt={offer.title}
                       className="w-full h-32 object-cover transition-transform duration-300 hover:scale-110"
                       loading="lazy"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop";
+                      }}
                     />
                   </div>
 
@@ -365,20 +473,29 @@ const OffersSlider: React.FC = () => {
                     <p className="text-sm text-gray-600 text-right">
                       {offer.description}
                     </p>
+                    {/* معلومات المنتج */}
+                    <div className="mt-2 text-xs text-gray-500 text-right">
+                      <div>السعر: {offer.product.price} ريال</div>
+                      <div>المخزون: {offer.product.stock} قطعة</div>
+                    </div>
                   </div>
 
                   {/* زر العمل المحدث */}
                   <button
                     onClick={() => handleOfferClick(offer)}
-                    disabled={addingStates[offer.id]}
+                    disabled={addingStates[offer.id] || !offer.product.inStock}
                     className={`w-full py-3 px-4 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md text-center ${
                       addingStates[offer.id]
                         ? "bg-green-500 text-white cursor-not-allowed"
+                        : !offer.product.inStock
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                         : "bg-white/90 hover:bg-white text-gray-800 hover:scale-105"
                     }`}
                   >
                     {addingStates[offer.id]
                       ? "تم الإضافة للسلة"
+                      : !offer.product.inStock
+                      ? "غير متوفر"
                       : "احصل على العرض"}
                   </button>
                 </div>
@@ -388,20 +505,22 @@ const OffersSlider: React.FC = () => {
         </div>
 
         {/* مؤشرات التنقل */}
-        <div className="flex justify-center mt-6 gap-2">
-          {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-            <button
-              key={index}
-              onClick={() => goToSlide(index)}
-              className={`transition-all duration-200 rounded-full ${
-                currentIndex === index
-                  ? "bg-teal-500 w-8 h-2"
-                  : "bg-gray-300 hover:bg-gray-400 w-2 h-2"
-              }`}
-              aria-label={`الانتقال إلى الصفحة ${index + 1}`}
-            />
-          ))}
-        </div>
+        {maxIndex > 0 && (
+          <div className="flex justify-center mt-6 gap-2">
+            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`transition-all duration-200 rounded-full ${
+                  currentIndex === index
+                    ? "bg-teal-500 w-8 h-2"
+                    : "bg-gray-300 hover:bg-gray-400 w-2 h-2"
+                }`}
+                aria-label={`الانتقال إلى الصفحة ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
 
         {/* شريط التقدم */}
         <div className="mt-4 w-full bg-gray-200 rounded-full h-1">

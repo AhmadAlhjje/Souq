@@ -1,6 +1,6 @@
-// components/atoms/Input.tsx
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
+import { COLORS } from '../../constants/colors';
 
 interface InputProps {
   type?: string;
@@ -11,6 +11,7 @@ interface InputProps {
   className?: string;
   disabled?: boolean;
   required?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 const Input: React.FC<InputProps> = ({ 
@@ -21,12 +22,18 @@ const Input: React.FC<InputProps> = ({
   icon: Icon, 
   className = "",
   disabled = false,
-  required = false
+  required = false,
+  theme = 'light'
 }) => {
+  const colors = COLORS[theme];
+  
   return (
     <div className="relative">
       {Icon && (
-        <Icon className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+        <Icon 
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5" 
+          style={{ color: colors.text.muted }}
+        />
       )}
       <input
         type={type}
@@ -38,16 +45,32 @@ const Input: React.FC<InputProps> = ({
         className={`
           w-full px-3 py-2 sm:px-4 sm:py-3 
           ${Icon ? 'pr-10 sm:pr-12' : ''} 
-          border border-gray-200 rounded-lg 
-          focus:outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent 
-          text-right text-sm sm:text-base
-          transition-all duration-200
+          border-2 rounded-lg 
+          focus:outline-none focus:ring-2 focus:border-transparent 
+          text-right text-xs sm:text-sm
+          transition-all duration-300
           ${disabled 
-            ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60' 
-            : 'bg-white text-gray-900 hover:border-gray-300'
+            ? 'cursor-not-allowed opacity-60' 
+            : 'hover:border-opacity-80'
           }
           ${className}
         `}
+        style={{ 
+          backgroundColor: disabled ? colors.background.muted : colors.background.primary,
+          borderColor: colors.border.light,
+          color: disabled ? colors.text.muted : colors.text.primary,
+          direction: 'rtl'
+        }}
+        onFocus={(e) => {
+          if (!disabled) {
+            e.target.style.borderColor = colors.accent;
+            e.target.style.boxShadow = `0 0 0 3px ${colors.accent}20`;
+          }
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = colors.border.light;
+          e.target.style.boxShadow = 'none';
+        }}
       />
     </div>
   );
