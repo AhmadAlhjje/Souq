@@ -3,7 +3,7 @@
 import React from 'react';
 import { User, Loader2 } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
-import PasswordField from '../../components/molecules/PasswordField';
+// بدلاً من PasswordField، استخدم InputField مع type="password"
 import PhoneField from '../../components/molecules/PhoneField';
 import { useTranslation } from 'react-i18next';
 
@@ -64,8 +64,11 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
       />
       
-      <PasswordField
+      {/* استخدام InputField بدلاً من PasswordField */}
+      <InputField
         label="كلمة المرور"
+        type="password"
+        placeholder="أدخل كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
         required={true}
