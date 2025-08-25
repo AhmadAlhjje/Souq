@@ -7,7 +7,7 @@ interface StatsCardProps {
   title: string;
   value: number | string;
   icon: LucideIcon;
-  color: 'blue' | 'green' | 'red' | 'yellow';
+  color: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
   loading?: boolean;
 }
 
@@ -40,6 +40,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
       bg: isDark ? 'bg-yellow-900/20' : 'bg-yellow-50',
       icon: isDark ? 'text-yellow-400' : 'text-yellow-500',
       border: isDark ? 'border-yellow-800' : 'border-yellow-200'
+    },
+    purple: {
+      bg: isDark ? 'bg-purple-900/20' : 'bg-purple-50',
+      icon: isDark ? 'text-purple-400' : 'text-purple-500',
+      border: isDark ? 'border-purple-800' : 'border-purple-200'
     }
   };
 

@@ -1,33 +1,29 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Package, Check, X, AlertCircle } from "lucide-react";
-import {
-  ViewButton,
-  EditButton,
-  DeleteButton,
-} from "../../../../components/common/ActionButtons";
-import StatsCard from "../../../../components/molecules/StatsCard";
-import DataTable, {
-  TableColumn,
-} from "../../../../components/organisms/DataTable";
+import OrdersTemplate from "../../../../components/templates/OrdersTemplate";
+import useTheme from "@/hooks/useTheme";
+import { Order, TabType, OrderStats } from "../../../../types/orders";
+import { ConfirmationVariant } from "../../../../components/common/ConfirmationModal";
 
-// Sample data structure for orders
-interface Order {
-  id: string;
-  customerName: string;
-  productImage: string;
-  status: "active" | "pending" | "cancelled" | "completed";
-  orderNumber: string;
-  price: number;
-  quantity: number;
-  category: string;
-}
-
-const OrdersPage: React.FC = () => {
+const OrdersPageComponent: React.FC = () => {
+  // States
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<TabType>("all");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [confirmationModal, setConfirmationModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    onConfirm: () => {},
+    variant: "warning" as ConfirmationVariant,
+    loading: false,
+  });
 
-  // Sample data - replace with actual API call
+  const { isDark } = useTheme();
+
+  // Load sample data
   useEffect(() => {
     const sampleOrders: Order[] = [
       {
@@ -38,331 +34,232 @@ const OrdersPage: React.FC = () => {
         orderNumber: "#7712309",
         price: 1452.5,
         quantity: 1638,
-        category: "فاست",
+        category: "مشحون",
+        orderDate: "2025-08-20",
+        customerPhone: "+966501234567",
+        customerAddress: "الرياض، حي النرجس",
+        products: [
+          {
+            id: "p1",
+            name: "بيتزا مارجريتا",
+            image: "🍕",
+            quantity: 2,
+            price: 45.0,
+            totalPrice: 90.0,
+          },
+          {
+            id: "p2",
+            name: "كوكا كولا",
+            image: "🥤",
+            quantity: 3,
+            price: 8.5,
+            totalPrice: 25.5,
+          },
+        ],
       },
       {
         id: "2",
-        customerName: "Kristin Watson",
+        customerName: "Ahmed Ali",
         productImage: "🍔",
         status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "إيتل",
+        orderNumber: "#7712310",
+        price: 850.0,
+        quantity: 950,
+        category: "مشحون",
+        orderDate: "2025-08-21",
+        customerPhone: "+966507654321",
+        products: [
+          {
+            id: "p3",
+            name: "برجر دجاج",
+            image: "🍔",
+            quantity: 1,
+            price: 35.0,
+            totalPrice: 35.0,
+          },
+          {
+            id: "p4",
+            name: "بطاطس مقلية",
+            image: "🍟",
+            quantity: 2,
+            price: 12.0,
+            totalPrice: 24.0,
+          },
+        ],
       },
       {
         id: "3",
-        customerName: "Kristin Watson",
-        productImage: "🥗",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "إيتل",
+        customerName: "Sara Mohammed",
+        productImage: "🌮",
+        status: "pending",
+        orderNumber: "#7712311",
+        price: 1200.0,
+        quantity: 750,
+        category: "غير مشحون",
+        orderDate: "2025-08-22",
+        products: [
+          {
+            id: "p5",
+            name: "تاكو لحم",
+            image: "🌮",
+            quantity: 3,
+            price: 28.0,
+            totalPrice: 84.0,
+          },
+        ],
       },
       {
         id: "4",
-        customerName: "Kristin Watson",
-        productImage: "🌮",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "5",
-        customerName: "Kristin Watson",
-        productImage: "🍜",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "6",
-        customerName: "Kristin Watson",
-        productImage: "🍰",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "7",
-        customerName: "Kristin Watson",
-        productImage: "☕",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "8",
-        customerName: "Kristin Watson",
-        productImage: "🥤",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "9",
-        customerName: "Kristin Watson",
-        productImage: "🍪",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "10",
-        customerName: "Kristin Watson",
-        productImage: "🍓",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "12",
-        customerName: "Kristin Watson",
-        productImage: "🍕",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "فاست",
-      },
-      {
-        id: "12",
-        customerName: "Kristin Watson",
-        productImage: "🍔",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "إيتل",
-      },
-      {
-        id: "13",
-        customerName: "Kristin Watson",
+        customerName: "Omar Hassan",
         productImage: "🥗",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "إيتل",
-      },
-      {
-        id: "14",
-        customerName: "Kristin Watson",
-        productImage: "🌮",
         status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
-      },
-      {
-        id: "15",
-        customerName: "Kristin Watson",
-        productImage: "🍜",
-        status: "pending",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "قيد الانتظار",
+        orderNumber: "#7712312",
+        price: 650.0,
+        quantity: 400,
+        category: "غير مشحون",
+        orderDate: "2025-08-23",
+        products: [
+          {
+            id: "p6",
+            name: "سلطة خضار",
+            image: "🥗",
+            quantity: 2,
+            price: 22.0,
+            totalPrice: 44.0,
+          },
+        ],
       },
     ];
 
-    // Simulate loading
     setTimeout(() => {
       setOrders(sampleOrders);
       setLoading(false);
     }, 1000);
   }, []);
 
-  // Calculate statistics
-  const totalOrders = orders.length;
-  const activeOrders = orders.filter(
-    (order) => order.status === "active"
-  ).length;
-  const cancelledOrders = orders.filter(
-    (order) => order.status === "cancelled"
-  ).length;
-  const pendingOrders = orders.filter(
-    (order) => order.status === "pending"
-  ).length;
+  // Computed values
+  const filteredOrders = orders.filter((order) => {
+    switch (activeTab) {
+      case "shipped":
+        return order.category === "مشحون";
+      case "unshipped":
+        return order.category === "غير مشحون";
+      default:
+        return true;
+    }
+  });
 
-  // Statistics data
-  const stats = [
-    {
-      title: "إجمالي الطلبات",
-      value: totalOrders,
-      icon: Package,
-      color: "blue" as const,
-    },
-    {
-      title: "الطلبات النشطة",
-      value: activeOrders,
-      icon: Check,
-      color: "green" as const,
-    },
-    {
-      title: "الطلبات الملغاة",
-      value: cancelledOrders,
-      icon: X,
-      color: "red" as const,
-    },
-    {
-      title: "قيد الانتظار",
-      value: pendingOrders,
-      icon: AlertCircle,
-      color: "yellow" as const,
-    },
-  ];
+  const stats: OrderStats = {
+    totalOrders: orders.length,
+    shippedOrders: orders.filter((order) => order.category === "مشحون").length,
+    unshippedOrders: orders.filter((order) => order.category === "غير مشحون")
+      .length,
+    totalShippedPrice: orders
+      .filter((order) => order.category === "مشحون")
+      .reduce((sum, order) => sum + order.price, 0),
+  };
 
-  // Table columns configuration
-  const columns: TableColumn[] = [
-    {
-      key: "customerName",
-      title: "المنتج",
-      width: "200px",
-      render: (value, row) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
-            {row.productImage}
-          </div>
-          <span className="font-medium">{value}</span>
-        </div>
-      ),
-    },
-    {
-      key: "orderNumber",
-      title: "رقم الطلب",
-      width: "120px",
-    },
-    {
-      key: "price",
-      title: "السعر",
-      width: "120px",
-      render: (value) => `${value.toLocaleString()}`,
-    },
-    {
-      key: "quantity",
-      title: "الكمية",
-      width: "100px",
-      render: (value) => value.toLocaleString(),
-    },
-    {
-      key: "category",
-      title: "الحالة",
-      width: "120px",
-      render: (value: string) => {
-        const statusColors: { [key: string]: string } = {
-          فاست: "bg-teal-100 text-teal-800",
-          إيتل: "bg-teal-100 text-teal-800",
-          "قيد الانتظار": "bg-yellow-100 text-yellow-800",
-        };
-        return (
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${
-              statusColors[value] || "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {value}
-          </span>
-        );
-      },
-    },
-    {
-      key: "actions",
-      title: "الإجراءات",
-      width: "120px",
-      align: "center",
-      render: (_, row) => (
-        <div className="flex items-center justify-center gap-1">
-          <ViewButton
-            size="sm"
-            onClick={() => handleView(row)}
-            tooltip="عرض التفاصيل"
-          />
-          <EditButton
-            size="sm"
-            onClick={() => handleEdit(row)}
-            tooltip="تعديل الطلب"
-          />
-          <DeleteButton
-            size="sm"
-            onClick={() => handleDelete(row)}
-            tooltip="حذف الطلب"
-          />
-        </div>
-      ),
-    },
-  ];
+  // Event handlers
+  const handleMarkAsShipped = (order: Order) => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "تأكيد الشحن",
+      message: `هل أنت متأكد من أنه تم شحن الطلب ${order.orderNumber} للزبون ${order.customerName}؟`,
+      variant: "success",
+      loading: false,
+      onConfirm: () => confirmShipOrder(order),
+    });
+  };
 
-  // Action handlers
+  const confirmShipOrder = (order: Order) => {
+    setConfirmationModal((prev) => ({ ...prev, loading: true }));
+
+    setTimeout(() => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.id === order.id ? { ...o, category: "مشحون", status: "active" } : o
+        )
+      );
+
+      setConfirmationModal({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: () => {},
+        variant: "warning" as ConfirmationVariant,
+        loading: false,
+      });
+    }, 1500);
+  };
+
   const handleView = (order: Order) => {
-    console.log("عرض الطلب:", order);
+    setSelectedOrder(order);
+    setIsModalOpen(true);
   };
 
-  const handleEdit = (order: Order) => {
-    console.log("تعديل الطلب:", order);
+  const handleResetShippedTotal = () => {
+    setConfirmationModal({
+      isOpen: true,
+      title: "تصفير المبلغ",
+      message:
+        "هل أنت متأكد من تصفير مجموع الطلبات المشحونة؟ هذا الإجراء لا يمكن التراجع عنه.",
+      variant: "danger",
+      loading: false,
+      onConfirm: confirmResetTotal,
+    });
   };
 
-  const handleDelete = (order: Order) => {
-    console.log("حذف الطلب:", order);
-    // Add confirmation dialog here
+  const confirmResetTotal = () => {
+    setConfirmationModal((prev) => ({ ...prev, loading: true }));
+
+    setTimeout(() => {
+      console.log("تم تصفير مجموع الطلبات المشحونة");
+
+      setConfirmationModal({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: () => {},
+        variant: "warning" as ConfirmationVariant,
+        loading: false,
+      });
+    }, 1000);
   };
 
   const handleExport = () => {
     console.log("تصدير بيانات الطلبات...");
   };
 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedOrder(null);
+  };
+
+  const handleCloseConfirmation = () => {
+    setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  // Render using template
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">جميع الطلبات</h1>
-        </div>
-
-        {/* Statistics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stats.map((stat, index) => (
-            <StatsCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              color={stat.color}
-              loading={loading}
-            />
-          ))}
-        </div>
-
-        {/* Orders Table */}
-        <DataTable
-          data={orders}
-          columns={columns}
-          loading={loading}
-          searchable={true}
-          exportable={true}
-          onExport={handleExport}
-          itemsPerPageOptions={[10, 25, 50]}
-          className="shadow-sm"
-        />
-      </div>
-    </div>
+    <OrdersTemplate
+      orders={orders}
+      filteredOrders={filteredOrders}
+      loading={loading}
+      activeTab={activeTab}
+      selectedOrder={selectedOrder}
+      isModalOpen={isModalOpen}
+      stats={stats}
+      confirmationModal={confirmationModal}
+      isDark={isDark}
+      onTabChange={setActiveTab}
+      onView={handleView}
+      onMarkAsShipped={handleMarkAsShipped}
+      onResetTotal={handleResetShippedTotal}
+      onExport={handleExport}
+      onCloseModal={handleCloseModal}
+      onCloseConfirmation={handleCloseConfirmation}
+    />
   );
 };
 
-export default OrdersPage;
+export default OrdersPageComponent;
