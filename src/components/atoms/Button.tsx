@@ -10,7 +10,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline';
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline' | 'teal' | 'teal-outline';
   size?: 'sm' | 'md' | 'lg';
 }
 
@@ -37,7 +37,9 @@ const Button: React.FC<ButtonProps> = ({
     danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
     success: 'bg-green-500 text-white hover:bg-green-600 focus:ring-green-500',
     ghost: 'bg-transparent text-gray-600 hover:bg-gray-100 focus:ring-gray-500',
-    outline: 'bg-transparent border-2 border-[#004D5A] text-[#004D5A] hover:bg-[#004D5A] hover:text-white focus:ring-[#5CA9B5]'
+    outline: 'bg-transparent border-2 border-[#004D5A] text-[#004D5A] hover:bg-[#004D5A] hover:text-white focus:ring-[#5CA9B5]',
+    teal: 'bg-teal-500 text-white hover:bg-teal-600 focus:ring-teal-500',
+    'teal-outline': 'bg-white border-2 border-teal-500 text-teal-500 hover:bg-teal-500 hover:text-white focus:ring-teal-500'
   };
   
   // Size classes
