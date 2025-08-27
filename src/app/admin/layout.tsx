@@ -7,6 +7,7 @@ import AdminHeader from "@/components/admin/AdminHeader";
 import useTheme from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
 import "./styles/rtl.css";
+import { StoreProvider } from "@/contexts/StoreContext";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -97,7 +98,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 isRTL ? "text-right" : "text-left"
               }`}
             >
-              {children}
+              <StoreProvider>{children}</StoreProvider>
             </div>
           </main>
         </div>

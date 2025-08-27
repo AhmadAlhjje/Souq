@@ -130,7 +130,7 @@ const LoginPage = () => {
         showToast(result.message, "success");
 
         setTimeout(() => {
-          router.push("/admin");
+          router.push("/admin/dashboard/creatingStore");
         }, 1500);
 
         setSignInData({
