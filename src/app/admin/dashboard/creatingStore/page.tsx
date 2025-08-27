@@ -140,7 +140,7 @@ const CreateStorePage: React.FC = () => {
         coverImage: formData.coverImage,
         logoImage: formData.logoImage,
       });
-
+      console.log("📌 store_id الراجع من الباك:", response.store_id);
       // ✅ تخزين store_id في الـ Context
       setStoreId(response.store_id);
 
