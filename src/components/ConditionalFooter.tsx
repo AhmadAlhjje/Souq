@@ -6,10 +6,10 @@ export default function ConditionalFooter() {
   const pathname = usePathname();
   
   // مسارات محددة لإخفاء Footer
-  const specificHidePages = ['/login', '/LoginPage'];
+  const specificHidePages = ['/login', '/LoginPage',];
   
   // مسارات تبدأ بـ (prefixes) لإخفاء Footer
-  const hideFooterPrefixes = ['/admin', '/auth'];
+  const hideFooterPrefixes = ['/admin', '/auth','/superAdmin'];
   
   // التحقق من المسارات
   const shouldHideFooter = 
