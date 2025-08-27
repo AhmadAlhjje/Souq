@@ -17,7 +17,7 @@ import useTheme from "@/hooks/useTheme";
 import AdminLayout from "../../../../components/templates/admin/products/AdminLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
-import { api } from "@/api/api";
+import { useStore } from "@/contexts/StoreContext";
 import { createProduct } from "@/api/products";
 
 interface ProductImage {
@@ -44,6 +44,7 @@ const AddProductPage: React.FC = () => {
   const { t, i18n } = useTranslation("products");
   const { isDark } = useTheme();
   const { showToast } = useToast();
+  const { storeId, isLoaded } = useStore();
   const isRTL = i18n.language === "ar";
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -136,6 +137,12 @@ const AddProductPage: React.FC = () => {
       return;
     }
 
+    // التحقق من وجود storeId
+    if (!storeId) {
+      showToast("خطأ في تحديد المتجر. يرجى إعادة تسجيل الدخول", "error");
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -144,7 +151,7 @@ const AddProductPage: React.FC = () => {
         description: formData.description || formData.descriptionAr,
         price: formData.price,
         stock_quantity: formData.quantity,
-        store_id: 7,
+        store_id: storeId, // استخدام storeId من السياق
         images: formData.images
           .filter((img) => img.file)
           .map((img) => img.file!) as File[],
@@ -153,7 +160,7 @@ const AddProductPage: React.FC = () => {
       const response = await createProduct(payload);
       
       // نجح الإنشاء
-      showToast("🎉 تم إنشاء المنتج بنجاح! سيتم مراجعته قريباً", "success");
+      showToast("تم إنشاء المنتج بنجاح! سيتم مراجعته قريباً", "success");
       
       // إعادة تعيين النموذج
       setFormData({
@@ -438,18 +445,48 @@ const AddProductPage: React.FC = () => {
           disabled={loading}
           className="px-8 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              جاري الإنشاء...
-            </>
-          ) : (
-            "إنهاء"
-          )}
+          {loading ? "جاري الإنشاء..." : "إنهاء"}
         </button>
       </div>
     </div>
   );
+
+  // انتظار تحميل storeId
+  if (!isLoaded) {
+    return (
+      <LoadingSpinner
+        size="lg"
+        color="green"
+        message="جاري تحميل بيانات المتجر..."
+        overlay={true}
+        pulse={true}
+      />
+    );
+  }
+
+  // التحقق من وجود storeId
+  if (!storeId) {
+    return (
+      <AdminLayout
+        title="خطأ"
+        subtitle="خطأ في تحديد المتجر"
+      >
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-600 text-lg mb-4">
+              لا يمكن تحديد المتجر. يرجى إعادة تسجيل الدخول.
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   // عرض LoadingSpinner عند التحميل
   if (loading) {
@@ -457,7 +494,7 @@ const AddProductPage: React.FC = () => {
       <LoadingSpinner
         size="lg"
         color="green"
-        message="🛍️ جاري إنشاء منتجك الجديد..."
+        message="جاري إنشاء منتجك الجديد..."
         overlay={true}
         pulse={true}
         dots={true}
