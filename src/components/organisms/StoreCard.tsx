@@ -33,14 +33,6 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
       "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
   }}
 />
-        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
-          <div className="flex items-center space-x-1">
-            <span className="text-sm font-medium text-gray-700">
-              {store.rating || 4.5}
-            </span>
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          </div>
-        </div>
       </div>
 
       <div className="p-6">

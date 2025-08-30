@@ -2,9 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Star, ShoppingCart, Plus, Minus, Check, ArrowRight } from 'lucide-react';
+import { Star, ShoppingCart, Plus, Minus, Check, ArrowRight, User } from 'lucide-react';
 import { Product } from '@/types/product';
 import { useCart, useCartNotifications } from '@/contexts/CartContext';
 
@@ -24,6 +23,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [imageError, setImageError] = useState<{[key: number]: boolean}>({});
 
   const { 
     addToCart, 
@@ -34,16 +34,38 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   } = useCart();
   const { showAddToCartSuccess } = useCartNotifications();
 
-  const productImages = [
-    product.image, 
-    product.image, 
-    product.image, 
-    product.image, 
-    product.image, 
-    product.image, 
-    product.image, 
-    product.image
-  ];
+  // إنشاء مصفوفة الصور من المنتج
+  const getProductImages = () => {
+    // إذا كان المنتج يحتوي على معلومات الصور من API
+    if ((product as any).images) {
+      try {
+        console.log('Raw images data:', (product as any).images);
+        
+        // استخدام نفس طريقة تحليل الصور المستخدمة في المتاجر
+        const parsed = JSON.parse((product as any).images);
+        const images = Array.isArray(parsed) ? parsed : [(product as any).images];
+        
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.74.8:4000';
+        
+        const imageUrls = images.map((img: string) => {
+          // إزالة أي مسارات مكررة
+          const cleanImg = img.replace(/^\/uploads\//, '');
+          return `${baseUrl}/uploads/${cleanImg}`;
+        });
+        
+        console.log('Generated image URLs:', imageUrls);
+        return imageUrls;
+      } catch (error) {
+        console.error('خطأ في تحليل صور المنتج:', error);
+      }
+    }
+    
+    // استخدام صورة المنتج الأساسية أو الافتراضية
+    const mainImage = product.image || '/images/default-product.jpg';
+    return [mainImage, mainImage, mainImage, mainImage, mainImage, mainImage, mainImage, mainImage];
+  };
+
+  const productImages = getProductImages();
 
   // تحديث الكمية عند تغيير المنتج أو كمية السلة
   useEffect(() => {
@@ -54,7 +76,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   }, [product.id, getItemQuantity]);
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= 20) {
+    if (newQuantity >= 1 && newQuantity <= (product.stock || 20)) {
       setQuantity(newQuantity);
       
       // إذا كان المنتج في السلة، حدث الكمية مباشرة
@@ -114,12 +136,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     }
   };
 
-  // دالة العودة للمنتجات - استخدام onBackToProducts إذا تم تمريرها
+  // دالة العودة للمنتجات
   const handleBackToProducts = () => {
     if (onBackToProducts) {
       onBackToProducts();
     } else {
-      router.push('/products');
+      router.back();
     }
   };
 
@@ -131,12 +153,25 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       />
     ));
 
+  // معالجة خطأ الصورة
+  const handleImageError = (index: number) => {
+    setImageError(prev => ({ ...prev, [index]: true }));
+  };
+
+  // الحصول على مصدر الصورة مع معالجة الأخطاء
+  const getImageSrc = (index: number) => {
+    if (imageError[index]) {
+      return '/images/default-product.jpg';
+    }
+    return productImages[index] || '/images/default-product.jpg';
+  };
+
   // تحديد حالة المنتج في السلة
   const productInCart = isItemInCart(product.id);
   const cartQuantity = getItemQuantity(product.id);
 
   // تحديد ما إذا كان الزر معطل
-  const isMaxQuantityReached = quantity >= 20 || Boolean(product.stock && quantity >= product.stock);
+  const isMaxQuantityReached = quantity >= (product.stock || 20);
   const isMinQuantityReached = quantity <= 1;
 
   return (
@@ -150,7 +185,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               className="text-teal-600 flex items-center gap-2 text-lg hover:text-teal-700 transition-colors duration-200"
             >
               <ArrowRight className="w-5 h-5" />
-              عودة للمنتجات
+              العودة للخلف
             </button>
 
             {/* مؤشر المنتج في السلة */}
@@ -179,7 +214,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               <div className="flex items-center gap-1 text-sm">
                 <div className="flex">{renderStars(product.rating)}</div>
-                <span>({product.rating})</span>
+                <span>({product.rating}) - {product.reviewCount} تقييم</span>
               </div>
 
               {/* السعر */}
@@ -202,11 +237,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               <div className="py-3">
                 <h3 className="font-semibold text-gray-900 mb-2 text-sm">وصف المنتج</h3>
                 <p className="text-gray-600 leading-relaxed text-sm">
-                  {product.descriptionAr || product.description || 
-                    `منتج عالي الجودة مصنوع من أفضل المواد المتاحة في السوق، مصمم خصيصاً ليلبي احتياجاتك اليومية بكفاءة عالية. 
-                    يتميز هذا المنتج بالمتانة والأناقة في التصميم، مع الحرص على توفير تجربة استخدام مريحة وآمنة. 
-                    يأتي مع ضمان شامل لمدة سنة كاملة ضد عيوب الصناعة، بالإضافة إلى خدمة عملاء متميزة تعمل على مدار الساعة لضمان رضاكم التام.`
-                  }
+                  {product.descriptionAr || product.description}
                 </p>
               </div>
               
@@ -292,6 +323,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   {!product.inStock ? 'غير متوفر' : isAdding ? 'جاري التحضير...' : 'اشتري الآن'}
                 </button>
               </div>
+
             </div>
 
             {/* القسم 2: الصور */}
@@ -299,11 +331,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               {/* الصورة الرئيسية */}
               <div className="bg-white rounded-xl overflow-hidden shadow-lg w-full">
                 <div className="aspect-square relative bg-gray-100 w-full" style={{ minHeight: '250px', maxHeight: '250px' }}>
-                  <Image
-                    src={productImages[selectedImage]}
+                  <img
+                    src={getImageSrc(selectedImage)}
                     alt={product.nameAr || product.name}
-                    fill
-                    className="object-cover w-full h-full"
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(selectedImage)}
                   />
                   {/* شارة الخصم */}
                   {product.salePrice && product.originalPrice && (
@@ -330,7 +362,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               {/* الصور المصغرة */}
               <div className="grid grid-cols-4 gap-2">
-                {productImages.map((img, idx) => (
+                {productImages.slice(0, 8).map((img: string, idx: number) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(idx)}
@@ -338,7 +370,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       selectedImage === idx ? 'border-teal-500' : 'border-gray-200'
                     }`}
                   >
-                    <Image src={img} alt="" width={80} height={80} className="w-full h-full object-cover" />
+                    <img 
+                      src={getImageSrc(idx)} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                      onError={() => handleImageError(idx)}
+                    />
                   </button>
                 ))}
               </div>
@@ -346,7 +383,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               {/* معلومات إضافية */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">العلامة التجارية:</span>
+                  <span className="text-gray-600">المتجر:</span>
                   <span className="font-medium">{product.brandAr || product.brand || 'غير محدد'}</span>
                 </div>
                 <div className="flex justify-between">
@@ -359,6 +396,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     <span className="font-medium">{product.sales}</span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">عدد التقييمات:</span>
+                  <span className="font-medium">{product.reviewCount}</span>
+                </div>
               </div>
             </div>
           </div>

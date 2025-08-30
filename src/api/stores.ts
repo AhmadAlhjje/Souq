@@ -16,7 +16,33 @@ export interface Store {
   created_at: string;
   User: StoreUser;
 }
+export interface ApiProduct {
+  product_id: number;
+  store_id: number;
+  name: string;
+  description: string;
+  price: string;
+  stock_quantity: number;
+  images: string;
+  created_at: string;
+}
 
+// نوع للمتجر من الـ API
+export interface ApiStore {
+  store_id: number;
+  user_id: number;
+  store_name: string;
+  store_address: string;
+  description: string;
+  images: string;
+  logo_image: string;
+  created_at: string;
+  User: {
+    username: string;
+    whatsapp_number: string;
+  };
+  Products: ApiProduct[];
+}
 // جلب جميع المتاجر
 export const getStores = async (): Promise<Store[]> => {
   try {
@@ -49,15 +75,25 @@ export const getStores = async (): Promise<Store[]> => {
     throw error;
   }
 };
-
 // جلب متجر واحد بمنتجاته
-export const getStore = async (storeId: number): Promise<Store> => {
+export const getStore = async (storeId: number): Promise<ApiStore> => {
   try {
     console.log(`🔄 جلب متجر برقم ${storeId}...`);
     
-    const response = await api.get(`/stores/${storeId}`);
+    const response = await api.get<ApiStore>(`/stores/${storeId}`);
     
     console.log('✅ تم جلب المتجر بنجاح:', response.data);
+    
+    // التحقق من وجود البيانات
+    if (!response.data) {
+      throw new Error('لم يتم العثور على بيانات المتجر');
+    }
+    
+    // التحقق من وجود المنتجات
+    if (!response.data.Products) {
+      console.warn('⚠️ المتجر لا يحتوي على منتجات');
+      response.data.Products = [];
+    }
     
     return response.data;
   } catch (error: any) {
@@ -65,7 +101,26 @@ export const getStore = async (storeId: number): Promise<Store> => {
     throw error;
   }
 };
-
+// جلب منتج واحد بتفاصيله
+export const getProduct = async (productId: number): Promise<any> => {
+  try {
+    console.log(`🔄 جلب منتج برقم ${productId}...`);
+    
+    const response = await api.get(`/products/${productId}`);
+    
+    console.log('✅ تم جلب المنتج بنجاح:', response.data);
+    
+    // التحقق من وجود البيانات
+    if (!response.data) {
+      throw new Error('لم يتم العثور على المنتج');
+    }
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('❌ خطأ في جلب المنتج:', error);
+    throw error;
+  }
+};
 // مساعد لتحليل الصور من JSON بدون صورة افتراضية
 export const parseImages = (imagesString: string): string[] => {
   try {
