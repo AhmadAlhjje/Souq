@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { ShoppingCart, Eye, Check } from 'lucide-react';
 import Card from '../atoms/Card';
 import { SimpleStarRating } from '../molecules/StarRating';
@@ -21,6 +20,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [localQuantity, setLocalQuantity] = useState<number>(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const router = useRouter();
   const { 
@@ -43,7 +43,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const newQuantity = localQuantity + 1;
     setLocalQuantity(newQuantity);
     
-    // إذا كان المنتج في السلة، حديث الكمية مباشرة
     if (isItemInCart(product.id)) {
       updateQuantity(product.id, newQuantity);
     }
@@ -54,7 +53,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       const newQuantity = localQuantity - 1;
       setLocalQuantity(newQuantity);
       
-      // إذا كان المنتج في السلة، حديث الكمية مباشرة
       if (isItemInCart(product.id)) {
         updateQuantity(product.id, newQuantity);
       }
@@ -62,70 +60,66 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const handleViewDetails = () => {
-    // إذا كان هناك callback مخصص، استخدمه
     if (onViewDetails) {
       onViewDetails(product);
     }
-    
-    // التنقل إلى صفحة المنتج
     router.push(`/products/${product.id}`);
   };
 
-const handleAddToCart = async () => {
-  try {
-    setIsAdding(true);
-    
-    console.log('Adding product to cart:', product);
-    
-    if (isItemInCart(product.id)) {
-      // إذا كان المنتج موجود، استبدل الكمية بالكمية المحلية المحددة
-      updateQuantity(product.id, localQuantity);
-      showAddToCartSuccess(product.name, localQuantity);
-    } else {
-      // إذا لم يكن موجود، أضفه بالكمية المحلية المحددة
-      addToCart(product, localQuantity);
-      showAddToCartSuccess(product.name, localQuantity);
+  const handleAddToCart = async () => {
+    try {
+      setIsAdding(true);
+      
+      console.log('Adding product to cart:', product);
+      
+      if (isItemInCart(product.id)) {
+        updateQuantity(product.id, localQuantity);
+        showAddToCartSuccess(product.name, localQuantity);
+      } else {
+        addToCart(product, localQuantity);
+        showAddToCartSuccess(product.name, localQuantity);
+      }
+      
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+      
+    } catch (error) {
+      console.error('خطأ في إضافة المنتج للسلة:', error);
+    } finally {
+      setIsAdding(false);
     }
-    
-    // إظهار أيقونة النجاح
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
-    
-  } catch (error) {
-    console.error('خطأ في إضافة المنتج للسلة:', error);
-  } finally {
-    setIsAdding(false);
-  }
-};
+  };
 
-  // دالة مساعدة لحساب نسبة الخصم بشكل آمن
   const calculateDiscountPercentage = (originalPrice?: number, salePrice?: number): number => {
     if (!originalPrice || !salePrice || salePrice >= originalPrice) {
       return 0;
     }
     return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   };
-  
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
+
   return (
     <Card hover className="overflow-hidden group">
       <div className="relative overflow-hidden" style={{ backgroundColor: '#F6F8F9' }}>
-        <Image
-          src={product.image}
-          alt={product.name}
-          width={400}
-          height={300}
-          className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-          priority={false}
-        />
+<img
+  src={product.image || 'https://placehold.co/400x250/00C8B8/FFFFFF?text=منتج'}
+  alt={product.name}
+  className="w-full h-44 object-cover"
+/>
+
+
+
         
-        {/* شارة الخصم */}
         {product.salePrice && product.originalPrice && calculateDiscountPercentage(product.originalPrice, product.salePrice) > 0 && (
           <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
             -{calculateDiscountPercentage(product.originalPrice, product.salePrice)}%
           </div>
         )}
         
-        {/* شارة جديد */}
         {product.isNew && (
           <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
             جديد
