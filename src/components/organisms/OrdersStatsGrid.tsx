@@ -1,14 +1,17 @@
-import React from 'react';
-import { Package, Check, X, DollarSign } from 'lucide-react';
-import StatsCard from '../../components/molecules/StatsCard';
-import { OrderStats } from '../../types/orders';
+import React from "react";
+import { Package, Check, X, DollarSign } from "lucide-react";
+import StatsCard from "../../components/molecules/StatsCard";
+import { OrderStats } from "../../types/orders";
 
 interface OrdersStatsGridProps {
   stats: OrderStats;
   loading: boolean;
 }
 
-const OrdersStatsGrid: React.FC<OrdersStatsGridProps> = ({ stats, loading }) => {
+const OrdersStatsGrid: React.FC<OrdersStatsGridProps> = ({
+  stats,
+  loading,
+}) => {
   const statsData = [
     {
       title: "إجمالي الطلبات",
@@ -31,6 +34,12 @@ const OrdersStatsGrid: React.FC<OrdersStatsGridProps> = ({ stats, loading }) => 
     {
       title: "مبلغ الطلبات المشحونة",
       value: `${stats.totalShippedPrice.toLocaleString()} ر.س`,
+      icon: DollarSign,
+      color: "purple" as const,
+    },
+    {
+      title: "مبلغ الطلبات الغير مشحونة", // ✨ جديد
+      value: `${stats.totalUnshippedPrice.toLocaleString()} ر.س`,
       icon: DollarSign,
       color: "purple" as const,
     },

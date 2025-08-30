@@ -4,6 +4,7 @@ import OrdersTemplate from "../../../../components/templates/OrdersTemplate";
 import useTheme from "@/hooks/useTheme";
 import { Order, TabType, OrderStats } from "../../../../types/orders";
 import { ConfirmationVariant } from "../../../../components/common/ConfirmationModal";
+import { getStoreOrdersStats, updateOrderStatus } from "../../../../api/orders";
 
 const OrdersPageComponent: React.FC = () => {
   // States
@@ -12,6 +13,7 @@ const OrdersPageComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [apiStats, setApiStats] = useState<any>(null); // إضافة state للإحصائيات من API
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: "",
@@ -23,118 +25,55 @@ const OrdersPageComponent: React.FC = () => {
 
   const { isDark } = useTheme();
 
-  // Load sample data
-  useEffect(() => {
-    const sampleOrders: Order[] = [
-      {
-        id: "1",
-        customerName: "Kristin Watson",
-        productImage: "🍕",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "مشحون",
-        orderDate: "2025-08-20",
-        customerPhone: "+966501234567",
-        customerAddress: "الرياض، حي النرجس",
-        products: [
-          {
-            id: "p1",
-            name: "بيتزا مارجريتا",
-            image: "🍕",
-            quantity: 2,
-            price: 45.0,
-            totalPrice: 90.0,
-          },
-          {
-            id: "p2",
-            name: "كوكا كولا",
-            image: "🥤",
-            quantity: 3,
-            price: 8.5,
-            totalPrice: 25.5,
-          },
-        ],
-      },
-      {
-        id: "2",
-        customerName: "Ahmed Ali",
-        productImage: "🍔",
-        status: "active",
-        orderNumber: "#7712310",
-        price: 850.0,
-        quantity: 950,
-        category: "مشحون",
-        orderDate: "2025-08-21",
-        customerPhone: "+966507654321",
-        products: [
-          {
-            id: "p3",
-            name: "برجر دجاج",
-            image: "🍔",
-            quantity: 1,
-            price: 35.0,
-            totalPrice: 35.0,
-          },
-          {
-            id: "p4",
-            name: "بطاطس مقلية",
-            image: "🍟",
-            quantity: 2,
-            price: 12.0,
-            totalPrice: 24.0,
-          },
-        ],
-      },
-      {
-        id: "3",
-        customerName: "Sara Mohammed",
-        productImage: "🌮",
-        status: "pending",
-        orderNumber: "#7712311",
-        price: 1200.0,
-        quantity: 750,
-        category: "غير مشحون",
-        orderDate: "2025-08-22",
-        products: [
-          {
-            id: "p5",
-            name: "تاكو لحم",
-            image: "🌮",
-            quantity: 3,
-            price: 28.0,
-            totalPrice: 84.0,
-          },
-        ],
-      },
-      {
-        id: "4",
-        customerName: "Omar Hassan",
-        productImage: "🥗",
-        status: "pending",
-        orderNumber: "#7712312",
-        price: 650.0,
-        quantity: 400,
-        category: "غير مشحون",
-        orderDate: "2025-08-23",
-        products: [
-          {
-            id: "p6",
-            name: "سلطة خضار",
-            image: "🥗",
-            quantity: 2,
-            price: 22.0,
-            totalPrice: 44.0,
-          },
-        ],
-      },
-    ];
+  // تحويل بيانات API إلى تنسيق Order
+  const transformApiDataToOrders = (apiData: any): Order[] => {
+    const allOrders = apiData.allOrders.orders || [];
 
-    setTimeout(() => {
-      setOrders(sampleOrders);
-      setLoading(false);
-    }, 1000);
+    return allOrders.map((order: any) => ({
+      id: order.order_id.toString(),
+      customerName: order.Shipping?.customer_name || "غير محدد",
+      productImage: "📦", // يمكن تحسينه لاحقاً بناءً على صور المنتجات
+      status: order.status === "shipped" ? "active" : "pending", // ✅ تمييز الحالة بناءً على status
+      orderNumber: `#${order.order_id}`,
+      price: parseFloat(order.total_price),
+      quantity: order.OrderItems.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0
+      ),
+      category: order.status === "shipped" ? "مشحون" : "غير مشحون", // ✅ التحقق من status مباشرة
+      orderDate: new Date(order.created_at).toISOString().split("T")[0],
+      customerPhone: order.Shipping?.customer_phone || "",
+      customerAddress: order.Shipping?.shipping_address || "",
+      products: order.OrderItems.map((item: any) => ({
+        id: item.order_item_id.toString(),
+        name: item.Product.name,
+        image: "📦", // يمكن تحسينه لاحقاً
+        quantity: item.quantity,
+        price: parseFloat(item.price_at_time),
+        totalPrice: parseFloat(item.price_at_time) * item.quantity,
+      })),
+    }));
+  };
+
+  // Load data from API
+  useEffect(() => {
+    const loadOrdersData = async () => {
+      try {
+        // استبدل 8 برقم المتجر الفعلي أو احصل عليه من context/props
+        const storeId = 8;
+        const data = await getStoreOrdersStats(storeId);
+
+        setApiStats(data);
+        const transformedOrders = transformApiDataToOrders(data);
+        setOrders(transformedOrders);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        setLoading(false);
+      }
+    };
+
+    loadOrdersData();
   }, []);
 
   // Computed values
@@ -149,15 +88,22 @@ const OrdersPageComponent: React.FC = () => {
     }
   });
 
-  const stats: OrderStats = {
-    totalOrders: orders.length,
-    shippedOrders: orders.filter((order) => order.category === "مشحون").length,
-    unshippedOrders: orders.filter((order) => order.category === "غير مشحون")
-      .length,
-    totalShippedPrice: orders
-      .filter((order) => order.category === "مشحون")
-      .reduce((sum, order) => sum + order.price, 0),
-  };
+  // حساب الإحصائيات باستخدام البيانات من API فقط
+  const stats: OrderStats = apiStats
+    ? {
+        totalOrders: apiStats.statistics.totalOrders,
+        shippedOrders: apiStats.statistics.shippedCount,
+        unshippedOrders: apiStats.statistics.unshippedCount,
+        totalShippedPrice: apiStats.statistics.shippedRevenue, // 💡 استخدام مبلغ المشحونة
+        totalUnshippedPrice: apiStats.statistics.unshippedRevenue, // 💡 إضافة مبلغ الغير مشحونة
+      }
+    : {
+        totalOrders: 0,
+        shippedOrders: 0,
+        unshippedOrders: 0,
+        totalShippedPrice: 0,
+        totalUnshippedPrice: 0,
+      };
 
   // Event handlers
   const handleMarkAsShipped = (order: Order) => {
@@ -171,16 +117,39 @@ const OrdersPageComponent: React.FC = () => {
     });
   };
 
-  const confirmShipOrder = (order: Order) => {
+  const confirmShipOrder = async (order: Order) => {
+    console.log("🚀 Starting confirmShipOrder for order:", order);
+
     setConfirmationModal((prev) => ({ ...prev, loading: true }));
 
-    setTimeout(() => {
+    try {
+      // استدعاء API لتحديث حالة الطلب
+      const updateResponse = await updateOrderStatus(
+        Number(order.id),
+        "confirmed"
+      );
+      console.log("✅ Order status updated successfully:", updateResponse);
+
+      // تحديث الطلب محلياً (لتشوف التغيير مباشرة)
       setOrders((prev) =>
         prev.map((o) =>
           o.id === order.id ? { ...o, category: "مشحون", status: "active" } : o
         )
       );
+      console.log("🔄 Orders state updated locally");
 
+      // إعادة جلب البيانات من السيرفر للتأكد
+      const storeId = apiStats?.storeId || 8;
+      console.log("📡 Reloading store stats after update...");
+      const data = await getStoreOrdersStats(storeId);
+      setApiStats(data);
+
+      const transformedOrders = transformApiDataToOrders(data);
+      setOrders(transformedOrders);
+      console.log("✅ Orders reloaded from server:", transformedOrders);
+    } catch (error) {
+      console.error("❌ Failed to update order status:", error);
+    } finally {
       setConfirmationModal({
         isOpen: false,
         title: "",
@@ -189,7 +158,8 @@ const OrdersPageComponent: React.FC = () => {
         variant: "warning" as ConfirmationVariant,
         loading: false,
       });
-    }, 1500);
+      console.log("📌 Confirmation modal closed");
+    }
   };
 
   const handleView = (order: Order) => {
@@ -214,6 +184,18 @@ const OrdersPageComponent: React.FC = () => {
 
     setTimeout(() => {
       console.log("تم تصفير مجموع الطلبات المشحونة");
+      // هنا يجب استدعاء API لتصفير المبلغ
+
+      // تحديث الإحصائيات محلياً
+      if (apiStats) {
+        setApiStats({
+          ...apiStats,
+          statistics: {
+            ...apiStats.statistics,
+            shippedRevenue: 0,
+          },
+        });
+      }
 
       setConfirmationModal({
         isOpen: false,
@@ -228,6 +210,7 @@ const OrdersPageComponent: React.FC = () => {
 
   const handleExport = () => {
     console.log("تصدير بيانات الطلبات...");
+    // يمكن إضافة منطق تصدير البيانات هنا
   };
 
   const handleCloseModal = () => {
