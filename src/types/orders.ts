@@ -29,4 +29,5 @@ export interface OrderStats {
   shippedOrders: number;
   unshippedOrders: number;
   totalShippedPrice: number;
+  totalUnshippedPrice: number;
 }
