@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Check, X } from 'lucide-react';
+import { Package, Check, X, Eye } from 'lucide-react';
 import TabButton from '../atoms/TabButton';
 import { TabType, OrderStats } from '../../types/orders';
 
@@ -20,6 +20,7 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
     { id: "all" as TabType, label: "كل الطلبات", icon: Package, count: stats.totalOrders },
     { id: "shipped" as TabType, label: "الطلبات المشحونة", icon: Check, count: stats.shippedOrders },
     { id: "unshipped" as TabType, label: "الطلبات غير المشحونة", icon: X, count: stats.unshippedOrders },
+    { id: "monitored" as TabType, label: "الطلبات المرصودة", icon: Eye, count: stats.monitoredOrders || 0 },
   ];
 
   return (
