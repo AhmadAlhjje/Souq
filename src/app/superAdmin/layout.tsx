@@ -6,20 +6,23 @@ import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminHeader from "@/components/admin/AdminHeader";
 import useTheme from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
-import "./styles/rtl.css";
-import { StoreProvider } from "@/contexts/StoreContext";
+import { getSuperAdminSidebarConfig } from "@/data/sidebarConfigsSuper";
+import "../admin/styles/rtl.css";
 
-interface AdminLayoutProps {
+interface TeacherLayoutProps {
   children: React.ReactNode;
 }
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
+const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isDark } = useTheme();
   const { i18n, t } = useTranslation();
   const router = useRouter();
 
   const isRTL = i18n.language === "ar";
+
+  // الحصول على config لوحة تحكم المعلمين
+  const teacherSidebarConfig = getSuperAdminSidebarConfig(t);
 
   // Auto-close sidebar on desktop resize
   useEffect(() => {
@@ -55,17 +58,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     }
   }, [isRTL, i18n.language, isDark]);
 
-  // التحقق من الصلاحيات
+  // التحقق من الصلاحيات - منطق مختلف للمعلمين
   useEffect(() => {
     const isAuthenticated = true; // Replace with actual auth check
-    const isAdmin = true; // Replace with actual role check
+    const isTeacher = true; // Replace with actual teacher role check
 
     if (!isAuthenticated) {
-      router.push("/login");
+      router.push("/teacher/login");
       return;
     }
 
-    if (!isAdmin) {
+    if (!isTeacher) {
       router.push("/unauthorized");
       return;
     }
@@ -87,7 +90,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           isRTL ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        <AdminSidebar isOpen={sidebarOpen} onToggle={toggleSidebar} />
+        <AdminSidebar 
+          isOpen={sidebarOpen} 
+          onToggle={toggleSidebar} 
+          config={teacherSidebarConfig} // تمرير config خاص بالمعلمين
+        />
 
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminHeader onToggleSidebar={toggleSidebar} />
@@ -98,7 +105,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 isRTL ? "text-right" : "text-left"
               }`}
             >
-              <StoreProvider>{children}</StoreProvider>
+              {children}
             </div>
           </main>
         </div>
@@ -107,4 +114,4 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 };
 
-export default AdminLayout;
+export default TeacherLayout;
