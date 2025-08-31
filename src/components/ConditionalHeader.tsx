@@ -9,7 +9,7 @@ export default function ConditionalHeader() {
   const specificHidePages = ['/login', '/LoginPage'];
   
   // مسارات تبدأ بـ (prefixes) لإخفاء Header
-  const hideHeaderPrefixes = ['/admin', '/auth', '/superAdmin'];
+  const hideHeaderPrefixes = ['/admin', '/auth'];
   
   // التحقق من المسارات
   const shouldHideHeader = 

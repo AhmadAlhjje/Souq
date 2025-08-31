@@ -5,33 +5,6 @@ import { useTranslation } from 'react-i18next';
 import useTheme from '@/hooks/useTheme';
 import { Product } from '../../../../types/product';
 
-// دالة لتنسيق التاريخ بالتقويم الميلادي - متطابقة مع ProductsPage
-const formatGregorianDateWithCalendar = (dateString: string, locale: string = 'ar-SA') => {
-  try {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    
-    return date.toLocaleDateString(locale, {
-      calendar: 'gregory', // تحديد التقويم الميلادي صراحة
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  } catch (error) {
-    console.error('Error formatting gregorian date:', error);
-    // fallback إلى التنسيق البسيط
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-    
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    
-    return `${day}/${month}/${year}`;
-  }
-};
-
 interface ProductViewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -134,11 +107,11 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
   const getStatusText = (status: string) => {
     switch (status) {
       case "active":
-        return t('status.active') || 'متوفر';
+        return t('status.active');
       case "out_of_stock":
-        return t('status.out_of_stock') || 'نفد المخزون';
+        return t('status.out_of_stock');
       case "low_stock":
-        return t('status.low_stock') || 'مخزون منخفض';
+        return t('status.low_stock');
       default:
         return status;
     }
@@ -165,7 +138,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
         <div className={`flex items-center justify-between p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <h2 className={`text-2xl font-bold ${titleClasses} flex items-center gap-3`}>
             <Eye className="w-6 h-6" />
-            {t('productDetails.title') || 'تفاصيل المنتج'}
+            {t('productDetails.title')}
           </h2>
           <button
             onClick={onClose}
@@ -212,7 +185,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                 {product.description && (
                   <div>
                     <h4 className={`text-lg font-semibold ${labelClasses} mb-2`}>
-                      {t('productDetails.description') || 'الوصف'}
+                      {t('productDetails.description')}
                     </h4>
                     <p className={`${textClasses} leading-relaxed`}>
                       {product.description}
@@ -227,7 +200,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                   <div className="flex items-center gap-2 mb-1">
                     <DollarSign className={`w-5 h-5 ${labelClasses}`} />
                     <span className={`text-sm font-medium ${labelClasses}`}>
-                      {t('productDetails.price') || 'السعر'}
+                      {t('productDetails.price')}
                     </span>
                   </div>
                   <span className={`text-2xl font-bold ${priceClasses}`}>
@@ -239,7 +212,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                   <div className="flex items-center gap-2 mb-1">
                     <Star className={`w-5 h-5 ${labelClasses}`} />
                     <span className={`text-sm font-medium ${labelClasses}`}>
-                      {t('productDetails.rating') || 'التقييم'}
+                      {t('productDetails.rating')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -261,7 +234,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                   </div>
                   {product.reviewCount && (
                     <span className={`text-sm ${labelClasses}`}>
-                      ({product.reviewCount} {t('productDetails.reviews') || 'مراجعة'})
+                      ({product.reviewCount} {t('productDetails.reviews')})
                     </span>
                   )}
                 </div>
@@ -273,11 +246,11 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                   <div className="flex items-center gap-2 mb-1">
                     <Package className={`w-5 h-5 ${labelClasses}`} />
                     <span className={`text-sm font-medium ${labelClasses}`}>
-                      {t('productDetails.stock') || 'المخزون'}
+                      {t('productDetails.stock')}
                     </span>
                   </div>
                   <span className={`text-xl font-bold ${stockClasses(product.stock)}`}>
-                    {product.stock} {t('productDetails.units') || 'قطعة'}
+                    {product.stock} {t('productDetails.units')}
                   </span>
                 </div>
 
@@ -285,11 +258,11 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp className={`w-5 h-5 ${labelClasses}`} />
                     <span className={`text-sm font-medium ${labelClasses}`}>
-                      {t('productDetails.sales') || 'المبيعات'}
+                      {t('productDetails.sales')}
                     </span>
                   </div>
                   <span className={`text-xl font-bold text-green-500`}>
-                    {product.sales || 0}
+                    {product.sales}
                   </span>
                 </div>
               </div>
@@ -298,7 +271,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
               <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600">
                   <span className={`font-medium ${labelClasses}`}>
-                    {t('productDetails.sku') || 'رقم المنتج'}
+                    {t('productDetails.sku')}
                   </span>
                   <span className={`${valueClasses}`}>
                     {product.id}
@@ -308,7 +281,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                 {product.brand && (
                   <div className="flex items-center justify-between py-2 border-b border-gray-200 dark:border-gray-600">
                     <span className={`font-medium ${labelClasses}`}>
-                      {t('productDetails.brand') || 'العلامة التجارية'}
+                      {t('productDetails.brand')}
                     </span>
                     <span className={`${valueClasses}`}>
                       {product.brand}
@@ -319,7 +292,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                 {product.tags && product.tags.length > 0 && (
                   <div className="py-2">
                     <span className={`font-medium ${labelClasses} block mb-2`}>
-                      {t('productDetails.tags') || 'العلامات'}
+                      {t('productDetails.tags')}
                     </span>
                     <div className="flex flex-wrap gap-2">
                       {product.tags.map((tag, index) => (
@@ -334,10 +307,10 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
 
                 <div className="flex items-center justify-between py-2">
                   <span className={`font-medium ${labelClasses}`}>
-                    {t('productDetails.createdAt') || 'تاريخ الإنشاء'}
+                    {t('productDetails.createdAt')}
                   </span>
                   <span className={`${valueClasses}`}>
-                    {formatGregorianDateWithCalendar(product.createdAt, isRTL ? 'ar-SA' : 'en-US')}
+                    {new Date(product.createdAt || Date.now()).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
                   </span>
                 </div>
               </div>
@@ -355,7 +328,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            {t('actions.close') || 'إغلاق'}
+            {t('actions.close')}
           </button>
         </div>
       </div>

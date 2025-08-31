@@ -778,40 +778,5 @@
     "stockRequired": "كمية المخزون مطلوبة",
     "categoryRequired": "الفئة مطلوبة",
     "statusRequired": "الحالة مطلوبة"
-  },
-
-  "superAdmin": {
-    "sidebar": {
-      "header": {
-        "title": "بوابة المعلم",
-        "subtitle": "لوحة التعليم"
-      },
-      "dashboard": "الرئيسية",
-      "classes": {
-        "main": "الفصول",
-        "all": "جميع الفصول",
-        "create": "إنشاء فصل"
-      },
-      "students": {
-        "main": "الطلاب",
-        "all": "جميع الطلاب",
-        "attendance": "الحضور والغياب"
-      },
-      "assignments": {
-        "main": "الواجبات",
-        "all": "جميع الواجبات",
-        "create": "إنشاء واجب"
-      },
-      "grades": "الدرجات",
-      "schedule": "الجدول الزمني",
-      "resources": "الموارد التعليمية",
-      "bottom": {
-        "messages": "الرسائل",
-        "notifications": "الإشعارات",
-        "help": "المساعدة والدعم",
-        "settings": "الإعدادات",
-        "logout": "تسجيل الخروج"
-      }
-    }
   }
 }

@@ -21,6 +21,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [localQuantity, setLocalQuantity] = useState<number>(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const router = useRouter();
   const { 
@@ -103,17 +104,45 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
     return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   };
+
+  // دالة للتعامل مع خطأ تحميل الصورة
+  const handleImageError = () => {
+    console.warn('فشل تحميل الصورة:', product.image);
+    setImageError(true);
+  };
+
+  // تحديد مصدر الصورة مع التعامل مع الأخطاء
+  const getImageSrc = () => {
+    if (imageError) {
+      // صورة افتراضية في حالة فشل التحميل
+      return 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop';
+    }
+    
+    // إذا كانت الصورة تبدأ بـ http أو https، استخدمها مباشرة
+    if (product.image.startsWith('http')) {
+      return product.image;
+    }
+    
+    // إذا كانت صورة من الـ API المحلي
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3001';
+    return `${baseUrl}/uploads/${product.image}`;
+  };
   
   return (
     <Card hover className="overflow-hidden group">
       <div className="relative overflow-hidden" style={{ backgroundColor: '#F6F8F9' }}>
-        <Image
-          src={product.image}
+        {/* استخدام img عادي بدلاً من Next/Image لتجنب مشاكل التحقق */}
+        <img
+          src={getImageSrc()}
           alt={product.name}
-          width={400}
-          height={300}
           className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
-          priority={false}
+          onError={handleImageError}
+          loading="lazy"
+          style={{
+            maxWidth: '100%',
+            height: '176px', // h-44 = 11rem = 176px
+            objectFit: 'cover'
+          }}
         />
         
         {/* شارة الخصم */}
@@ -147,7 +176,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </div>
         
-        <div className="mb-2  flex items-center justify-end">
+        <div className="mb-2 flex items-center justify-end">
           <CompactQuantityCounter
             quantity={localQuantity}
             onIncrease={handleQuantityIncrease}
@@ -156,45 +185,42 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </div>
 
-<div className="flex" style={{ gap: '12px' }}>
-  <button
-    onClick={handleViewDetails}
-    className="flex-1 border border-teal-800 text-teal-800 hover:bg-teal-50 text-xs py-1.5 rounded-md transition-colors flex items-center justify-center gap-1"
-  >
-    <Eye className="w-3 h-3" />
-    <span>التفاصيل</span>
-  </button>
+        <div className="flex" style={{ gap: '12px' }}>
+          <button
+            onClick={handleViewDetails}
+            className="flex-1 border border-teal-800 text-teal-800 hover:bg-teal-50 text-xs py-1.5 rounded-md transition-colors flex items-center justify-center gap-1"
+          >
+            <Eye className="w-3 h-3" />
+            <span>التفاصيل</span>
+          </button>
 
-  <button
-    onClick={handleAddToCart}
-    disabled={isAdding}
-    className={`flex-1 text-white text-xs py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
-      showSuccess
-        ? "bg-green-500 hover:bg-green-600"
-        : "bg-teal-800 hover:bg-teal-900"
-    } ${isAdding ? "opacity-50 cursor-not-allowed" : ""}`}
-  >
-    {showSuccess ? (
-      <>
-        <Check className="w-3 h-3" />
-        <span>تمت الإضافة</span>
-      </>
-    ) : isAdding ? (
-      <>
-        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
-        <span>جاري الإضافة</span>
-      </>
-    ) : (
-      <>
-        <ShoppingCart className="w-3 h-3" />
-        <span>إضافة</span>
-      </>
-    )}
-  </button>
-</div>
-
-<div className="flex" style={{ gap: '20px', backgroundColor: 'red' }}>
-</div>
+          <button
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className={`flex-1 text-white text-xs py-1.5 rounded-md transition-colors flex items-center justify-center gap-1 ${
+              showSuccess
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-teal-800 hover:bg-teal-900"
+            } ${isAdding ? "opacity-50 cursor-not-allowed" : ""}`}
+          >
+            {showSuccess ? (
+              <>
+                <Check className="w-3 h-3" />
+                <span>تمت الإضافة</span>
+              </>
+            ) : isAdding ? (
+              <>
+                <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>جاري الإضافة</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-3 h-3" />
+                <span>إضافة</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </Card>
   );
