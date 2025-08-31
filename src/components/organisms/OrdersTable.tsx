@@ -27,14 +27,26 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       key: "customerName",
       title: "اسم الزبون",
       width: "150px",
-      render: (value) => (
+      render: (value, row) => (
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
             isDark ? 'bg-teal-500 text-white' : 'bg-teal-100 text-teal-800'
           }`}>
             {value.charAt(0)}
           </div>
-          <span className="font-medium">{value}</span>
+          <div className="flex flex-col">
+            <span className="font-medium">{value}</span>
+            {/* Show monitored indicator */}
+            {row.isMonitored && (
+              <span className={`text-xs px-2 py-0.5 rounded-full w-fit ${
+                isDark 
+                  ? 'bg-blue-900 text-blue-200' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                مرصود
+              </span>
+            )}
+          </div>
         </div>
       ),
     },
@@ -77,21 +89,27 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       key: "category",
       title: "الحالة",
       width: "120px",
-      render: (value: string) => {
+      render: (value: string, row) => {
         const statusColors: { [key: string]: string } = {
           مشحون:
             "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100",
           "غير مشحون":
             "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+          مرصود:
+            "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
         };
+        
+        // If it's a monitored order, show "مرصود" status
+        const displayValue = row.isMonitored ? "مرصود" : value;
+        
         return (
           <span
             className={`px-2 py-1 rounded-full text-xs font-medium ${
-              statusColors[value] ||
+              statusColors[displayValue] ||
               "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
             }`}
           >
-            {value}
+            {displayValue}
           </span>
         );
       },
@@ -108,8 +126,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
             onClick={() => onView(row)}
             tooltip="عرض التفاصيل"
           />
-          {/* Show "Mark as Shipped" button for unshipped orders */}
-          {(activeTab === "unshipped" ||
+          {/* Show "Mark as Shipped" button for unshipped orders (excluding monitored orders) */}
+          {!row.isMonitored && 
+           (activeTab === "unshipped" ||
             (activeTab === "all" && row.category === "غير مشحون")) && (
             <ShipButton
               size="sm"

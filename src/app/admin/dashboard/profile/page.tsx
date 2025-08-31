@@ -688,7 +688,7 @@ const ProfilePage = () => {
             {/* Action Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
               {/* Advanced Settings */}
-              <div
+              {/* <div
                 className={`${themeClasses.cardBackground} rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center`}
               >
                 <div className="bg-teal-600 p-4 rounded-2xl mb-4">
@@ -705,10 +705,10 @@ const ProfilePage = () => {
                 <button className="bg-teal-100 text-teal-600 px-6 py-2 rounded-lg hover:bg-teal-200 transition-colors">
                   تحكم
                 </button>
-              </div>
+              </div> */}
 
               {/* Export Data */}
-              <div
+              {/* <div
                 className={`${themeClasses.cardBackground} rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center`}
               >
                 <div className="bg-teal-600 p-4 rounded-2xl mb-4">
@@ -725,7 +725,7 @@ const ProfilePage = () => {
                 <button className="bg-teal-100 text-teal-600 px-6 py-2 rounded-lg hover:bg-teal-200 transition-colors">
                   تحميل
                 </button>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>

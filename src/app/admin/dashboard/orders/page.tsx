@@ -4,6 +4,12 @@ import OrdersTemplate from "../../../../components/templates/OrdersTemplate";
 import useTheme from "@/hooks/useTheme";
 import { Order, TabType, OrderStats } from "../../../../types/orders";
 import { ConfirmationVariant } from "../../../../components/common/ConfirmationModal";
+import {
+  getStoreOrdersStats,
+  updateOrderStatus,
+  updateProgrammaticShipped,
+} from "../../../../api/orders";
+import { useStore } from "@/contexts/StoreContext";
 
 const OrdersPageComponent: React.FC = () => {
   // States
@@ -12,6 +18,7 @@ const OrdersPageComponent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [apiStats, setApiStats] = useState<any>(null);
   const [confirmationModal, setConfirmationModal] = useState({
     isOpen: false,
     title: "",
@@ -22,145 +29,124 @@ const OrdersPageComponent: React.FC = () => {
   });
 
   const { isDark } = useTheme();
+  const { storeId, isLoaded } = useStore();
 
-  // Load sample data
+  // Transform API data to Orders with updated status logic
+  const transformApiDataToOrders = (apiData: any): Order[] => {
+    const allOrders = apiData.allOrders.orders || [];
+
+    return allOrders.map((order: any) => ({
+      id: order.order_id.toString(),
+      customerName: order.Shipping?.customer_name || "غير محدد",
+      productImage: "📦",
+      status: order.status === "shipped" ? "active" : "pending",
+      orderNumber: `#${order.order_id}`,
+      price: parseFloat(order.total_price),
+      quantity: order.OrderItems.reduce(
+        (sum: number, item: any) => sum + item.quantity,
+        0
+      ),
+      category: order.is_programmatic
+        ? "مرصود"
+        : order.status === "shipped"
+        ? "مشحون"
+        : "غير مشحون",
+      orderDate: new Date(order.created_at).toISOString().split("T")[0],
+      customerPhone: order.Shipping?.customer_phone || "",
+      customerAddress: order.Shipping?.shipping_address || "",
+      isMonitored: order.is_programmatic || false,
+      products: order.OrderItems.map((item: any) => ({
+        id: item.order_item_id.toString(),
+        name: item.Product.name,
+        image: "📦",
+        quantity: item.quantity,
+        price: parseFloat(item.price_at_time),
+        totalPrice: parseFloat(item.price_at_time) * item.quantity,
+      })),
+    }));
+  };
+
+  // Load data from API
   useEffect(() => {
-    const sampleOrders: Order[] = [
-      {
-        id: "1",
-        customerName: "Kristin Watson",
-        productImage: "🍕",
-        status: "active",
-        orderNumber: "#7712309",
-        price: 1452.5,
-        quantity: 1638,
-        category: "مشحون",
-        orderDate: "2025-08-20",
-        customerPhone: "+966501234567",
-        customerAddress: "الرياض، حي النرجس",
-        products: [
-          {
-            id: "p1",
-            name: "بيتزا مارجريتا",
-            image: "🍕",
-            quantity: 2,
-            price: 45.0,
-            totalPrice: 90.0,
-          },
-          {
-            id: "p2",
-            name: "كوكا كولا",
-            image: "🥤",
-            quantity: 3,
-            price: 8.5,
-            totalPrice: 25.5,
-          },
-        ],
-      },
-      {
-        id: "2",
-        customerName: "Ahmed Ali",
-        productImage: "🍔",
-        status: "active",
-        orderNumber: "#7712310",
-        price: 850.0,
-        quantity: 950,
-        category: "مشحون",
-        orderDate: "2025-08-21",
-        customerPhone: "+966507654321",
-        products: [
-          {
-            id: "p3",
-            name: "برجر دجاج",
-            image: "🍔",
-            quantity: 1,
-            price: 35.0,
-            totalPrice: 35.0,
-          },
-          {
-            id: "p4",
-            name: "بطاطس مقلية",
-            image: "🍟",
-            quantity: 2,
-            price: 12.0,
-            totalPrice: 24.0,
-          },
-        ],
-      },
-      {
-        id: "3",
-        customerName: "Sara Mohammed",
-        productImage: "🌮",
-        status: "pending",
-        orderNumber: "#7712311",
-        price: 1200.0,
-        quantity: 750,
-        category: "غير مشحون",
-        orderDate: "2025-08-22",
-        products: [
-          {
-            id: "p5",
-            name: "تاكو لحم",
-            image: "🌮",
-            quantity: 3,
-            price: 28.0,
-            totalPrice: 84.0,
-          },
-        ],
-      },
-      {
-        id: "4",
-        customerName: "Omar Hassan",
-        productImage: "🥗",
-        status: "pending",
-        orderNumber: "#7712312",
-        price: 650.0,
-        quantity: 400,
-        category: "غير مشحون",
-        orderDate: "2025-08-23",
-        products: [
-          {
-            id: "p6",
-            name: "سلطة خضار",
-            image: "🥗",
-            quantity: 2,
-            price: 22.0,
-            totalPrice: 44.0,
-          },
-        ],
-      },
-    ];
+    if (!isLoaded || !storeId) return;
 
-    setTimeout(() => {
-      setOrders(sampleOrders);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const loadOrdersData = async () => {
+      try {
+        const data = await getStoreOrdersStats(storeId);
+        setApiStats(data);
+        const transformedOrders = transformApiDataToOrders(data);
+        setOrders(transformedOrders);
+      } catch (error) {
+        console.error("Error loading orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Computed values
+    loadOrdersData();
+  }, [storeId, isLoaded]);
+
+  // Updated filtered orders logic
   const filteredOrders = orders.filter((order) => {
     switch (activeTab) {
       case "shipped":
-        return order.category === "مشحون";
+        // Only show orders that are shipped and not monitored
+        return order.category === "مشحون" && !order.isMonitored;
       case "unshipped":
-        return order.category === "غير مشحون";
+        // Only show orders that are not shipped and not monitored
+        return order.category === "غير مشحون" && !order.isMonitored;
+      case "monitored":
+        // Only show monitored orders
+        return order.isMonitored;
       default:
         return true;
     }
   });
 
-  const stats: OrderStats = {
-    totalOrders: orders.length,
-    shippedOrders: orders.filter((order) => order.category === "مشحون").length,
-    unshippedOrders: orders.filter((order) => order.category === "غير مشحون")
-      .length,
-    totalShippedPrice: orders
-      .filter((order) => order.category === "مشحون")
-      .reduce((sum, order) => sum + order.price, 0),
-  };
+  // Calculate statistics with updated logic
+  const stats: OrderStats = apiStats
+    ? {
+        totalOrders: apiStats.statistics.totalOrders,
+        // Count only non-monitored shipped orders
+        shippedOrders: orders.filter(
+          (order) => order.category === "مشحون" && !order.isMonitored
+        ).length,
+        // Count only non-monitored unshipped orders
+        unshippedOrders: orders.filter(
+          (order) => order.category === "غير مشحون" && !order.isMonitored
+        ).length,
+        // Count monitored orders
+        monitoredOrders: orders.filter((order) => order.isMonitored).length,
+        // Revenue calculations
+        totalShippedPrice: orders
+          .filter((order) => order.category === "مشحون" && !order.isMonitored)
+          .reduce((sum, order) => sum + order.price, 0),
+        totalUnshippedPrice: orders
+          .filter(
+            (order) => order.category === "غير مشحون" && !order.isMonitored
+          )
+          .reduce((sum, order) => sum + order.price, 0),
+        totalMonitoredPrice: orders
+          .filter((order) => order.isMonitored)
+          .reduce((sum, order) => sum + order.price, 0),
+      }
+    : {
+        totalOrders: 0,
+        shippedOrders: 0,
+        unshippedOrders: 0,
+        monitoredOrders: 0,
+        totalShippedPrice: 0,
+        totalUnshippedPrice: 0,
+        totalMonitoredPrice: 0,
+      };
 
   // Event handlers
   const handleMarkAsShipped = (order: Order) => {
+    // Don't allow shipping monitored orders
+    if (order.isMonitored) {
+      return;
+    }
+
     setConfirmationModal({
       isOpen: true,
       title: "تأكيد الشحن",
@@ -171,16 +157,29 @@ const OrdersPageComponent: React.FC = () => {
     });
   };
 
-  const confirmShipOrder = (order: Order) => {
+  const confirmShipOrder = async (order: Order) => {
+    console.log("🚀 Starting confirmShipOrder for order:", order);
+
     setConfirmationModal((prev) => ({ ...prev, loading: true }));
 
-    setTimeout(() => {
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id === order.id ? { ...o, category: "مشحون", status: "active" } : o
-        )
-      );
+    try {
+      if (!storeId) throw new Error("⚠️ StoreId is not available");
 
+      if (order.isMonitored) {
+        // ✅ إذا كان الطلب مرصود
+        await updateProgrammaticShipped(storeId);
+      } else {
+        // ✅ إذا كان طلب عادي
+        await updateOrderStatus(Number(order.id), "shipped");
+      }
+
+      // إعادة تحميل البيانات
+      const data = await getStoreOrdersStats(storeId);
+      setApiStats(data);
+      setOrders(transformApiDataToOrders(data));
+    } catch (error) {
+      console.error("❌ Failed to update order status:", error);
+    } finally {
       setConfirmationModal({
         isOpen: false,
         title: "",
@@ -189,7 +188,7 @@ const OrdersPageComponent: React.FC = () => {
         variant: "warning" as ConfirmationVariant,
         loading: false,
       });
-    }, 1500);
+    }
   };
 
   const handleView = (order: Order) => {
@@ -209,12 +208,26 @@ const OrdersPageComponent: React.FC = () => {
     });
   };
 
-  const confirmResetTotal = () => {
+  const confirmResetTotal = async () => {
     setConfirmationModal((prev) => ({ ...prev, loading: true }));
 
-    setTimeout(() => {
-      console.log("تم تصفير مجموع الطلبات المشحونة");
+    try {
+      if (!storeId) throw new Error("⚠️ StoreId is not available");
 
+      // ✅ استدعاء التابع الموجود
+      await updateProgrammaticShipped(storeId);
+
+      // ✅ إعادة تحميل البيانات بعد التصفير
+      const data = await getStoreOrdersStats(storeId);
+      setApiStats(data);
+      setOrders(transformApiDataToOrders(data));
+
+      console.log(
+        "✅ تم تحديث (تصفير) مجموع الطلبات المشحونة عبر updateProgrammaticShipped"
+      );
+    } catch (error) {
+      console.error("❌ فشل في استدعاء updateProgrammaticShipped:", error);
+    } finally {
       setConfirmationModal({
         isOpen: false,
         title: "",
@@ -223,7 +236,7 @@ const OrdersPageComponent: React.FC = () => {
         variant: "warning" as ConfirmationVariant,
         loading: false,
       });
-    }, 1000);
+    }
   };
 
   const handleExport = () => {
@@ -239,7 +252,6 @@ const OrdersPageComponent: React.FC = () => {
     setConfirmationModal((prev) => ({ ...prev, isOpen: false }));
   };
 
-  // Render using template
   return (
     <OrdersTemplate
       orders={orders}

@@ -8,12 +8,14 @@ import SignInForm from "../../components/organisms/SignInForm";
 import { registerUser, loginUser } from "../../api/auth";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "next/navigation";
-import { saveTokens } from "@/api/api";
+import { getStoreIdFromToken, saveTokens } from "@/api/api";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import { useStore } from "@/contexts/StoreContext";
 
 const LoginPage = () => {
   const router = useRouter();
   const { showToast } = useToast();
+  const { setStoreId } = useStore();
   const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -121,29 +123,32 @@ const LoginPage = () => {
 
       const result = await loginUser(loginData);
 
-      // ✅ التحقق من وجود الرسالة و التوكن بدلاً من success
       if (result.message && result.token) {
-        // حفظ التوكن
-        saveTokens(result.token, result.token); // نفس التوكن للاثنين
+        // حفظ التوكن في الكوكيز أو localStorage
+        saveTokens(result.token, result.token);
 
-        // عرض رسالة النجاح باللون الأخضر
+        // فك التوكن للحصول على store_id
+        const storeIdFromToken = getStoreIdFromToken();
+        setStoreId(storeIdFromToken); // تخزينه في الـ Context و localStorage
+
         showToast(result.message, "success");
 
         setTimeout(() => {
-          router.push("/admin");
+
+          if (storeIdFromToken) {
+            router.push("/admin/dashboard/products"); // المستخدم لديه متجر مسبقاً
+          } else {
+            router.push("/admin/dashboard/creatingStore"); // المستخدم يحتاج لإنشاء متجر
+          }
         }, 1500);
 
-        setSignInData({
-          username: "",
-          password: "",
-        });
+        // إعادة تعيين بيانات تسجيل الدخول
+        setSignInData({ username: "", password: "" });
       } else {
         showToast(result.message || "فشل في تسجيل الدخول", "error");
       }
     } catch (error: any) {
       console.error("Login error:", error);
-
-      // التحقق من نوع الخطأ
       if (error.response?.data?.message) {
         showToast(error.response.data.message, "error");
       } else {
