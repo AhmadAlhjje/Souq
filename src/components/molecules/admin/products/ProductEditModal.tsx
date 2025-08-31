@@ -79,6 +79,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
       newErrors.name = t("validation.nameRequired");
     }
 
+    if (!formData.nameAr?.trim()) {
+      newErrors.nameAr = t("validation.nameArRequired");
+    }
+
     if (!formData.price || formData.price <= 0) {
       newErrors.price = t("validation.priceRequired");
     }
@@ -281,6 +285,36 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     )}
                   </div>
 
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${labelClasses} mb-2`}
+                    >
+                      {t("productEdit.nameAr")} *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.nameAr || ""}
+                      onChange={(e) =>
+                        handleInputChange("nameAr", e.target.value)
+                      }
+                      className={`
+                        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
+                        transition-colors duration-200 ${inputClasses}
+                        ${errors.nameAr ? "border-red-500" : ""}
+                      `}
+                      placeholder={t("productEdit.nameArPlaceholder")}
+                      dir="rtl"
+                      disabled={loading}
+                    />
+                    {errors.nameAr && (
+                      <p
+                        className={`text-sm mt-1 ${errorClasses} flex items-center gap-1`}
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.nameAr}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description */}

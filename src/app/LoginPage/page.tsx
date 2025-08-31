@@ -134,6 +134,7 @@ const LoginPage = () => {
         showToast(result.message, "success");
 
         setTimeout(() => {
+
           if (storeIdFromToken) {
             router.push("/admin/dashboard/products"); // المستخدم لديه متجر مسبقاً
           } else {

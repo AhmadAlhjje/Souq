@@ -733,40 +733,5 @@
     "stockRequired": "Stock quantity is required",
     "categoryRequired": "Category is required",
     "statusRequired": "Status is required"
-  },
-
-  "superAdmin": {
-    "sidebar": {
-      "header": {
-        "title": "superAdmin Portal",
-        "subtitle": "Education Dashboard"
-      },
-      "dashboard": "Dashboard",
-      "classes": {
-        "main": "Classes",
-        "all": "All Classes",
-        "create": "Create Class"
-      },
-      "students": {
-        "main": "Students",
-        "all": "All Students",
-        "attendance": "Attendance"
-      },
-      "assignments": {
-        "main": "Assignments",
-        "all": "All Assignments",
-        "create": "Create Assignment"
-      },
-      "grades": "Grades",
-      "schedule": "Schedule",
-      "resources": "Resources",
-      "bottom": {
-        "messages": "Messages",
-        "notifications": "Notifications",
-        "help": "Help & Support",
-        "settings": "Settings",
-        "logout": "Logout"
-      }
-    }
   }
 }
