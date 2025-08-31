@@ -3,10 +3,9 @@ import { FaRocket, FaUsers } from "react-icons/fa";
 import Heading from "../atoms/Heading";
 import Text from "../atoms/Text";
 import Button from "../atoms/Button";
-import Icon from "../atoms/Icon";
 import IconWrapper from "../molecules/IconWrapper";
 
-const FinalCTASection = () => {
+const FinalCTASection: React.FC = () => {
   return (
     <div className="mt-16 text-center">
       <div className="bg-gradient-to-br from-[#004D5A] via-[#005965] to-[#006670] rounded-3xl p-6 md:p-10 shadow-2xl relative overflow-hidden">
@@ -20,36 +19,38 @@ const FinalCTASection = () => {
         
         <div className="relative text-center" dir="rtl">
           <IconWrapper 
-            icon={<Icon icon={FaRocket} size="3xl" color="mint" />}
-            size="xl"
+            icon={<FaRocket className="w-8 h-8 text-[#96EDD9]" />}
+            size="large"
             gradient="from-[#96EDD9]/20 to-[#96EDD9]/30"
           />
           
-          <Heading level={2} className="text-white mt-6 mb-4">
-            هل أنت مستعد للبدء معنا؟
-          </Heading>
+          <Heading 
+            text="هل أنت مستعد للبدء معنا؟"
+            level={2} 
+            variant="hero"
+            className="mt-6 mb-4"
+          />
           
-          <Text color="white" className="mb-8 max-w-2xl mx-auto leading-relaxed opacity-90">
-            انضم إلى آلاف العملاء الذين يثقون في خدماتنا ويحققون النجاح معنا. 
-            دعنا نساعدك في تحويل أفكارك إلى واقع رقمي مميز
-          </Text>
+          <Text 
+            text="انضم إلى آلاف العملاء الذين يثقون في خدماتنا ويحققون النجاح معنا. دعنا نساعدك في تحويل أفكارك إلى واقع رقمي مميز"
+            variant="hero"
+            className="mb-8 max-w-2xl mx-auto leading-relaxed opacity-90"
+          />
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
+              text="ابدأ رحلتك الآن"
               variant="secondary" 
               size="lg"
-              icon={<Icon icon={FaRocket} size="sm" />}
-            >
-              ابدأ رحلتك الآن
-            </Button>
+              startIcon={<FaRocket className="w-4 h-4" />}
+            />
             
             <Button 
+              text="تواصل معنا"
               variant="outline" 
               size="lg"
-              icon={<Icon icon={FaUsers} size="sm" />}
-            >
-              تواصل معنا
-            </Button>
+              startIcon={<FaUsers className="w-4 h-4" />}
+            />
           </div>
         </div>
       </div>

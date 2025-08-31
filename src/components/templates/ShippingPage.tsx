@@ -35,7 +35,6 @@ const ShippingPage: React.FC = () => {
           onClick={toggleTheme}
           variant="ghost"
           size="sm"
-          theme={theme}
           className="rounded-full p-2"
           startIcon={theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         >

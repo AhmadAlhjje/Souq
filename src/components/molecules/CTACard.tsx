@@ -1,33 +1,50 @@
-import React from "react";
-import { FaRocket } from "react-icons/fa";
-import Heading from "../atoms/Heading";
-import Text from "../atoms/Text";
-import Button from "../atoms/Button";
-import Icon from "../atoms/Icon";
+import React from "react"; 
+import { FaRocket } from "react-icons/fa"; 
+import Heading from "../atoms/Heading"; 
+import Text from "../atoms/Text"; 
+import Button from "../atoms/Button"; 
 import IconWrapper from "./IconWrapper";
 
-const CTACard = ({ title, description, buttonText, buttonIcon, onClick }) => {
+interface CTACardProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  buttonIcon: React.ReactNode;
+  onClick: () => void;
+}
+
+const CTACard: React.FC<CTACardProps> = ({ 
+  title, 
+  description, 
+  buttonText, 
+  buttonIcon, 
+  onClick 
+}) => {
   return (
     <div className="relative z-10 flex flex-col items-center justify-center text-center">
-      <IconWrapper 
-        icon={<Icon icon={FaRocket} size="2xl" color="white" />} 
-        size="xl"
+      <IconWrapper         
+        icon={<FaRocket className="w-6 h-6 text-white" />}         
+        size="large"        
         gradient="from-[#004D5A] to-[#005965]"
       />
-      <Heading level={3} className="text-white mt-6 mb-3">
-        {title}
-      </Heading>
-      <Text color="white" className="mb-6 max-w-2xl leading-relaxed">
-        {description}
-      </Text>
-      <Button 
-        variant="secondary" 
-        size="lg" 
-        icon={buttonIcon}
+      <Heading 
+        text={title}
+        level={3} 
+        variant="hero"
+        className="mt-6 mb-3"
+      />
+      <Text 
+        text={description}
+        variant="hero"
+        className="mb-6 max-w-2xl leading-relaxed"
+      />
+      <Button         
+        text={buttonText}
+        variant="secondary"         
+        size="lg"         
+        startIcon={buttonIcon}        
         onClick={onClick}
-      >
-        {buttonText}
-      </Button>
+      />
     </div>
   );
 };

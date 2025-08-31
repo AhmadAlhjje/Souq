@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
 import { useCart, useCartNotifications } from "@/contexts/CartContext";
 import { Product } from "@/types/product";
@@ -57,7 +57,7 @@ const OffersSlider: React.FC = () => {
   const { showAddToCartSuccess } = useCartNotifications();
 
   // دالة تحويل منتج المتجر إلى منتج للنظام
-  const convertStoreProductToProduct = (
+  const convertStoreProductToProduct = useCallback((
     storeProduct: StoreProduct,
     storeData: StoreData
   ): Product => {
@@ -98,10 +98,10 @@ const OffersSlider: React.FC = () => {
       inStock: storeProduct.stock_quantity > 0,
       createdAt: storeProduct.created_at,
     };
-  };
+  }, []);
 
   // دالة إنشاء العروض من بيانات المتاجر
-  const createOffersFromStores = (storeData: StoreData[]): Offer[] => {
+  const createOffersFromStores = useCallback((storeData: StoreData[]): Offer[] => {
     const offerTypes = [
       {
         title: "خصم مميز",
@@ -171,48 +171,10 @@ const OffersSlider: React.FC = () => {
     });
 
     return createdOffers;
-  };
-
-  // دالة جلب بيانات المتاجر
-  const fetchStoresData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // جلب بيانات عدة متاجر (يمكنك تعديل هذا حسب API الخاص بك)
-      const storeIds = [1, 2, 3]; // معرفات المتاجر التي تريد جلبها
-      const storePromises = storeIds.map(id => 
-        api.get<StoreData>(`/stores/${id}`).catch(err => {
-          console.warn(`فشل في جلب بيانات المتجر ${id}:`, err);
-          return null;
-        })
-      );
-
-      const storeResponses = await Promise.all(storePromises);
-      const validStores = storeResponses
-        .filter(response => response !== null)
-        .map(response => response!.data);
-
-      if (validStores.length === 0) {
-        throw new Error("لم يتم العثور على أي متاجر");
-      }
-
-      const generatedOffers = createOffersFromStores(validStores);
-      setOffers(generatedOffers);
-
-    } catch (err: any) {
-      console.error("خطأ في جلب بيانات المتاجر:", err);
-      setError(err.message || "حدث خطأ أثناء جلب البيانات");
-      
-      // استخدام بيانات تجريبية في حالة الخطأ
-      setOffers(getDefaultOffers());
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [convertStoreProductToProduct]);
 
   // دالة للحصول على عروض افتراضية في حالة الخطأ
-  const getDefaultOffers = (): Offer[] => {
+  const getDefaultOffers = useCallback((): Offer[] => {
     const defaultProduct: Product = {
       id: 999,
       name: "منتج تجريبي",
@@ -249,12 +211,50 @@ const OffersSlider: React.FC = () => {
         product: defaultProduct,
       },
     ];
-  };
+  }, []);
 
-  // جلب البيانات عند تحميل المكون
+  // دالة جلب بيانات المتاجر - مع useCallback لحل مشكلة dependency
+  const fetchStoresData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // جلب بيانات عدة متاجر (يمكنك تعديل هذا حسب API الخاص بك)
+      const storeIds = [1, 2, 3]; // معرفات المتاجر التي تريد جلبها
+      const storePromises = storeIds.map(id => 
+        api.get<StoreData>(`/stores/${id}`).catch(err => {
+          console.warn(`فشل في جلب بيانات المتجر ${id}:`, err);
+          return null;
+        })
+      );
+
+      const storeResponses = await Promise.all(storePromises);
+      const validStores = storeResponses
+        .filter(response => response !== null)
+        .map(response => response!.data);
+
+      if (validStores.length === 0) {
+        throw new Error("لم يتم العثور على أي متاجر");
+      }
+
+      const generatedOffers = createOffersFromStores(validStores);
+      setOffers(generatedOffers);
+
+    } catch (err: any) {
+      console.error("خطأ في جلب بيانات المتاجر:", err);
+      setError(err.message || "حدث خطأ أثناء جلب البيانات");
+      
+      // استخدام بيانات تجريبية في حالة الخطأ
+      setOffers(getDefaultOffers());
+    } finally {
+      setLoading(false);
+    }
+  }, [createOffersFromStores, getDefaultOffers]);
+
+  // جلب البيانات عند تحميل المكون - مع إضافة fetchStoresData للـ dependencies
   useEffect(() => {
     fetchStoresData();
-  }, []);
+  }, [fetchStoresData]);
 
   // تحديد عدد الشرائح المعروضة حسب حجم الشاشة
   useEffect(() => {

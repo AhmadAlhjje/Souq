@@ -134,7 +134,7 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
 
   return (
     <div 
-      className=" mt-16 جميع المعلومات محمية ومشفرة بأمانw-full max-w-2xl mx-auto p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 max-h-[90vh] overflow-y-auto" 
+      className="mt-16 w-full max-w-2xl mx-auto p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 max-h-[90vh] overflow-y-auto" 
       style={{ 
         background: 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
         direction: 'rtl' 
@@ -147,6 +147,7 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
         >
           معلومات الشحن
         </h2>
+        <p className="text-sm text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
       </div>
 
       {/* Grid Layout - 2 columns on larger screens */}
@@ -237,16 +238,14 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
 
       {/* Submit Button */}
       <Button 
+        text={isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
         onClick={handleSubmit}
         className="w-full"
         size="lg"
         loading={isSubmitting}
         disabled={isSubmitting}
-        theme={theme}
         variant="primary"
-      >
-        {isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
-      </Button>
+      />
     </div>
   );
 };
