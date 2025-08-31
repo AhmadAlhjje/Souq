@@ -7,6 +7,7 @@ import ConditionalFooter from "../components/ConditionalFooter";
 import Providers from "../components/providers/Providers";
 import { ToastProvider } from "@/hooks/useToast";
 import { StoreProvider } from "@/contexts/StoreContext";
+import SessionManager from "@/utils/SessionManager";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -45,6 +46,7 @@ export default function RootLayout({
           <ConditionalHeader />
           <ToastProvider>
             <StoreProvider>
+              <SessionManager />
               <main>{children}</main>
             </StoreProvider>
           </ToastProvider>
