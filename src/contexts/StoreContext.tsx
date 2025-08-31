@@ -13,7 +13,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
   const [storeId, setStoreIdState] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // جلب storeId من localStorage عند تحميل المكون
+  // جلب storeId من localStorage عند تحميل المكون .
   useEffect(() => {
     try {
       const savedStoreId = localStorage.getItem('storeId');
