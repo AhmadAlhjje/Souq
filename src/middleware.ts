@@ -20,7 +20,6 @@ export function middleware(request: NextRequest) {
         response.cookies.delete("refresh_token");
         return response;
       }
-
       if (payload.role !== "merchant") {
         return NextResponse.redirect(new URL("/", request.url));
       }
