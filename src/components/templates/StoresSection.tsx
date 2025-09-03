@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
+import Button from '../atoms/Button';
 import Typography from '../atoms/Typography';
+import Icon from '../atoms/Icon';
 import StoreCard from '../organisms/StoreCard';
 import OffersSlider from '../organisms/OffersSlider';
+import SearchInput from '../molecules/SearchInput';
 
+// نفس interface المحلي بدون تغيير
 interface Store {
   id: number;
   name: string;
   image: string;
   location: string;
+  rating?: number;
+  reviewsCount?: number;
 }
 
 interface StoresSectionProps {
@@ -21,19 +27,17 @@ const StoresSection: React.FC<StoresSectionProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // فلترة المتاجر حسب الاسم
+  // فلترة المتاجر حسب الاسم (بنفس المنطق السابق)
   const filteredStores = stores.filter(store =>
     store.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* العروض */}
+      {/* العروض - بنفس التنسيق السابق */}
       <OffersSlider />
 
-    
-
-      {/* Stores Grid */}
+      {/* Stores Grid - بنفس التنسيق السابق */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {filteredStores.map((store) => (
           <StoreCard
@@ -44,7 +48,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
         ))}
       </div>
 
-      {/* No Results Message */}
+      {/* No Results Message - بنفس التنسيق السابق */}
       {filteredStores.length === 0 && searchTerm && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
@@ -52,7 +56,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
             لا توجد نتائج
           </Typography>
           <Typography variant="body" className="text-gray-400 mb-6">
-            لم نجد أي متاجر تطابق بحثك عن 
+            لم نجد أي متاجر تطابق بحثك عن “{searchTerm}”
           </Typography>
           <button 
             onClick={() => setSearchTerm('')}
@@ -63,7 +67,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
         </div>
       )}
 
-      {/* Load More Button */}
+      {/* Load More Button - بنفس التنسيق السابق */}
       {filteredStores.length > 0 && (
         <div className="text-center">
           <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
@@ -72,11 +76,8 @@ const StoresSection: React.FC<StoresSectionProps> = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-      
         </div>
       )}
-
-     
     </div>
   );
 };

@@ -137,7 +137,10 @@ const ProfilePage = () => {
 
         // تحويل البيانات من صيغة الباك إند إلى صيغة الفرونت إند
         const images = JSON.parse(storeData.images || "[]");
-        const coverImage = images.length > 0 ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}` : null;
+        const coverImage =
+          images.length > 0
+            ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
+            : null;
 
         setProfileData({
           name: storeData.User.username,
@@ -164,7 +167,7 @@ const ProfilePage = () => {
     };
 
     fetchStoreData();
-  }, [storeId]);
+  }, [storeId, showToast]);
 
   const handleEdit = (field: EditingField) => {
     if (field === "password") {
@@ -222,7 +225,7 @@ const ProfilePage = () => {
         if (file) {
           try {
             setSaving(true);
-            
+
             // تحضير البيانات للإرسال
             const updateData = {
               name: profileData.storeName,
@@ -264,10 +267,10 @@ const ProfilePage = () => {
       if (tempData[field] !== undefined) {
         try {
           setSaving(true);
-          
+
           // تحضير البيانات للإرسال بناءً على نوع الحقل
           let updateData;
-          
+
           if (field === "storeName") {
             updateData = {
               name: tempData[field] as string,
@@ -359,10 +362,10 @@ const ProfilePage = () => {
   // حالة التحميل
   if (loading) {
     return (
-      <LoadingSpinner 
-        size="lg" 
-        color="green" 
-        message="جاري تحميل بيانات المتجر..." 
+      <LoadingSpinner
+        size="lg"
+        color="green"
+        message="جاري تحميل بيانات المتجر..."
         overlay={true}
         pulse={true}
       />
@@ -443,7 +446,11 @@ const ProfilePage = () => {
             className="absolute top-4 right-4 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors shadow-lg backdrop-blur-sm disabled:opacity-50"
             title="تعديل الصورة الغطاء"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
+            {saving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Camera className="w-4 h-4" />
+            )}
           </button>
         </div>
 
@@ -474,7 +481,11 @@ const ProfilePage = () => {
                       className="absolute -top-1 -right-1 bg-teal-600 hover:bg-teal-700 text-white p-1.5 rounded-full transition-colors shadow-lg disabled:opacity-50"
                       title="تعديل شعار المتجر"
                     >
-                      {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                      {saving ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Camera className="w-3 h-3" />
+                      )}
                     </button>
                   </div>
 
@@ -990,10 +1001,10 @@ const ProfilePage = () => {
 
       {/* Loading Overlay */}
       {saving && (
-        <LoadingSpinner 
-          size="md" 
-          color="green" 
-          message="جاري حفظ التغييرات..." 
+        <LoadingSpinner
+          size="md"
+          color="green"
+          message="جاري حفظ التغييرات..."
           overlay={true}
           pulse={true}
         />

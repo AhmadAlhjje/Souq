@@ -30,7 +30,7 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     >
       <div className="space-y-6">
         <CustomerInfo order={order} isDark={isDark} />
-        <ProductsList products={order.products} isDark={isDark} />
+        <ProductsList products={order.products || []} isDark={isDark} />
         <OrderSummary order={order} isDark={isDark} />
       </div>
     </Modal>
