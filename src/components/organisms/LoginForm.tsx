@@ -1,16 +1,16 @@
 // components/organisms/LoginForm.tsx
 "use client";
 import React from 'react';
-import { User, Loader2 } from 'lucide-react';
+import { User, Loader2, Lock } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
-// بدلاً من PasswordField، استخدم InputField مع type="password"
 import PhoneField from '../../components/molecules/PhoneField';
 import { useTranslation } from 'react-i18next';
 
 interface SignUpFormData {
   username: string;
-  phoneNumber: string; // الآن سيحتوي على رقم الهاتف الكامل مع رمز البلد
+  phoneNumber: string;
   password: string;
+  confirmPassword: string; // إضافة حقل تأكيد كلمة المرور
 }
 
 interface LoginFormProps {
@@ -43,6 +43,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
     handleInputChange('phoneNumber', value || '');
   };
 
+  // التحقق من تطابق كلمات المرور
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const showPasswordMismatch = formData.confirmPassword && !passwordsMatch;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
       <InputField
@@ -64,26 +68,54 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
       />
       
-      {/* استخدام InputField بدلاً من PasswordField */}
       <InputField
         label="كلمة المرور"
         type="password"
         placeholder="أدخل كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
+        icon={Lock}
         required={true}
         disabled={isLoading}
       />
+      
+      {/* حقل تأكيد كلمة المرور */}
+      <div className="space-y-1">
+        <InputField
+          label="تأكيد كلمة المرور"
+          type="password"
+          placeholder="أعد إدخال كلمة المرور"
+          value={formData.confirmPassword}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
+          icon={Lock}
+          required={true}
+          disabled={isLoading}
+        />
+        
+        {/* رسالة خطأ عند عدم التطابق */}
+        {showPasswordMismatch && (
+          <p className="text-red-500 text-sm mt-1 pr-2">
+            كلمات المرور غير متطابقة
+          </p>
+        )}
+        
+        {/* رسالة نجاح عند التطابق */}
+        {formData.confirmPassword && passwordsMatch && formData.password && (
+          <p className="text-green-500 text-sm mt-1 pr-2">
+            ✓ كلمات المرور متطابقة
+          </p>
+        )}
+      </div>
       
       <div className="pt-4">
         <button
           type="submit"
           onClick={handleButtonClick}
-          disabled={isLoading}
+          disabled={isLoading || showPasswordMismatch || !passwordsMatch}
           className={`
             w-full py-3 px-4 rounded-lg font-medium text-white
             transition-all duration-200 flex items-center justify-center
-            ${isLoading 
+            ${isLoading || showPasswordMismatch || !passwordsMatch
               ? 'bg-gray-400 cursor-not-allowed' 
               : 'bg-teal-500 hover:bg-teal-600 active:bg-teal-700'
             }

@@ -1,6 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { deleteCookie } from 'cookies-next';
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_BASE_URL,
@@ -74,3 +77,53 @@ export const clearTokens = () => {
   Cookies.remove(ACCESS_TOKEN_KEY);
   Cookies.remove(REFRESH_TOKEN_KEY);
 };
+
+
+
+
+export const logout = () => {
+  // حذف الـ tokens من الكوكيز
+  deleteCookie('access_token');
+  deleteCookie('refresh_token');
+  
+  // يمكنك أيضاً حذف أي معلومات إضافية مخزنة
+  deleteCookie('user_data');
+  deleteCookie('user_role');
+  
+  // إعادة توجيه للصفحة الرئيسية أو صفحة تسجيل الدخول
+  window.location.href = '/LoginPage';
+};
+
+
+export const useAuth = () => {
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      setIsLoggingOut(true);
+      
+      // حذف الـ tokens من الكوكيز
+      deleteCookie('access_token');
+      deleteCookie('refresh_token');
+      deleteCookie('user_data');
+      deleteCookie('user_role');
+      
+      // يمكنك إضافة API call لتسجيل الخروج من الخادم
+      // await fetch('/api/auth/logout', { method: 'POST' });
+      
+      // إعادة توجيه لصفحة تسجيل الدخول
+      router.push('/LoginPage');
+      
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }, [router]);
+
+  return {
+    handleLogout,
+    isLoggingOut
+  };
+}

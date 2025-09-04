@@ -132,7 +132,7 @@ export const getSuperAdminSidebarConfig = (t: any): SidebarConfig => ({
       id: "logout",
       label: t("superAdmin.sidebar.bottom.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });
@@ -226,7 +226,7 @@ export const getStudentSidebarConfig = (t: any): SidebarConfig => ({
       id: "logout",
       label: t("student.sidebar.bottom.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });

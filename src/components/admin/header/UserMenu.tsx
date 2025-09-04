@@ -42,9 +42,9 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
   const menuItems = [
     { icon: User, label: t("profile"), href: "/admin/profile" },
-    { icon: Settings, label: t("settings"), href: "/admin/settings" },
-    { icon: MessageSquare, label: t("messages"), href: "/admin/messages" },
-    { icon: HelpCircle, label: t("help"), href: "/admin/help" },
+    // { icon: Settings, label: t("settings"), href: "/admin/settings" },
+    // { icon: MessageSquare, label: t("messages"), href: "/admin/messages" },
+    // { icon: HelpCircle, label: t("help"), href: "/admin/help" },
   ];
 
   return (

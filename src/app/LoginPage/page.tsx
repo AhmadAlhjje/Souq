@@ -19,11 +19,12 @@ const LoginPage = () => {
   const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
 
-  // بيانات إنشاء الحساب - تم إزالة countryCode لأن phoneNumber سيحتوي على رقم الهاتف الكامل
+  // بيانات إنشاء الحساب - إضافة confirmPassword
   const [signUpData, setSignUpData] = useState({
     username: "",
-    phoneNumber: "", // سيحتوي على رقم الهاتف الكامل مع رمز البلد
+    phoneNumber: "",
     password: "",
+    confirmPassword: "", // إضافة حقل تأكيد كلمة المرور
   });
 
   // بيانات تسجيل الدخول
@@ -50,12 +51,26 @@ const LoginPage = () => {
 
   /** إرسال بيانات إنشاء الحساب إلى الـ API */
   const handleSignUpSubmit = async () => {
+    // التحقق من الحقول المطلوبة
     if (
       !signUpData.username ||
       !signUpData.phoneNumber ||
-      !signUpData.password
+      !signUpData.password ||
+      !signUpData.confirmPassword
     ) {
       showToast("يرجى ملء جميع الحقول المطلوبة", "warning");
+      return;
+    }
+
+    // التحقق من تطابق كلمات المرور
+    if (signUpData.password !== signUpData.confirmPassword) {
+      showToast("كلمات المرور غير متطابقة", "error");
+      return;
+    }
+
+    // التحقق من طول كلمة المرور (اختياري)
+    if (signUpData.password.length < 6) {
+      showToast("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "warning");
       return;
     }
 
@@ -88,6 +103,7 @@ const LoginPage = () => {
           username: "",
           phoneNumber: "",
           password: "",
+          confirmPassword: "", // إعادة تعيين تأكيد كلمة المرور أيضاً
         });
       } else {
         showToast(result.message || "حدث خطأ أثناء إنشاء الحساب", "error");

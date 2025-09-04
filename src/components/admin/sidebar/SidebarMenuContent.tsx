@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { SidebarMenuItem } from "@/types/admin";
 import SidebarMenuBadge from "./SidebarMenuBadge";
+import { useAuth } from "@/api/api"; // استيراد الـ hook
 
 interface SidebarMenuContentProps {
   item: SidebarMenuItem;
@@ -25,7 +26,15 @@ const SidebarMenuContent: React.FC<SidebarMenuContentProps> = ({
   onToggleExpanded,
   onItemClick,
 }) => {
+  const { handleLogout, isLoggingOut } = useAuth();
+
   const handleClick = () => {
+    // التحقق من إذا كان العنصر هو تسجيل الخروج
+    if (item.id === 'logout') {
+      handleLogout();
+      return;
+    }
+
     if (hasChildren) {
       onToggleExpanded(item.id);
     } else {
@@ -37,7 +46,7 @@ const SidebarMenuContent: React.FC<SidebarMenuContentProps> = ({
     <div className="flex items-center flex-1 gap-3">
       <item.icon size={18} />
       <span className={`${!isOpen && "hidden"} lg:block truncate`}>
-        {item.label}
+        {item.id === 'logout' && isLoggingOut ? 'جاري تسجيل الخروج...' : item.label}
       </span>
       {item.badge && <SidebarMenuBadge badge={item.badge} isActive={isActive} />}
     </div>
@@ -60,7 +69,8 @@ const SidebarMenuContent: React.FC<SidebarMenuContentProps> = ({
     );
   }
 
-  if (item.href) {
+  // للعناصر التي لها href وليست تسجيل خروج
+  if (item.href && item.id !== 'logout') {
     return (
       <Link href={item.href} className="flex items-center flex-1 gap-3" onClick={onItemClick}>
         <item.icon size={18} />
@@ -72,7 +82,20 @@ const SidebarMenuContent: React.FC<SidebarMenuContentProps> = ({
     );
   }
 
-  return menuContent;
+  // لتسجيل الخروج أو العناصر الأخرى بدون href
+  return (
+    <div 
+      className="flex items-center flex-1 gap-3 cursor-pointer" 
+      onClick={handleClick}
+      style={{ opacity: isLoggingOut && item.id === 'logout' ? 0.7 : 1 }}
+    >
+      <item.icon size={18} />
+      <span className={`${!isOpen && "hidden"} lg:block truncate`}>
+        {item.id === 'logout' && isLoggingOut ? 'جاري تسجيل الخروج...' : item.label}
+      </span>
+      {item.badge && <SidebarMenuBadge badge={item.badge} isActive={isActive} />}
+    </div>
+  );
 };
 
 export default SidebarMenuContent;

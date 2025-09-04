@@ -278,12 +278,12 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       icon: User, // أو User2, UserCircle, Settings
       href: "/admin/dashboard/profile",
     },
-    {
-      id: "create-store",
-      label: t("sidebar.createStore"),
-      icon: Store,
-      href: "/admin/dashboard/creatingStore",
-    },
+    // {
+    //   id: "create-store",
+    //   label: t("sidebar.createStore"),
+    //   icon: Store,
+    //   href: "/admin/dashboard/creatingStore",
+    // },
   ],
   bottomMenuItems: [
     {
@@ -293,17 +293,17 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       href: "/admin/notifications",
       // badge: 7,
     },
-    {
-      id: "help",
-      label: t("sidebar.bottom.help"),
-      icon: HelpCircle,
-      href: "/admin/help",
-    },
+    // {
+    //   id: "help",
+    //   label: t("sidebar.bottom.help"),
+    //   icon: HelpCircle,
+    //   href: "/admin/help",
+    // },
     {
       id: "logout",
       label: t("sidebar.bottom.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });
@@ -337,17 +337,17 @@ export const getCustomerSidebarConfig = (t: any): SidebarConfig => ({
     },
   ],
   bottomMenuItems: [
-    {
-      id: "help",
-      label: t("customer.sidebar.help"),
-      icon: HelpCircle,
-      href: "/customer/help",
-    },
+    // {
+    //   id: "help",
+    //   label: t("customer.sidebar.help"),
+    //   icon: HelpCircle,
+    //   href: "/customer/help",
+    // },
     {
       id: "logout",
       label: t("customer.sidebar.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });
