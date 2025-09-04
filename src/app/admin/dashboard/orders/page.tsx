@@ -12,7 +12,7 @@ import {
 import { useStore } from "@/contexts/StoreContext";
 
 const OrdersPageComponent: React.FC = () => {
-  // States
+  // Statesx
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("all");

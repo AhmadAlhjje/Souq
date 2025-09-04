@@ -24,7 +24,7 @@ import { getStoreById, updateStore } from "@/api/stores";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 
-// تعريف الأنواع
+// تعريف الأنواعx
 type EditingField =
   | "name"
   | "storeName"

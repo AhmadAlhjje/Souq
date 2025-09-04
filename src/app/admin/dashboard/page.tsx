@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { MoreHorizontal, Package, ShoppingCart, Users, TrendingUp } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
 
-// Atomic Design Components
+// Atomic Design Componentsx
 import AdminButton from "@/components/atoms/admin/AdminButton";
 import AdminSkeleton from "@/components/atoms/admin/AdminSkeleton";
 import AdminDashboardStats from "@/components/organisms/admin/AdminDashboardStats";

@@ -30,7 +30,7 @@ interface FormErrors {
 }
 
 const CreateStorePage: React.FC = () => {
-  // State Management
+  // State Managementx
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     location: "",
