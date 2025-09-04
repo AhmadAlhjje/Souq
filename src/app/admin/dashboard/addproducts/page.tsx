@@ -1,4 +1,4 @@
-// pages/admin/products/AddProductPage.tsx
+// pages/admin/products/AddProductPage.tsxx
 "use client";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
