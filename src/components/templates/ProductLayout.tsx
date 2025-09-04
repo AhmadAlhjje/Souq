@@ -65,7 +65,7 @@ function getFirstImage(imagesField: string | undefined): string {
       parsed = JSON.parse(parsed);
     }
 
-    let firstImage: unknown =
+    const firstImage: unknown =
       Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : parsed;
 
     // تأكد أن firstImage نص
