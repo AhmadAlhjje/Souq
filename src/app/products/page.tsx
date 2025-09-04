@@ -1,5 +1,7 @@
 
 // app/products/page.tsx
+// app/products/page.tsx
+
 import React from 'react';
 import ProductLayout from '@/components/templates/ProductLayout';
 import type { Metadata } from 'next';

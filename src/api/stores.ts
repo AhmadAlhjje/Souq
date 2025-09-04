@@ -1,3 +1,5 @@
+//store.ts
+
 import { api } from "./api";
 
 export interface StoreUser {

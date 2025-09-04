@@ -1,4 +1,6 @@
 // components/organisms/ProductsSection.tsx
+// components/organisms/ProductsSection.tsx
+
 import React from 'react';
 import { TrendingUp } from 'lucide-react';
 import Badge from '../atoms/Badge';

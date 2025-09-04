@@ -1,3 +1,4 @@
+//s
 "use client";
 import React from "react";
 import { MapPin, Star } from "lucide-react";

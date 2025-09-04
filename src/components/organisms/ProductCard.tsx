@@ -1,3 +1,4 @@
+//p
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Eye, Check } from 'lucide-react';

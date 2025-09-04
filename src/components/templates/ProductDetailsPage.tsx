@@ -1,4 +1,6 @@
 // components/templates/ProductDetailsPage.tsx
+// components/templates/ProductDetailsPage.tsx
+
 "use client";
 
 import React, { useState, useEffect } from "react";

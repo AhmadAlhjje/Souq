@@ -5,6 +5,7 @@ import Icon from '../atoms/Icon';
 import StoreCard from '../organisms/StoreCard';
 import OffersSlider from '../organisms/OffersSlider';
 import SearchInput from '../molecules/SearchInput';
+// نفس interface المحلي بدون تغيير
 
 // نفس interface المحلي بدون تغيير
 interface Store {
