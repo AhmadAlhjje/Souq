@@ -1,9 +1,8 @@
 // components/organisms/LoginForm.tsx
 "use client";
 import React from 'react';
-import { User, Loader2 } from 'lucide-react';
+import { User, Loader2, Lock, KeyRound } from 'lucide-react';
 import InputField from '../../components/molecules/InputField';
-// بدلاً من PasswordField، استخدم InputField مع type="password"
 import PhoneField from '../../components/molecules/PhoneField';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +10,7 @@ interface SignUpFormData {
   username: string;
   phoneNumber: string; // الآن سيحتوي على رقم الهاتف الكامل مع رمز البلد
   password: string;
+  confirmPassword: string; // حقل جديد لتأكيد كلمة المرور
 }
 
 interface LoginFormProps {
@@ -43,6 +43,10 @@ const LoginForm: React.FC<LoginFormProps> = ({
     handleInputChange('phoneNumber', value || '');
   };
 
+  // التحقق من تطابق كلمتي المرور للعرض البصري
+  const passwordsMatch = formData.password === formData.confirmPassword;
+  const showPasswordMismatch = formData.confirmPassword.length > 0 && !passwordsMatch;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-4">
       <InputField
@@ -64,16 +68,46 @@ const LoginForm: React.FC<LoginFormProps> = ({
         disabled={isLoading}
       />
       
-      {/* استخدام InputField بدلاً من PasswordField */}
       <InputField
         label="كلمة المرور"
         type="password"
         placeholder="أدخل كلمة المرور"
         value={formData.password}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('password', e.target.value)}
+        icon={Lock}
         required={true}
         disabled={isLoading}
       />
+      
+      {/* حقل تأكيد كلمة المرور الجديد */}
+      <div className="space-y-1">
+        <InputField
+          label="تأكيد كلمة المرور"
+          type="password"
+          placeholder="أعد إدخال كلمة المرور"
+          value={formData.confirmPassword}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange('confirmPassword', e.target.value)}
+          icon={KeyRound}
+          required={true}
+          disabled={isLoading}
+        />
+        
+        {/* رسالة تحذير إذا كانت كلمتا المرور غير متطابقتين */}
+        {showPasswordMismatch && (
+          <p className="text-red-500 text-sm mt-1 flex items-center">
+            <span className="mr-1">⚠️</span>
+            كلمتا المرور غير متطابقتين
+          </p>
+        )}
+        
+        {/* رسالة تأكيد إذا كانت كلمتا المرور متطابقتين */}
+        {formData.confirmPassword.length > 0 && passwordsMatch && (
+          <p className="text-green-500 text-sm mt-1 flex items-center">
+            <span className="mr-1">✅</span>
+            كلمتا المرور متطابقتان
+          </p>
+        )}
+      </div>
       
       <div className="pt-4">
         <button

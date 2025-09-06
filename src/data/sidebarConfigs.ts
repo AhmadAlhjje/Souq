@@ -303,7 +303,7 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       id: "logout",
       label: t("sidebar.bottom.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });
@@ -347,7 +347,7 @@ export const getCustomerSidebarConfig = (t: any): SidebarConfig => ({
       id: "logout",
       label: t("customer.sidebar.logout"),
       icon: LogOut,
-      href: "/logout",
+      href: "/LoginPage",
     },
   ],
 });

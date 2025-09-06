@@ -9,7 +9,7 @@ interface SidebarMenuProps {
   isOpen: boolean;
   expandedItems: string[];
   onToggleExpanded: (itemId: string) => void;
-  onItemClick: () => void;
+  onItemClick: (itemId?: string) => void;
   className?: string;
 }
 
@@ -30,7 +30,7 @@ const SidebarMenu: React.FC<SidebarMenuProps> = ({
           isOpen={isOpen}
           expandedItems={expandedItems}
           onToggleExpanded={onToggleExpanded}
-          onItemClick={onItemClick}
+          onItemClick={() => onItemClick(item.id)}
         />
       ))}
     </nav>
