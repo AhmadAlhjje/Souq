@@ -109,6 +109,7 @@ export interface ApiStore {
   };
   Products: ApiProduct[];
 }
+
 // جلب جميع المتاجر
 export const getStores = async (): Promise<Store[]> => {
   try {
@@ -141,6 +142,7 @@ export const getStores = async (): Promise<Store[]> => {
     throw error;
   }
 };
+
 // جلب متجر واحد بمنتجاته
 export const getStore = async (storeId: number): Promise<ApiStore> => {
   try {
@@ -167,6 +169,7 @@ export const getStore = async (storeId: number): Promise<ApiStore> => {
     throw error;
   }
 };
+
 // جلب منتج واحد بتفاصيله
 export const getProduct = async (productId: number): Promise<any> => {
   try {
@@ -187,6 +190,7 @@ export const getProduct = async (productId: number): Promise<any> => {
     throw error;
   }
 };
+
 // مساعد لتحليل الصور من JSON بدون صورة افتراضية
 export const parseImages = (imagesString: string): string[] => {
   try {

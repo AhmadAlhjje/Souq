@@ -415,14 +415,14 @@ const ProfilePage = () => {
             >
               <Share2 className={`w-5 h-5 ${themeClasses.buttonIcon}`} />
             </button>
-            <button
+            {/* <button
               className={`${themeClasses.buttonBackground} p-3 rounded-xl transition-colors ${themeClasses.borderColor} border shadow-sm`}
             >
               <Bell className={`w-5 h-5 ${themeClasses.buttonIcon}`} />
             </button>
             <button className="bg-teal-400 hover:bg-teal-500 p-3 rounded-xl transition-colors border border-gray-200 shadow-sm">
               <Settings className="w-5 h-5 text-gray-50" />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -511,7 +511,7 @@ const ProfilePage = () => {
               </div>
 
               {/* Statistics */}
-              <div
+              {/* <div
                 className={`grid grid-cols-3 text-center w-full border-t ${themeClasses.borderColor} pt-4`}
                 dir="rtl"
               >
@@ -545,7 +545,7 @@ const ProfilePage = () => {
                     النشاط
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
