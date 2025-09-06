@@ -1,4 +1,4 @@
-// pages/admin/products/AddProductPage.tsxx
+// pages/admin/products/AddProductPage.tsx
 "use client";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,6 +19,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { api } from "@/api/api";
 import { createProduct } from "@/api/products";
+import { useStore } from "@/contexts/StoreContext";
 
 interface ProductImage {
   id: string;
@@ -44,6 +45,7 @@ const AddProductPage: React.FC = () => {
   const { t, i18n } = useTranslation("products");
   const { isDark } = useTheme();
   const { showToast } = useToast();
+  const { storeId, isLoaded } = useStore();
   const isRTL = i18n.language === "ar";
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -131,6 +133,12 @@ const AddProductPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    // التحقق من وجود store_id
+    if (!storeId) {
+      showToast("خطأ: لا يمكن تحديد المتجر. يرجى إعادة تسجيل الدخول", "error");
+      return;
+    }
+
     // التحقق من صحة البيانات
     if (!validateForm()) {
       return;
@@ -139,16 +147,22 @@ const AddProductPage: React.FC = () => {
     setLoading(true);
     
     try {
+      console.log("=== Debug: Creating Product ===");
+      console.log("Store ID:", storeId);
+      console.log("User store context:", { storeId, isLoaded });
+
       const payload = {
         name: formData.name || formData.nameAr,
         description: formData.description || formData.descriptionAr,
         price: formData.price,
         stock_quantity: formData.quantity,
-        store_id: 7,
+        store_id: storeId,
         images: formData.images
           .filter((img) => img.file)
           .map((img) => img.file!) as File[],
       };
+
+      console.log("Payload being sent:", payload);
 
       const response = await createProduct(payload);
       
@@ -172,13 +186,15 @@ const AddProductPage: React.FC = () => {
       // العودة للخطوة الأولى
       setCurrentStep(1);
       
-      console.log("تم إنشاء المنتج:", response.data);
+      console.log("تم إنشاء المنتج:", response);
       
     } catch (error: any) {
       console.error("خطأ أثناء إنشاء المنتج:", error.response?.data || error.message);
       
-      // عرض رسالة خطأ مناسبة حسب نوع الخطأ
-      if (error.response?.status === 400) {
+      // معالجة محسنة للأخطاء
+      if (error.response?.status === 403) {
+        showToast("غير مصرح لك بإضافة منتجات لهذا المتجر. تحقق من صلاحياتك", "error");
+      } else if (error.response?.status === 400) {
         showToast("خطأ في البيانات المدخلة. يرجى التحقق من جميع الحقول", "error");
       } else if (error.response?.status === 401) {
         showToast("انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى", "error");
@@ -450,6 +466,39 @@ const AddProductPage: React.FC = () => {
       </div>
     </div>
   );
+
+  // التحقق من تحميل StoreContext
+  if (!isLoaded) {
+    return (
+      <LoadingSpinner
+        size="lg"
+        color="green"
+        message="جاري تحميل بيانات المتجر..."
+        overlay={true}
+        pulse={true}
+      />
+    );
+  }
+
+  if (!storeId) {
+    return (
+      <AdminLayout title="خطأ" subtitle="خطأ في تحديد المتجر">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="text-red-600 text-lg mb-4">
+              لا يمكن تحديد المتجر. يرجى إعادة تسجيل الدخول.
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600"
+            >
+              إعادة المحاولة
+            </button>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
 
   // عرض LoadingSpinner عند التحميل
   if (loading) {

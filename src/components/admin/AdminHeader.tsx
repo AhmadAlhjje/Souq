@@ -27,39 +27,38 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
   const language = i18n.language || "ar";
   const isRTL = language === "ar";
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showNotifications, setShowNotifications] = useState(false);
+  // const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   // Mock notifications data
-  const [notifications] = useState<AdminNotification[]>([
-    {
-      id: "1",
-      title: t("new_order"),
-      message: t("new_order_message"),
-      type: "info",
-      isRead: false,
-      createdAt: new Date(),
-      actionUrl: "/admin/orders/123",
-    },
-    {
-      id: "2",
-      title: t("low_stock"),
-      message: t("low_stock_message"),
-      type: "warning",
-      isRead: false,
-      createdAt: new Date(),
-      actionUrl: "/admin/products/456",
-    },
-    {
-      id: "3",
-      title: t("payment_completed"),
-      message: t("payment_completed_message"),
-      type: "success",
-      isRead: true,
-      createdAt: new Date(),
-    },
-  ]);
+  // const [notifications] = useState<AdminNotification[]>([
+  //   {
+  //     id: "1",
+  //     title: t("new_order"),
+  //     message: t("new_order_message"),
+  //     type: "info",
+  //     isRead: false,
+  //     createdAt: new Date(),
+  //     actionUrl: "/admin/orders/123",
+  //   },
+  //   {
+  //     id: "2",
+  //     title: t("low_stock"),
+  //     message: t("low_stock_message"),
+  //     type: "warning",
+  //     isRead: false,
+  //     createdAt: new Date(),
+  //     actionUrl: "/admin/products/456",
+  //   },
+  //   {
+  //     id: "3",
+  //     title: t("payment_completed"),
+  //     message: t("payment_completed_message"),
+  //     type: "success",
+  //     isRead: true,
+  //     createdAt: new Date(),
+  //   },
+  // ]);
 
   return (
     <header
@@ -102,12 +101,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
           <ThemeToggle />
           <LanguageToggle />
           
-          <NotificationDropdown
+          {/* <NotificationDropdown
             notifications={notifications}
             showNotifications={showNotifications}
             setShowNotifications={setShowNotifications}
             isRTL={isRTL}
-          />
+          /> */}
           
           <UserMenu
             showUserMenu={showUserMenu}

@@ -297,7 +297,7 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       id: "help",
       label: t("sidebar.bottom.help"),
       icon: HelpCircle,
-      href: "/admin/help",
+      href: "/admin/dashboard/help",
     },
     {
       id: "logout",
