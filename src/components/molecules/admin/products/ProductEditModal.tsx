@@ -28,6 +28,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
   const [formData, setFormData] = useState<Partial<Product>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]); // لحفظ الصور المحددة
 
   // Initialize form data when product changes
   useEffect(() => {
@@ -35,8 +36,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
       setFormData({
         ...product,
       });
-      setImagePreview(product.image);
+      // تحديد الصورة الحالية للمعاينة
+      setImagePreview(product.image || "");
       setErrors({});
+      setSelectedImages([]); // إعادة تعيين الصور المحددة
     }
   }, [product]);
 
@@ -111,7 +114,14 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
       return;
     }
 
-    onSave(formData as Product);
+    // إنشاء كائن البيانات للإرسال مع إضافة الصور الجديدة
+    const productToSave = {
+      ...formData,
+      // إضافة الصور الجديدة كخاصية مؤقتة للمعالجة
+      newImages: selectedImages.length > 0 ? selectedImages : undefined,
+    } as Product & { newImages?: File[] };
+
+    onSave(productToSave);
   };
 
   // Handle input changes
@@ -132,15 +142,18 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
 
   // Handle image upload
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      setSelectedImages(fileArray);
+
+      // إنشاء معاينة للصورة الأولى
       const reader = new FileReader();
       reader.onload = () => {
         const imageUrl = reader.result as string;
         setImagePreview(imageUrl);
-        handleInputChange("image", imageUrl);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(fileArray[0]);
     }
   };
 
@@ -209,6 +222,11 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     className="w-full h-64 object-cover rounded-lg border border-gray-200"
                     onError={handleImageError}
                   />
+                  {selectedImages.length > 0 && (
+                    <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs">
+                      {selectedImages.length} صورة جديدة
+                    </div>
+                  )}
                 </div>
 
                 {/* Upload Button */}
@@ -217,6 +235,7 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     type="file"
                     id="image-upload"
                     accept="image/*"
+                    multiple // السماح بتحديد أكثر من صورة
                     onChange={handleImageUpload}
                     className="hidden"
                     disabled={loading}
@@ -235,9 +254,26 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     `}
                   >
                     <Upload className="w-5 h-5" />
-                    {t("productEdit.uploadImage")}
+                    {selectedImages.length > 0 
+                      ? `${selectedImages.length} صور محددة`
+                      : t("productEdit.uploadImage")
+                    }
                   </label>
                 </div>
+
+                {/* عرض أسماء الصور المحددة */}
+                {selectedImages.length > 0 && (
+                  <div className="space-y-2">
+                    <p className={`text-sm ${labelClasses}`}>الصور المحددة:</p>
+                    <ul className="space-y-1">
+                      {selectedImages.map((file, index) => (
+                        <li key={index} className={`text-xs ${labelClasses} truncate`}>
+                          {file.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
 

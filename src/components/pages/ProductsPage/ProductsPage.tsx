@@ -16,7 +16,11 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { useStore } from "@/contexts/StoreContext";
 import { getStoreById } from "@/api/stores";
-import { updateProduct, deleteProduct } from "@/api/products";
+import {
+  updateProduct,
+  deleteProduct,
+  ProductUpdateData,
+} from "@/api/products";
 import { Product, ViewMode } from "../../../types/product";
 
 // دالة بسيطة لتنسيق التاريخ للعرض
@@ -368,17 +372,78 @@ const ProductsPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  const handleSaveProduct = async (updatedProduct: Product): Promise<void> => {
+  // تحديث handleSaveProduct في ProductsPage.tsx
+  const handleSaveProduct = async (
+    updatedProduct: Product & { newImages?: File[] }
+  ): Promise<void> => {
+    if (!productToEdit?.id) return;
+
     setEditLoading(true);
     try {
-      // استدعاء API الحقيقي
-      await updateProduct(updatedProduct.id, {
-        name: updatedProduct.name,
-        description: updatedProduct.description,
-        price: updatedProduct.price,
-        stock_quantity: updatedProduct.stock,
-        // TODO: لو فيه صور جديدة ممكن ترسلها هنا
-      });
+      console.log("=== DEBUG: Product Update Process ===");
+      console.log("Original product:", productToEdit);
+      console.log("Updated product:", updatedProduct);
+      console.log("New images:", updatedProduct.newImages);
+
+      // إعداد البيانات للإرسال إلى updateProduct
+      const updateData: ProductUpdateData = {};
+
+      // إضافة البيانات المتغيرة فقط
+      if (updatedProduct.name !== productToEdit.name) {
+        updateData.name = updatedProduct.name;
+        console.log("Adding name:", updatedProduct.name);
+      }
+
+      if (updatedProduct.description !== productToEdit.description) {
+        updateData.description = updatedProduct.description;
+        console.log("Adding description:", updatedProduct.description);
+      }
+
+      if (updatedProduct.price !== productToEdit.price) {
+        updateData.price = updatedProduct.price;
+        console.log("Adding price:", updatedProduct.price);
+      }
+
+      if (updatedProduct.stock !== productToEdit.stock) {
+        updateData.stock_quantity = updatedProduct.stock; // تحويل من stock إلى stock_quantity
+        console.log("Adding stock_quantity:", updatedProduct.stock);
+      }
+
+      // إضافة الصور الجديدة إذا كانت موجودة
+      if (updatedProduct.newImages && updatedProduct.newImages.length > 0) {
+        updateData.images = updatedProduct.newImages;
+        console.log(
+          `Adding ${updatedProduct.newImages.length} images to update data`
+        );
+
+        // طباعة تفاصيل الصور
+        updatedProduct.newImages.forEach((file, index) => {
+          console.log(`Image ${index}:`, {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+          });
+        });
+      } else {
+        console.log("No new images to upload");
+      }
+
+      console.log("Final update data:", updateData);
+
+      // التحقق من وجود تغييرات
+      if (Object.keys(updateData).length === 0) {
+        console.log("No changes detected");
+        setShowEditModal(false);
+        setProductToEdit(null);
+        showToast("لا توجد تغييرات للحفظ", "info");
+        return;
+      }
+
+      // استدعاء updateProduct API
+      console.log("Calling updateProduct API...");
+      const response = await updateProduct(productToEdit.id, updateData);
+
+      console.log("API Response:", response);
 
       // تحديث قائمة المنتجات محلياً
       setProducts((prevProducts) =>
@@ -387,13 +452,58 @@ const ProductsPage: React.FC = () => {
         )
       );
 
+      // إغلاق Modal
       setShowEditModal(false);
       setProductToEdit(null);
 
       showToast("تم تحديث المنتج بنجاح", "success");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating product:", error);
-      showToast("فشل في تحديث المنتج", "error");
+
+      // معالجة أفضل للأخطاء
+      if (error?.response) {
+        console.error("API Error Details:", {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers,
+        });
+
+        // رسائل خطأ مخصصة
+        switch (error.response.status) {
+          case 422:
+            showToast(
+              "خطأ في البيانات المدخلة - تحقق من صحة البيانات",
+              "error"
+            );
+            break;
+          case 413:
+            showToast("حجم الصور كبير جداً - يرجى اختيار صور أصغر", "error");
+            break;
+          case 415:
+            showToast("نوع الصور غير مدعوم - يرجى استخدام JPG أو PNG", "error");
+            break;
+          case 404:
+            showToast("المنتج غير موجود", "error");
+            break;
+          case 401:
+            showToast("غير مصرح لك بتعديل هذا المنتج", "error");
+            break;
+          default:
+            showToast(
+              `خطأ في تحديث المنتج: ${
+                error.response?.data?.message || "خطأ غير معروف"
+              }`,
+              "error"
+            );
+        }
+      } else if (error?.request) {
+        showToast(
+          "خطأ في الاتصال بالخادم - تحقق من الاتصال بالإنترنت",
+          "error"
+        );
+      } else {
+        showToast(`خطأ: ${error.message}`, "error");
+      }
     } finally {
       setEditLoading(false);
     }

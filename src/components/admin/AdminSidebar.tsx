@@ -5,11 +5,12 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import useTheme from "@/hooks/useTheme";
-import { useStore } from "@/contexts/StoreContext";
+import { useLogout } from "@/hooks/useLogout";
 import { SidebarConfig } from "@/types/admin";
 import SidebarHeader from "./sidebar/SidebarHeader";
 import SidebarMenu from "./sidebar/SidebarMenu";
 import { getAdminSidebarConfig } from "@/data/sidebarConfigs";
+import LoadingSpinner from "@/components/ui/LoadingSpinner"; // تأكد من المسار الصحيح
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,42 +27,11 @@ const AdminSidebar: React.FC<SidebarProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
-  const { setStoreId } = useStore();
+  const { handleLogout, isLoggingOut } = useLogout();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   // إنشاء config افتراضي إذا لم يتم تمريره
   const sidebarConfig = config || getAdminSidebarConfig(t);
-
-  // دالة لحذف الكوكيز
-  const deleteCookie = (name: string) => {
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname}`;
-  };
-
-  // دالة تسجيل الخروج
-  const handleLogout = async () => {
-    try {
-      // حذف الكوكيز
-      deleteCookie('access_token');
-      deleteCookie('refresh_token');
-      
-      // حذف البيانات من localStorage
-      localStorage.removeItem('storeId');
-      localStorage.removeItem('user');
-      localStorage.removeItem('userData');
-      
-      // تنظيف storeId من الـ context
-      setStoreId(null);
-      
-      console.log('تم تسجيل الخروج بنجاح');
-      
-      // توجيه المستخدم إلى صفحة تسجيل الدخول
-      window.location.href = '/LoginPage';
-      
-    } catch (error) {
-      console.error('خطأ في تسجيل الخروج:', error);
-    }
-  };
 
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev =>
@@ -83,6 +53,20 @@ const AdminSidebar: React.FC<SidebarProps> = ({
       onToggle();
     }
   };
+
+  // عرض شاشة التحميل عند تسجيل الخروج
+  if (isLoggingOut) {
+    return (
+      <LoadingSpinner
+        size="lg"
+        color="green"
+        message="🚪 جاري تسجيل الخروج... نراك قريباً!"
+        overlay={true}
+        pulse={true}
+        dots={true}
+      />
+    );
+  }
 
   return (
     <>

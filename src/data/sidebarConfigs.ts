@@ -278,21 +278,21 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       icon: User, // أو User2, UserCircle, Settings
       href: "/admin/dashboard/profile",
     },
-    {
-      id: "create-store",
-      label: t("sidebar.createStore"),
-      icon: Store,
-      href: "/admin/dashboard/creatingStore",
-    },
+    // {
+    //   id: "create-store",
+    //   label: t("sidebar.createStore"),
+    //   icon: Store,
+    //   href: "/admin/dashboard/creatingStore",
+    // },
   ],
   bottomMenuItems: [
-    {
-      id: "notifications",
-      label: t("sidebar.bottom.notifications"),
-      icon: Bell,
-      href: "/admin/notifications",
-      // badge: 7,
-    },
+    // {
+    //   id: "notifications",
+    //   label: t("sidebar.bottom.notifications"),
+    //   icon: Bell,
+    //   href: "/admin/notifications",
+    //   // badge: 7,
+    // },
     {
       id: "help",
       label: t("sidebar.bottom.help"),

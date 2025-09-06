@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
+import { useLogout } from "@/hooks/useLogout";
+import LoadingSpinner from "@/components/ui/LoadingSpinner"; // تأكد من المسار الصحيح
 
 interface UserMenuProps {
   showUserMenu: boolean;
@@ -24,6 +26,7 @@ const UserMenu: React.FC<UserMenuProps> = ({
 }) => {
   const { isDark } = useTheme();
   const { t } = useTranslation();
+  const { handleLogout, isLoggingOut } = useLogout();
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,10 +45,24 @@ const UserMenu: React.FC<UserMenuProps> = ({
 
   const menuItems = [
     { icon: User, label: t("profile"), href: "/admin/profile" },
-    { icon: Settings, label: t("settings"), href: "/admin/settings" },
-    { icon: MessageSquare, label: t("messages"), href: "/admin/messages" },
+    // { icon: Settings, label: t("settings"), href: "/admin/settings" },
+    // { icon: MessageSquare, label: t("messages"), href: "/admin/messages" },
     { icon: HelpCircle, label: t("help"), href: "/admin/help" },
   ];
+
+  // عرض شاشة التحميل عند تسجيل الخروج
+  if (isLoggingOut) {
+    return (
+      <LoadingSpinner
+        size="lg"
+        color="green"
+        message="🚪 جاري تسجيل الخروج... شكراً لك!"
+        overlay={true}
+        pulse={true}
+        dots={true}
+      />
+    );
+  }
 
   return (
     <div className="relative" ref={userMenuRef}>
@@ -107,6 +124,11 @@ const UserMenu: React.FC<UserMenuProps> = ({
               {menuItems.map((item) => (
                 <button
                   key={item.label}
+                  onClick={() => {
+                    setShowUserMenu(false);
+                    // يمكنك إضافة التنقل هنا
+                    // window.location.href = item.href;
+                  }}
                   className={`flex items-center gap-3 w-full px-4 py-2 text-sm transition-colors ${
                     isDark
                       ? "text-gray-300 hover:bg-gray-700 hover:text-gray-100"
@@ -125,11 +147,16 @@ const UserMenu: React.FC<UserMenuProps> = ({
               }`}
             >
               <button
+                onClick={() => {
+                  setShowUserMenu(false);
+                  handleLogout();
+                }}
+                disabled={isLoggingOut}
                 className={`flex items-center gap-3 w-full px-4 py-2 text-sm transition-colors ${
                   isDark
-                    ? "text-red-400 hover:bg-gray-700"
-                    : "text-red-600 hover:bg-gray-50"
-                }`}
+                    ? "text-red-400 hover:bg-gray-700 disabled:opacity-50"
+                    : "text-red-600 hover:bg-gray-50 disabled:opacity-50"
+                } ${isLoggingOut ? 'cursor-not-allowed' : 'cursor-pointer'}`}
               >
                 <LogOut size={16} />
                 {t("logout")}
