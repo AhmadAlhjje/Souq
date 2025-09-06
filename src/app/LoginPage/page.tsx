@@ -5,7 +5,8 @@ import LoginTemplate from "../../components/templates/LoginTemplate";
 import AuthTabs from "../../components/molecules/AuthTabs";
 import LoginForm from "../../components/organisms/LoginForm";
 import SignInForm from "../../components/organisms/SignInForm";
-import { registerUser, loginUser } from "../../api/auth";
+import VerificationPopup from "../../components/ui/VerificationPopup";
+import { registerUser, loginUser, verifyWhatsapp } from "../../api/auth";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "next/navigation";
 import { getStoreIdFromToken, saveTokens } from "@/api/api";
@@ -18,6 +19,12 @@ const LoginPage = () => {
   const { setStoreId } = useStore();
   const [activeTab, setActiveTab] = useState("register");
   const [isLoading, setIsLoading] = useState(false);
+  
+  // حالات التحقق من الواتساب
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
+  const [pendingUserId, setPendingUserId] = useState<number | null>(null);
+  const [verificationPhoneNumber, setVerificationPhoneNumber] = useState("");
 
   // بيانات إنشاء الحساب - مع إضافة حقل تأكيد كلمة المرور
   const [signUpData, setSignUpData] = useState({
@@ -85,12 +92,24 @@ const LoginPage = () => {
 
       const result = await registerUser(registerData);
 
-      // ✅ التحقق من وجود الرسالة و التوكن بدلاً من success
-      if (result.message && result.token) {
-        // حفظ التوكن
-        saveTokens(result.token, result.token); // يمكن استخدام نفس التوكن للاثنين مؤقتاً
-
-        // عرض رسالة النجاح
+      // التحقق من الحاجة للتحقق من الواتساب
+      if (result.requires_verification && result.user?.user_id) {
+        // عرض نافذة التحقق
+        setPendingUserId(result.user.user_id);
+        setVerificationPhoneNumber(signUpData.phoneNumber);
+        setShowVerificationPopup(true);
+        showToast(result.message, "success");
+        
+        // إعادة تعيين النموذج
+        setSignUpData({
+          username: "",
+          phoneNumber: "",
+          password: "",
+          confirmPassword: "",
+        });
+      } else if (result.message && result.token) {
+        // التسجيل مكتمل بدون تحقق
+        saveTokens(result.token, result.token);
         showToast(result.message, "success");
 
         setTimeout(() => {
@@ -120,6 +139,55 @@ const LoginPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  /** التحقق من رمز الواتساب */
+  const handleVerifyWhatsapp = async (verificationCode: string) => {
+    if (!pendingUserId) {
+      showToast("خطأ في البيانات", "error");
+      return;
+    }
+
+    setVerificationLoading(true);
+
+    try {
+      const result = await verifyWhatsapp({
+        user_id: pendingUserId,
+        verification_code: verificationCode,
+      });
+
+      if (result.message) {
+        showToast(result.message, "success");
+        setShowVerificationPopup(false);
+        setPendingUserId(null);
+        setVerificationPhoneNumber("");
+        
+        // توجيه المستخدم لتسجيل الدخول
+        setTimeout(() => {
+          setActiveTab("login");
+          showToast("تم التحقق بنجاح! يمكنك الآن تسجيل الدخول", "info");
+        }, 1500);
+      } else {
+        showToast("رمز التحقق غير صحيح", "error");
+      }
+    } catch (error: any) {
+      console.error("Verification error:", error);
+      
+      if (error.response?.data?.message) {
+        showToast(error.response.data.message, "error");
+      } else {
+        showToast("حدث خطأ أثناء التحقق", "error");
+      }
+    } finally {
+      setVerificationLoading(false);
+    }
+  };
+
+  /** إغلاق نافذة التحقق */
+  const handleCloseVerification = () => {
+    setShowVerificationPopup(false);
+    setPendingUserId(null);
+    setVerificationPhoneNumber("");
   };
 
   /** إرسال بيانات تسجيل الدخول إلى الـ API */
@@ -204,6 +272,15 @@ const LoginPage = () => {
           isLoading={isLoading}
         />
       )}
+
+      {/* نافذة التحقق من الواتساب */}
+      <VerificationPopup
+        isOpen={showVerificationPopup}
+        onClose={handleCloseVerification}
+        onVerify={handleVerifyWhatsapp}
+        isLoading={verificationLoading}
+        phoneNumber={verificationPhoneNumber}
+      />
     </LoginTemplate>
   );
 };
