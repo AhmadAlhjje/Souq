@@ -20,6 +20,7 @@ import {
   updateProduct,
   deleteProduct,
   ProductUpdateData,
+  filterProducts,
 } from "@/api/products";
 import { Product, ViewMode } from "../../../types/product";
 
@@ -274,40 +275,7 @@ const ProductsPage: React.FC = () => {
     }
   }, [storeId, isLoaded, showToast]);
 
-  // Filter products based on search criteria
-  const filteredProducts: Product[] = products.filter((product: Product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.nameAr.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description &&
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()));
-
-    const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
-
-    // تحسين فلترة الحالة
-    let matchesStatus = true;
-    if (selectedStatus !== "all") {
-      switch (selectedStatus) {
-        case "active":
-          matchesStatus = product.status === "active" && product.stock > 0;
-          break;
-        case "out_of_stock":
-          matchesStatus =
-            product.status === "out_of_stock" || product.stock <= 0;
-          break;
-        case "low_stock":
-          matchesStatus =
-            product.status === "low_stock" ||
-            (product.stock > 0 && product.stock < 10);
-          break;
-        default:
-          matchesStatus = product.status === selectedStatus;
-      }
-    }
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
+  const filteredProducts = products;
 
   // Event Handlers
   const handleDeleteProduct = (product: Product): void => {
@@ -550,6 +518,24 @@ const ProductsPage: React.FC = () => {
     setProductToEdit(null);
   };
 
+  // إضافة هذا داخل ProductsPage.tsx، مع الدوال الأخرى مثل handleAddProduct
+  const handleSearchClick = async () => {
+    if (!storeId) return;
+
+    try {
+      const data = await filterProducts(storeId, {
+        stockStatus: selectedStatus !== "all" ? selectedStatus : undefined,
+        name: searchTerm || undefined,
+      });
+
+      console.log("Filtered Products API Response:", data);
+      setProducts(data.Products.map(transformApiProduct)); // جلب المنتجات من API فقط
+      setStoreStats(transformStoreStats(data.statistics));
+    } catch (error) {
+      showToast("فشل في جلب المنتجات", "error");
+    }
+  };
+
   // دالة لرندر المحتوى حسب نوع العرض
   const renderProductsContent = () => {
     switch (viewMode) {
@@ -716,6 +702,15 @@ const ProductsPage: React.FC = () => {
               onAddProduct={handleAddProduct}
               loading={loading}
             />
+
+            <div className="flex items-center gap-2 mt-4">
+              <button
+                onClick={handleSearchClick}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                بحث
+              </button>
+            </div>
           </section>
 
           {/* Products Display Section */}
@@ -770,12 +765,9 @@ const ProductsPage: React.FC = () => {
                       setSearchTerm("");
                       setSelectedCategory("all");
                       setSelectedStatus("all");
+                      handleSearchClick(); // إعادة جلب كل المنتجات من API
                     }}
-                    className={`
-                      ${emptyStateClasses.clearFilters}
-                      px-4 py-2 font-medium transition-colors duration-200
-                      hover:underline focus:outline-none focus:underline
-                    `}
+                    className={` ... `}
                   >
                     مسح الفلاتر
                   </button>

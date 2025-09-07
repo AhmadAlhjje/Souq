@@ -54,15 +54,15 @@ export const updateProduct = async (
   if (productData.name !== undefined) {
     formData.append("name", productData.name);
   }
-  
+
   if (productData.description !== undefined) {
     formData.append("description", productData.description);
   }
-  
+
   if (productData.price !== undefined) {
     formData.append("price", String(productData.price));
   }
-  
+
   if (productData.stock_quantity !== undefined) {
     formData.append("stock_quantity", String(productData.stock_quantity));
   }
@@ -75,7 +75,7 @@ export const updateProduct = async (
   }
 
   console.log("Product ID:", id);
-  
+
   // طباعة محتويات FormData للتحقق
   for (let pair of formData.entries()) {
     console.log(`${pair[0]}: ${pair[1]}`);
@@ -83,7 +83,7 @@ export const updateProduct = async (
 
   try {
     const response = await api.put(`/products/${id}`, formData, {
-      headers: { 
+      headers: {
         "Content-Type": "multipart/form-data",
       },
     });
@@ -104,7 +104,7 @@ export const patchProduct = async (
 
   // إضافة البيانات فقط إذا كانت موجودة ومختلفة
   Object.entries(productData).forEach(([key, value]) => {
-    if (value !== undefined && key !== 'images') {
+    if (value !== undefined && key !== "images") {
       formData.append(key, String(value));
     }
   });
@@ -120,7 +120,7 @@ export const patchProduct = async (
 
   try {
     const response = await api.patch(`/products/${id}`, formData, {
-      headers: { 
+      headers: {
         "Content-Type": "multipart/form-data",
       },
     });
@@ -166,6 +166,31 @@ export const getAllProducts = async (params?: {
     return response.data;
   } catch (error) {
     console.error("Error fetching products:", error);
+    throw error;
+  }
+};
+
+// جلب المنتجات حسب الفلاتر
+export const filterProducts = async (
+  storeId: number | string,
+  filters?: {
+    stockStatus?: string;
+    name?: string;
+  }
+) => {
+  try {
+    const params: any = {};
+
+    if (filters?.stockStatus) params.stockStatus = filters.stockStatus;
+    if (filters?.name) params.name = filters.name;
+
+    const response = await api.get(`/products/store/${storeId}/filter`, {
+      params,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error filtering products:", error);
     throw error;
   }
 };
