@@ -27,6 +27,7 @@ import {
 
 export interface IconProps {
   name:
+  
     | 'search'
     | 'facebook'
     | 'twitter'
@@ -50,7 +51,7 @@ export interface IconProps {
     | 'rocket'   // ✅ جديد
     | 'bolt'     // ✅ جديد
     | 'globe';   // ✅ جديد
-
+    
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   color?: string;

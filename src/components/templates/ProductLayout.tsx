@@ -52,7 +52,7 @@ interface ApiStore {
   Products: ApiProduct[];
 }
 // تعريف الـ BASE_URL ودالة getFirstImage
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.4:4000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.152:4000";
 
 function getFirstImage(imagesField: string | undefined): string {
   if (!imagesField) return `${BASE_URL}/default-product.jpg`;

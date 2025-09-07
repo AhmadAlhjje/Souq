@@ -209,7 +209,7 @@ const Button: React.FC<ButtonProps> = ({
         </span>
       )}
     </button>
-  );
+);      
 };
-
+        
 export default Button;

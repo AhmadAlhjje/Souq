@@ -1,20 +1,24 @@
-
 // pages/AboutPage.tsx
 import React from "react";
-import { 
-  FaBullhorn, 
-  FaRocket, 
-  FaCreditCard, 
-  FaTruck, 
-  FaStore, 
-  FaPlug, 
-  FaUsers, 
-  FaExchangeAlt, 
-  FaBolt, 
-  FaCalendarCheck, 
-  FaShieldAlt, 
-  FaGlobe 
-} from "react-icons/fa";
+import {
+   FaBullhorn,
+   FaRocket,
+   FaCreditCard,
+   FaTruck,
+   FaStore,
+   FaPlug,
+   FaUsers,
+   FaExchangeAlt,
+   FaBolt,
+   FaCalendarCheck,
+   FaShieldAlt,
+   FaGlobe,
+   FaEye,
+   FaLightbulb,
+   FaHandshake,
+   FaUserShield,
+   FaCogs
+ } from "react-icons/fa";
 import AboutPageTemplate from "@/components/templates/AboutPageTemplate";
 import IconWrapper from "@/components/molecules/IconWrapper";
 import { Solution } from "@/types";
@@ -24,24 +28,24 @@ const AboutPage: React.FC = () => {
     {
       id: 1,
       title: "رؤيتنا",
-      description: "تركز الشركة المجتمعية المتكاملة لصناعة الرقمية والتجارة الالكترونية",
-      image: "/images/image1.png",
-      buttonIcon: <FaStore className="text-sm" />,
-      buttonText: "اعرف المزيد",
+      description: "أن نكون المنصة الرائدة في تمكين التجار من التحول الرقمي.",
+      image: "/images/image 72 (2).png", // صورة الرؤية
+      buttonIcon: null, // إزالة الأيقونة
+      buttonText: "", // إزالة النص
       features: [
         {
-          icon: <IconWrapper icon={<FaPlug />} />,
-          title: "تطوير الأعمال والتسويق الرقمي والتجارة الالكترونية",
+          icon: <IconWrapper icon={<FaGlobe />} />,
+          title: "فتح آفاق جديدة للنمو والتميز في عالم التكنولوجيا والتجارة.",
           description: "",
         },
         {
           icon: <IconWrapper icon={<FaRocket />} />,
-          title: "أتمتة الخدمات وتطوير البيئات التفاعلية",
+          title: "تقديم تجربة تجارة إلكترونية مبتكرة وسهلة الاستخدام.",
           description: "",
         },
         {
-          icon: <IconWrapper icon={<FaUsers />} />,
-          title: "إدارة المشاريع ومتابعة الفرق",
+          icon: <IconWrapper icon={<FaShieldAlt />} />,
+          title: "ضمان بيئة آمنة للتجار والعملاء على حد سواء.",
           description: "",
         },
       ],
@@ -50,30 +54,30 @@ const AboutPage: React.FC = () => {
     },
     {
       id: 2,
-      title: "قيمتنا",
-      description: "نسعى جاهدين لتطوير برامج وحلول تقنية متقدمة تغطي احتياجات التقنية والتجارة",
-      image: "/images/image22.png",
-      buttonIcon: <FaCreditCard className="text-sm" />,
-      buttonText: "اعرف المزيد",
+      title: "قيمنا",
+      description: "",
+      image: "/images/image 73 (2).png", // صورة القيم
+      buttonIcon: null, // إزالة الأيقونة
+      buttonText: "", // إزالة النص
       features: [
         {
-          icon: <IconWrapper icon={<FaExchangeAlt />} gradient="from-emerald-500 to-emerald-600" />,
-          title: "تقديم خيارات متقدمة للعملاء للتخصيص",
-          description: "",
-        },
-        { 
-          icon: <IconWrapper icon={<FaBolt />} gradient="from-emerald-500 to-emerald-600" />,
-          title: "الاستجابة السريعة للطلبات والملاحظات من العملاء",
+          icon: <IconWrapper icon={<FaLightbulb />} gradient="from-emerald-500 to-emerald-600" />,
+          title: "الابتكار: نطور حلولًا تقنية مبتكرة تواكب تطور التجارة الرقمية.",
           description: "",
         },
         {
-          icon: <IconWrapper icon={<FaCalendarCheck />} gradient="from-emerald-500 to-emerald-600" />,
-          title: "التحديث المستمر لضمان أحدث التقنيات",
+           icon: <IconWrapper icon={<FaEye />} gradient="from-emerald-500 to-emerald-600" />,
+          title: "الشفافية: نلتزم بالوضوح والمصداقية في تعاملاتنا مع التجار والعملاء.",
           description: "",
         },
         {
-          icon: <IconWrapper icon={<FaShieldAlt />} gradient="from-emerald-500 to-emerald-600" />,
-          title: "حماية البيانات وخصوصية العملاء",
+          icon: <IconWrapper icon={<FaHandshake />} gradient="from-emerald-500 to-emerald-600" />,
+          title: "الثقة: نبني علاقة طويلة الأمد قائمة على الأمان والموثوقية.",
+          description: "",
+        },
+        {
+          icon: <IconWrapper icon={<FaCogs />} gradient="from-emerald-500 to-emerald-600" />,
+          title: "التمكين: نمنح التجار الأدوات اللازمة للنمو والنجاح في العالم الرقمي.",
           description: "",
         },
       ],
@@ -83,38 +87,17 @@ const AboutPage: React.FC = () => {
     {
       id: 3,
       title: "رسالتنا",
-      description: "إن شركة Technology Metro Center هي مؤسسة تقنية متخصصة في جمع الخبرات والقدرات في مجال التقنية، واستخدام أحدث البرامج والتقنيات. نركز على تطوير الحلول التقنية المبتكرة التي تلبي احتياجات السوق المحلي والعالمي، مع التركيز على الجودة والكفاءة والاستدامة.",
-      image: "/images/image3.png",
-      buttonIcon: <FaTruck className="text-sm" />,
-      buttonText: "اعرف المزيد",
-      features: [
-        {
-          icon: <IconWrapper icon={<FaPlug />} gradient="from-blue-500 to-blue-600" />,
-          title: "تطوير الحلول التقنية المبتكرة",
-          description: "",
-        },
-        {
-          icon: <IconWrapper icon={<FaGlobe />} gradient="from-blue-500 to-blue-600" />,
-          title: "خدمة السوق المحلي والعالمي",
-          description: "",
-        },
-        {
-          icon: <IconWrapper icon={<FaBolt />} gradient="from-blue-500 to-blue-600" />,
-          title: "التركيز على الجودة والكفاءة",
-          description: "",
-        },
-        {
-          icon: <IconWrapper icon={<FaShieldAlt />} gradient="from-blue-500 to-blue-600" />,
-          title: "ضمان الاستدامة في التطوير",
-          description: "",
-        },
-      ],
+      description: "في شركة TMC – Technology Metro Center نسعى إلى تمكين التجار من دخول عالم التجارة الإلكترونية بسهولة واحترافية، من خلال توفير منصة متكاملة لإنشاء وإدارة المتاجر الإلكترونية، تدعمهم بحلول تقنية حديثة تشمل أنظمة الدفع الآمنة، خدمات الشحن الموثوقة، وإدارة المخزون بكفاءة. كما نحرص على تزويد التجار بأدوات تسويق مبتكرة تساعدهم على الوصول إلى عملائهم وزيادة مبيعاتهم، مع الالتزام بتقديم بيئة رقمية آمنة وموثوقة تفتح أمامهم آفاقًا جديدة للنمو والتميز في عالم التجارة والتكنولوجيا. نؤمن بأن كل تاجر يستحق الحصول على فرصة متساوية للنجاح في العصر الرقمي، لذا نقدم حلولاً مرنة تتكيف مع احتياجات الأعمال المختلفة، سواء كانت شركات ناشئة أو مؤسسات كبيرة. فريقنا المتخصص يعمل على مدار الساعة لضمان استمرارية الخدمة وتقديم الدعم الفني اللازم، بينما نطور باستمرار ميزات جديدة تواكب التطورات التكنولوجية العالمية. نسعى لبناء شراكات استراتيجية طويلة المدى مع عملائنا، ونعمل كشريك موثوق يرافقهم في رحلة التحول الرقمي من البداية حتى تحقيق أهدافهم التجارية. كما نلتزم بالمعايير الدولية للأمان والجودة، ونحرص على حماية بيانات عملائنا وضمان خصوصيتهم. رؤيتنا تتجاوز مجرد تقديم التكنولوجيا، بل نهدف إلى تمكين التجار من الإبداع والابتكار في أعمالهم، وخلق تجارب استثنائية لعملائهم النهائيين.",
+      image: "/images/image 74.png", // صورة الرسالة
+      buttonIcon: null, // إزالة الأيقونة
+      buttonText: "", // إزالة النص
+      features: [],
       background: "bg-gradient-to-br from-gray-50 to-gray-100/50",
       reverse: false,
     },
   ];
 
-  return <AboutPageTemplate solutions={solutions} />;
+ return <AboutPageTemplate solutions={solutions} />;
 };
 
 export default AboutPage;

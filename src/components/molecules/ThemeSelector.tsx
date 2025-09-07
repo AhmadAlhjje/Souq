@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, Monitor } from "lucide-react";
+import { ChevronDown, Sun, Moon } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import useTheme from "../../hooks/useTheme";
+import useTheme from "@/hooks/useTheme";
 
 const ThemeSelector: React.FC = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -27,9 +27,8 @@ const ThemeSelector: React.FC = () => {
 
   // إعدادات الثيم
   const themeOptions = [
-    { key: 'light', name: t('light_mode') || 'Light', icon: Sun },
-    { key: 'dark', name: t('dark_mode') || 'Dark', icon: Moon },
-    // { key: 'system', name: t('system_mode') || 'System', icon: Monitor },
+    { key: 'light', name: t('light_mode') || 'فاتح', icon: Sun },
+    { key: 'dark', name: t('dark_mode') || 'داكن', icon: Moon },
   ];
 
   const currentThemeOption = themeOptions.find(opt => opt.key === theme) || themeOptions[0];
@@ -64,7 +63,7 @@ const ThemeSelector: React.FC = () => {
               <button
                 key={option.key}
                 onClick={() => {
-                  setTheme(option.key as any);
+                  setTheme(option.key as 'light' | 'dark');
                   setIsDropdownOpen(false);
                 }}
                 className={`w-full text-right px-4 py-2 text-sm transition-colors flex items-center gap-3 ${

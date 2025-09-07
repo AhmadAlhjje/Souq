@@ -35,6 +35,24 @@ interface CompactCartPageProps {
   onBackToShopping?: () => void;
 }
 
+// Helper function to generate dummy images
+const getDummyImage = (id: number): string => {
+  const dummyImages = [
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop', // Headphones
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop', // Watch
+    'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=200&h=200&fit=crop', // Smartwatch
+    'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=200&h=200&fit=crop', // Sunglasses
+    'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop', // Laptop
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=200&h=200&fit=crop', // Phone
+    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop', // Shoes
+    'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200&h=200&fit=crop', // T-shirt
+    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop', // Bag
+    'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=200&h=200&fit=crop', // Camera
+  ];
+  
+  return dummyImages[id % dummyImages.length];
+};
+
 // Atoms - مصغرة
 const Checkbox: React.FC<{
   checked: boolean;
@@ -211,7 +229,7 @@ const CartItemRow: React.FC<{
       {/* Product Image */}
       <TableCell>
         <ProductImage
-          src={item.image}
+          src={getDummyImage(item.id)}
           alt={item.name}
           discount={item.discount}
           inStock={item.inStock}
@@ -507,6 +525,52 @@ const CompactCartPage: React.FC<CompactCartPageProps> = ({
       </div>
     </div>
   );
+};
+
+// Example usage with dummy data
+export const DummyCartData = {
+  items: [
+    {
+      id: 1,
+      name: "سماعات لاسلكية",
+      description: "سماعات بلوتوث عالية الجودة",
+      price: 250.00,
+      originalPrice: 320.00,
+      quantity: 2,
+      image: "", // Will be replaced by getDummyImage(1)
+      total: 500.00,
+      inStock: true,
+      discount: 22
+    },
+    {
+      id: 2,
+      name: "ساعة ذكية",
+      description: "ساعة ذكية مع مراقب صحي",
+      price: 450.00,
+      quantity: 1,
+      image: "", // Will be replaced by getDummyImage(2)
+      total: 450.00,
+      inStock: true
+    },
+    {
+      id: 3,
+      name: "حذاء رياضي",
+      description: "حذاء رياضي مريح",
+      price: 180.00,
+      originalPrice: 220.00,
+      quantity: 1,
+      image: "", // Will be replaced by getDummyImage(3)
+      total: 180.00,
+      inStock: false,
+      discount: 18
+    }
+  ] as CartItem[],
+  
+  selectedItems: new Set([1, 2]),
+  subtotal: 950.00,
+  deliveryFee: 25.00,
+  tax: 142.50,
+  total: 1117.50
 };
 
 export default CompactCartPage;

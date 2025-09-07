@@ -22,17 +22,11 @@ const HeroImageCard: React.FC = () => {
             <div className="relative w-72 h-80 lg:w-80 lg:h-96 xl:w-96 xl:h-[420px] max-w-full rounded-3xl shadow-2xl bg-gradient-to-br from-[#96EDD9] via-[#5CA9B5] to-[#004D5A] p-1">
               {/* Inner Card */}
               <div className="w-full h-full bg-white/95 backdrop-blur-sm rounded-3xl p-6 lg:p-8 flex flex-col items-center justify-center relative overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-5">
-                  <div className="absolute top-4 right-4 w-12 h-12 border-2 border-[#004D5A] rounded-lg rotate-12"></div>
-                  <div className="absolute bottom-6 left-6 w-8 h-8 border border-[#96EDD9] rounded-full"></div>
-                  <div className="absolute top-1/2 left-4 w-6 h-6 bg-[#5CA9B5] rounded rotate-45"></div>
-                </div>
-                
-                {/* Main Icon - استخدم مكون Icon بدلاً من FaRocket مباشرة */}
+             
+                {/* Main Icon - أيقونة التقنية والابتكار */}
                 <div className="relative z-10 mb-6">
                   <div className="w-24 h-24 lg:w-28 lg:h-28 mx-auto bg-gradient-to-br from-[#004D5A] to-[#005965] rounded-2xl flex items-center justify-center shadow-xl transform group-hover:rotate-6 transition-transform duration-500">
-                    <Icon name="cart" size="xl" color="#FFFFFF" />
+                    <Icon name="bolt" size="xl" color="#FFFFFF" />
                   </div>
                 </div>
                 
@@ -43,11 +37,15 @@ const HeroImageCard: React.FC = () => {
                     نحول أفكارك إلى حلول رقمية متقدمة تساعدك في تحقيق أهدافك التجارية
                   </Typography>
                   
-                  {/* Feature Icons - استخدم مكون Icon */}
+                  {/* Feature Icons - أيقونات تعبر عن الخدمات الأساسية */}
                   <div className="flex justify-center space-x-reverse space-x-4 mb-4">
-                    {['shield', 'users', 'star'].map((iconName, index) => (
-                      <div key={index} className="w-8 h-8 bg-[#96EDD9]/20 rounded-lg flex items-center justify-center group-hover:bg-[#96EDD9]/40 transition-colors duration-300">
-                        <Icon name={iconName as any} size="sm" />
+                    {[
+                      { name: 'shield', title: 'الأمان' },
+                      { name: 'globe', title: 'التواصل العالمي' },
+                      { name: 'rocket', title: 'النمو السريع' }
+                    ].map((icon, index) => (
+                      <div key={index} className="w-8 h-8 bg-[#96EDD9]/20 rounded-lg flex items-center justify-center group-hover:bg-[#96EDD9]/40 transition-colors duration-300" title={icon.title}>
+                        <Icon name={icon.name as any} size="sm" />
                       </div>
                     ))}
                   </div>

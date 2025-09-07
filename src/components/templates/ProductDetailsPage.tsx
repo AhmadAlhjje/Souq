@@ -182,7 +182,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         console.log("Raw images data:", (product as any).images);
         const parsed = JSON.parse((product as any).images);
         const images = Array.isArray(parsed) ? parsed : [(product as any).images];
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.8:4000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.152:4000";
         
         const imageUrls = images.map((img: string) => {
           const cleanImg = img.replace(/^\/uploads\//, "");

@@ -5,6 +5,8 @@ import FormField from '../molecules/FormField';
 import FileUpload from '../molecules/FileUpload';
 import Button from '../atoms/Button';
 import Label from '../atoms/Label';
+import { shippingService } from '@/api/shipping';
+import { useToast } from '@/hooks/useToast';
 
 interface ShippingFormData {
   title: string;
@@ -24,8 +26,14 @@ interface FormErrors {
   addressFile?: string;
 }
 
-const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' }) => {
+interface ShippingFormProps {
+  theme?: 'light' | 'dark';
+  orderId?: number; // رقم الطلبية إذا كان متوفراً
+}
+
+const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light', orderId }) => {
   const colors = COLORS[theme];
+  const { showToast } = useToast();
   
   const [formData, setFormData] = useState<ShippingFormData>({
     title: '',
@@ -104,15 +112,46 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
 
   const handleSubmit = async () => {
     if (!validateForm()) {
+      showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
+      return;
+    }
+    
+    // التأكد من وجود رقم الطلبية
+    if (!orderId) {
+      showToast('رقم الطلبية مطلوب', 'error');
       return;
     }
     
     setIsSubmitting(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Form submitted successfully:', formData);
+      // تحضير البيانات للإرسال إلى API
+      const shippingData = {
+        order_id: orderId,
+        customer_name: formData.fullName.trim(),
+        customer_phone: formData.phoneNumber.trim(),
+        customer_whatsapp: formData.phoneNumber.trim(), // نفس رقم الهاتف
+        recipient_name: formData.fullName.trim(), // نفس اسم العميل
+        shipping_address: formData.address.trim(),
+        source_address: formData.title.trim(), // استخدام العنوان كمصدر
+        destination: formData.address.trim(), // استخدام العنوان التفصيلي كوجهة
+        shipping_method: 'standard' // طريقة شحن افتراضية
+      };
+
+      console.log('إرسال البيانات:', shippingData);
       
+      // إرسال البيانات إلى API
+      const response = await shippingService.createShipping(shippingData);
+      
+      console.log('استجابة API:', response);
+      
+      // إظهار رسالة النجاح
+      showToast(
+        `تم إنشاء معلومات الشحن بنجاح! رقم الشحن: ${response.shipping_id}`, 
+        'success'
+      );
+      
+      // إعادة تعيين النموذج
       setFormData({
         title: '',
         fullName: '',
@@ -122,11 +161,12 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
         addressFile: null
       });
       
-      alert('تم إرسال البيانات بنجاح!');
+    } catch (error: any) {
+      console.error('خطأ في إرسال معلومات الشحن:', error);
       
-    } catch (error) {
-      console.error('Submission error:', error);
-      alert('حدث خطأ أثناء الإرسال. يرجى المحاولة مرة أخرى.');
+      const errorMessage = error.message || 'حدث خطأ غير متوقع';
+      showToast(errorMessage, 'error');
+      
     } finally {
       setIsSubmitting(false);
     }
@@ -146,6 +186,7 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
           style={{ color: colors.text.primary }}
         >
           معلومات الشحن
+          {orderId && <span className="text-sm font-normal text-gray-500 block">للطلبية رقم: {orderId}</span>}
         </h2>
         <p className="text-sm text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
       </div>

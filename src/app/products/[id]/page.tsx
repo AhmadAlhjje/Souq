@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import ProductDetailsPage from '@/components/templates/ProductDetailsPage';
 import { Product } from '@/types/product';
 import { getProduct } from '@/api/stores';
+import ProductDetailsPageTemplate from '@/components/templates/ProductDetailsPageTemplate';
 
 // نوع للمنتج من الـ API مع التفاصيل
 interface ApiProductDetails {
@@ -48,7 +49,7 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
   }
 
   // بناء رابط الصورة
-  const baseImageUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.74.8:4000';
+  const baseImageUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.152:4000';
   const imageUrl = images.length > 0 
     ? `${baseImageUrl}/uploads/${images[0]}` 
     : '/images/default-product.jpg';
@@ -187,20 +188,26 @@ export default function ProductPage() {
       </div>
     );
   }
+const handleAddToCart = (productId: string | number, quantity: number) => {
+  console.log(`إضافة ${quantity} من ${product.nameAr} للسلة`);
+  // هنا يمكنك إضافة منطق إضافة المنتج للسلة الفعلي
+};
 
-  const handleAddToCart = (product: Product, quantity: number) => {
-    console.log(`إضافة ${quantity} من ${product.nameAr} للسلة`);
-  };
+const handleBuyNow = (productId: string | number, quantity: number) => {
+  console.log(`شراء فوري لـ ${quantity} من ${product.nameAr}`);
+  // هنا يمكنك إضافة منطق الشراء المباشر
+};
 
-  const handleBackToProducts = () => {
-    router.back();
-  };
+const handleBackToProducts = () => {
+  router.back();
+};
 
-  return (
-    <ProductDetailsPage
-      product={product}
-      onAddToCart={handleAddToCart}
-      onBackToProducts={handleBackToProducts}
-    />
-  );
+return (
+  <ProductDetailsPageTemplate
+    product={product}
+    onAddToCart={handleAddToCart}
+    onBuyNow={handleBuyNow}
+    onBackToProducts={handleBackToProducts}
+  />
+);
 }
