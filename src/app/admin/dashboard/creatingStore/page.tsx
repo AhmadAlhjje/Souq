@@ -1,20 +1,19 @@
 "use client";
-import React, { useState } from 'react';
-import { 
-  MapPin, 
-  Save,
-  AlertCircle,
-  CheckCircle2,
-  ArrowRight,
-  Sparkles
-} from 'lucide-react';
-import Button from '../../../../components/atoms/Button';
-import InputField from '../../../../components/molecules/InputField';
-import TextareaField from '../../../../components/molecules/TextareaField';
-import FileUpload from '../../../../components/molecules/FileUpload';
-import ProgressSection from '../../../../components/molecules/ProgressSection';
-import StepIndicator from '../../../../components/molecules/StepIndicator';
-import SuccessMessage from '../../../../components/organisms/SuccessMessage';
+import React, { useState } from "react";
+import { MapPin, AlertCircle, ArrowRight } from "lucide-react";
+import Button from "../../../../components/atoms/Button";
+import InputField from "../../../../components/molecules/InputField";
+import TextareaField from "../../../../components/molecules/TextareaField";
+import FileUpload from "../../../../components/molecules/FileUpload";
+import ProgressSection from "../../../../components/molecules/ProgressSection";
+import StepIndicator from "../../../../components/molecules/StepIndicator";
+import SuccessMessage from "../../../../components/organisms/SuccessMessage";
+import { useToast } from "@/hooks/useToast";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { createStore } from "@/api/stores";
+import { useStore } from "@/contexts/StoreContext";
+import { useRouter } from "next/navigation";
+
 
 interface StoreFormData {
   name: string;
@@ -35,17 +34,21 @@ interface FormErrors {
 const CreateStorePage: React.FC = () => {
   // State Managementx
   const [formData, setFormData] = useState<StoreFormData>({
-    name: '',
-    location: '',
-    description: '',
+    name: "",
+    location: "",
+    description: "",
     coverImage: null,
-    logoImage: null
+    logoImage: null,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const { setStoreId } = useStore();
+  const { showToast } = useToast();
   const [step, setStep] = useState(1);
+  const router = useRouter();
+
 
   // Form Validation
   const validateForm = (): boolean => {
@@ -53,25 +56,25 @@ const CreateStorePage: React.FC = () => {
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = 'اسم المتجر مطلوب';
+      newErrors.name = "اسم المتجر مطلوب";
     } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'اسم المتجر يجب أن يكون حرفين على الأقل';
+      newErrors.name = "اسم المتجر يجب أن يكون حرفين على الأقل";
     } else if (formData.name.trim().length > 50) {
-      newErrors.name = 'اسم المتجر طويل جداً';
+      newErrors.name = "اسم المتجر طويل جداً";
     }
 
     // Location validation
     if (!formData.location.trim()) {
-      newErrors.location = 'موقع المتجر مطلوب';
+      newErrors.location = "موقع المتجر مطلوب";
     } else if (formData.location.trim().length < 2) {
-      newErrors.location = 'موقع المتجر قصير جداً';
+      newErrors.location = "موقع المتجر قصير جداً";
     }
 
     // Description validation
     if (!formData.description.trim()) {
-      newErrors.description = 'وصف المتجر مطلوب';
+      newErrors.description = "وصف المتجر مطلوب";
     } else if (formData.description.trim().length < 10) {
-      newErrors.description = 'الوصف قصير جداً (10 أحرف على الأقل)';
+      newErrors.description = "الوصف قصير جداً (10 أحرف على الأقل)";
     }
 
     setErrors(newErrors);
@@ -79,42 +82,52 @@ const CreateStorePage: React.FC = () => {
   };
 
   // Input Change Handlers
-  const handleInputChange = (field: keyof StoreFormData) => 
+  const handleInputChange =
+    (field: keyof StoreFormData) =>
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const value = e.target.value;
-      setFormData(prev => ({ ...prev, [field]: value }));
-      
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
       // Clear error when user starts typing
       if (errors[field as keyof FormErrors]) {
-        setErrors(prev => ({ ...prev, [field]: undefined }));
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
     };
 
   // File Change Handler
-  const handleFileChange = (field: 'coverImage' | 'logoImage', file: File | null) => {
+  const handleFileChange = (
+    field: "coverImage" | "logoImage",
+    file: File | null
+  ) => {
     // File validation
     if (file) {
-      const maxSize = field === 'coverImage' ? 10 * 1024 * 1024 : 5 * 1024 * 1024; // 10MB for cover, 5MB for logo
-      
+      const maxSize =
+        field === "coverImage" ? 10 * 1024 * 1024 : 5 * 1024 * 1024; // 10MB for cover, 5MB for logo
+
       if (file.size > maxSize) {
-        setErrors(prev => ({ 
-          ...prev, 
-          [field]: `الملف كبير جداً. الحد الأقصى: ${field === 'coverImage' ? '10' : '5'}MB` 
+        setErrors((prev) => ({
+          ...prev,
+          [field]: `الملف كبير جداً. الحد الأقصى: ${
+            field === "coverImage" ? "10" : "5"
+          }MB`,
         }));
         return;
       }
 
-      if (!file.type.startsWith('image/')) {
-        setErrors(prev => ({ ...prev, [field]: 'يرجى اختيار ملف صورة صالح' }));
+      if (!file.type.startsWith("image/")) {
+        setErrors((prev) => ({
+          ...prev,
+          [field]: "يرجى اختيار ملف صورة صالح",
+        }));
         return;
       }
     }
 
-    setFormData(prev => ({ ...prev, [field]: file }));
-    
+    setFormData((prev) => ({ ...prev, [field]: file }));
+
     // Clear error when file is selected
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -124,26 +137,39 @@ const CreateStorePage: React.FC = () => {
 
     setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const response = await createStore({
+        name: formData.name,
+        location: formData.location,
+        description: formData.description,
+        coverImage: formData.coverImage,
+        logoImage: formData.logoImage,
+      });
+      console.log("📌 store_id الراجع من الباك:", response.store_id);
+      // ✅ تخزين store_id في الـ Context
+      setStoreId(response.store_id);
+
+      showToast("✅ تم إنشاء المتجر بنجاح!", "success");
+
       setSuccess(true);
-      
-      // Reset form after success
+      router.replace("/admin/dashboard/products");
+
       setTimeout(() => {
         setFormData({
-          name: '',
-          location: '',
-          description: '',
+          name: "",
+          location: "",
+          description: "",
           coverImage: null,
-          logoImage: null
+          logoImage: null,
         });
         setErrors({});
         setSuccess(false);
         setStep(1);
       }, 3000);
-    } catch (error) {
-      console.error('Error creating store:', error);
+    } catch (error: any) {
+      // قراءة رسالة الخطأ من الباك لو موجودة
+      const message =
+        error?.response?.data?.message || "حدث خطأ أثناء إنشاء المتجر.";
+      showToast(message, "error");
     } finally {
       setLoading(false);
     }
@@ -160,7 +186,11 @@ const CreateStorePage: React.FC = () => {
   };
 
   const canProceedToStep2 = (): boolean => {
-    return !!(formData.name.trim() && formData.location.trim() && formData.description.trim());
+    return !!(
+      formData.name.trim() &&
+      formData.location.trim() &&
+      formData.description.trim()
+    );
   };
 
   const handleNextStep = () => {
@@ -183,7 +213,6 @@ const CreateStorePage: React.FC = () => {
 
       {/* Main Content Container */}
       <div className="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
-        
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white mb-2">
@@ -207,13 +236,12 @@ const CreateStorePage: React.FC = () => {
         {step === 1 && (
           <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl border border-white/20">
             <div className="space-y-6">
-              
               {/* Store Name Field */}
               <div>
                 <InputField
                   label="اسم المتجر"
                   value={formData.name}
-                  onChange={handleInputChange('name')}
+                  onChange={handleInputChange("name")}
                   placeholder="اختر اسماً مميزاً لمتجرك"
                   required
                 />
@@ -232,7 +260,7 @@ const CreateStorePage: React.FC = () => {
                 <InputField
                   label="الموقع"
                   value={formData.location}
-                  onChange={handleInputChange('location')}
+                  onChange={handleInputChange("location")}
                   placeholder="المدينة، الدولة"
                   icon={MapPin}
                   required
@@ -252,7 +280,7 @@ const CreateStorePage: React.FC = () => {
                 <TextareaField
                   label="وصف المتجر"
                   value={formData.description}
-                  onChange={handleInputChange('description')}
+                  onChange={handleInputChange("description")}
                   placeholder="اكتب وصفاً موجزاً عن متجرك والمنتجات التي تقدمها..."
                   rows={4}
                   maxLength={300}
@@ -277,7 +305,7 @@ const CreateStorePage: React.FC = () => {
                   disabled={!canProceedToStep2()}
                   size="lg"
                   endIcon={<ArrowRight className="w-4 h-4" />}
-                  variant="teal"
+                  variant="success"
                 >
                   التالي: إضافة الصور
                 </Button>
@@ -289,16 +317,14 @@ const CreateStorePage: React.FC = () => {
         {/* Step 2: Store Images */}
         {step === 2 && (
           <div className="space-y-6">
-            
             {/* Images Upload Grid */}
             <div className="grid md:grid-cols-2 gap-6">
-              
               {/* Cover Image Upload */}
               <FileUpload
                 title="صورة الغلاف"
                 description="صورة رئيسية تمثل متجرك (اختيارية)"
                 file={formData.coverImage}
-                onFileChange={(file) => handleFileChange('coverImage', file)}
+                onFileChange={(file) => handleFileChange("coverImage", file)}
                 maxSize={10 * 1024 * 1024}
                 error={errors.coverImage}
                 previewType="cover"
@@ -309,7 +335,7 @@ const CreateStorePage: React.FC = () => {
                 title="شعار المتجر"
                 description="الشعار الرسمي لمتجرك (اختياري)"
                 file={formData.logoImage}
-                onFileChange={(file) => handleFileChange('logoImage', file)}
+                onFileChange={(file) => handleFileChange("logoImage", file)}
                 maxSize={5 * 1024 * 1024}
                 error={errors.logoImage}
                 previewType="logo"
@@ -318,7 +344,6 @@ const CreateStorePage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between pt-6">
-              
               {/* Back Button */}
               <Button
                 onClick={handlePreviousStep}
@@ -327,33 +352,29 @@ const CreateStorePage: React.FC = () => {
               >
                 رجوع
               </Button>
-              
+
               {/* Submit Button */}
               <Button
                 onClick={handleSubmit}
                 disabled={loading || success}
                 size="lg"
-                variant="teal"
-                loading={loading}
+                variant="success"
                 className="min-w-[200px]"
-                startIcon={!loading && !success ? <Save className="w-5 h-5" /> : undefined}
-                endIcon={!loading && !success ? <Sparkles className="w-4 h-4" /> : undefined}
               >
-                {loading ? (
-                  'جاري الإنشاء...'
-                ) : success ? (
-                  <>
-                    <CheckCircle2 className="w-5 h-5 mr-2" />
-                    تم بنجاح!
-                  </>
-                ) : (
-                  'إنشاء المتجر'
-                )}
+                إنشاء المتجر
               </Button>
             </div>
           </div>
         )}
       </div>
+      {loading && (
+        <LoadingSpinner
+          color="green"
+          pulse
+          dots
+          message="جاري إنشاء المتجر..."
+        />
+      )}
     </div>
   );
 };
