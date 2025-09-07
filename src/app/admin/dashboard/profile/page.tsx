@@ -87,6 +87,7 @@ const ProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const [isEditing, setIsEditing] = useState<EditingState>({
     name: false,
@@ -339,6 +340,27 @@ const ProfilePage = () => {
     }
   };
 
+  // دالة لفتح نافذة المشاركة
+  const handleOpenShareModal = () => {
+    setShowShareModal(true);
+  };
+
+  // دالة لنسخ الرابط
+  const handleCopyLink = async () => {
+    try {
+      const baseUrl = window.location.origin;
+      const encodedStoreName = encodeURIComponent(profileData.storeName);
+      const storeUrl = `${baseUrl}/products?store=${storeId}&storeName=${encodedStoreName}`;
+
+      await navigator.clipboard.writeText(storeUrl);
+      showToast("تم نسخ رابط المتجر بنجاح", "success");
+      setShowShareModal(false);
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showToast("فشل في نسخ الرابط", "error");
+    }
+  };
+
   // تحديد الألوان حسب الوضع
   const themeClasses = {
     background: isDark ? "bg-gray-900" : "bg-teal-100",
@@ -411,10 +433,87 @@ const ProfilePage = () => {
 
           <div className="flex gap-3">
             <button
-              className={`${themeClasses.buttonBackground} p-3 rounded-xl transition-colors ${themeClasses.borderColor} border shadow-sm`}
+              onClick={handleOpenShareModal}
+              className={`${themeClasses.buttonBackground} p-3 rounded-xl transition-colors ${themeClasses.borderColor} border shadow-sm hover:scale-105 transform`}
+              title="مشاركة رابط المتجر"
             >
               <Share2 className={`w-5 h-5 ${themeClasses.buttonIcon}`} />
             </button>
+
+            {showShareModal && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                dir="rtl"
+              >
+                <div
+                  className={`${themeClasses.cardBackground} rounded-2xl p-6 mx-4 w-full max-w-md shadow-2xl`}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3
+                      className={`text-lg font-bold ${themeClasses.textPrimary}`}
+                    >
+                      مشاركة رابط المتجر
+                    </h3>
+                    <button
+                      onClick={() => setShowShareModal(false)}
+                      className={`${themeClasses.textMuted} hover:${themeClasses.textPrimary} transition-colors`}
+                    >
+                      <svg
+                        className="w-6 h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <p className={`${themeClasses.textSecondary} mb-4`}>
+                    شارك رابط متجرك مع العملاء ليتمكنوا من تصفح منتجاتك
+                  </p>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium ${themeClasses.textPrimary} mb-2`}
+                      >
+                        رابط المتجر:
+                      </label>
+                      <div
+                        className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} border rounded-lg p-3 break-all text-sm ${themeClasses.textSecondary}`}
+                      >
+                        {`${
+                          window.location.origin
+                        }/products?store=${storeId}&storeName=${encodeURIComponent(
+                          profileData.storeName
+                        )}`}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleCopyLink}
+                        className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                      >
+                        نسخ الرابط
+                      </button>
+                      <button
+                        onClick={() => setShowShareModal(false)}
+                        className={`px-4 py-2 rounded-lg transition-colors font-medium ${themeClasses.buttonBackground} ${themeClasses.textPrimary} ${themeClasses.borderColor} border`}
+                      >
+                        إغلاق
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* <button
               className={`${themeClasses.buttonBackground} p-3 rounded-xl transition-colors ${themeClasses.borderColor} border shadow-sm`}
             >

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { DollarSign, ShoppingCart, Package, Users } from "lucide-react";
+import { DollarSign, ShoppingCart, Package } from "lucide-react";
 import AdminStatsCard from "@/components/molecules/admin/AdminStatsCard";
 import AdminSkeleton from "@/components/atoms/admin/AdminSkeleton";
 import { DashboardStats } from "@/types/admin";
@@ -41,30 +41,23 @@ const AdminDashboardStats: React.FC<AdminDashboardStatsProps> = ({
       color: "purple" as const,
       format: "number",
     },
-    {
-      title: "إجمالي العملاء",
-      value: stats?.totalCustomers || 0,
-      change: stats?.customersChange || 0,
-      icon: Users,
-      color: "orange" as const,
-      format: "number",
-    },
   ];
 
   const formatValue = (value: number, format: string) => {
     if (format === "currency") {
+      // استخدام الليرة السورية بدلاً من الريال السعودي
       return new Intl.NumberFormat('ar-SA', {
-        style: 'currency',
-        currency: 'SAR'
-      }).format(value);
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      }).format(value) + ' ل.س';
     }
     return new Intl.NumberFormat('ar-SA').format(value);
   };
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {[1, 2, 3].map((i) => (
           <AdminSkeleton
             key={i}
             variant="card"
@@ -77,7 +70,7 @@ const AdminDashboardStats: React.FC<AdminDashboardStatsProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {statsCards.map((card, index) => (
         <motion.div
           key={card.title}

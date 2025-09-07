@@ -4,54 +4,173 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MoreHorizontal, Package, ShoppingCart, Users, TrendingUp } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
-
-// Atomic Design Componentsx
 import AdminButton from "@/components/atoms/admin/AdminButton";
 import AdminSkeleton from "@/components/atoms/admin/AdminSkeleton";
 import AdminDashboardStats from "@/components/organisms/admin/AdminDashboardStats";
-import AdminQuickActionCard from "@/components/molecules/admin/AdminQuickActionCard";
 import AdminRecentOrderItem from "@/components/molecules/admin/AdminRecentOrderItem";
-
-// Types
+import { getStore } from "@/api/stores";
+import { useStore } from "@/contexts/StoreContext";
 import { DashboardStats } from "@/types/admin";
+import { getStoreOrdersStats } from "@/api/orders";
+import SalesChart from "@/components/molecules/admin/SalesChart";
+
+interface RecentOrder {
+  id: number;
+  timeAgo: string;
+  amount: number;
+  status: 'completed' | 'pending' | 'cancelled';
+}
+
+// تحديث نوع ApiStore مؤقتاً أو إنشاء interface محلي
+interface StoreWithStats {
+  store_id: number;
+  user_id: number;
+  store_name: string;
+  store_address: string;
+  description: string;
+  images: string;
+  logo_image: string;
+  created_at: string;
+  User: {
+    username: string;
+    whatsapp_number: string;
+  };
+  Products: any[];
+  statistics: {
+    totalProducts: number;
+    availableProducts: number;
+    outOfStockProducts: number;
+    lowStockProducts: number;
+    averageRating: number;
+    totalReviews: number;
+    totalOrders: number;
+    totalRevenue: string;
+    ordersByStatus: {
+      shipped: number;
+      [key: string]: number;
+    };
+    averageOrderValue: string;
+  };
+}
 
 const AdminDashboardPage = () => {
   const { isDark } = useTheme();
+  const { storeId, isLoaded } = useStore(); // استخدام StoreContext
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [ordersStats, setOrdersStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  // Mock data - replace with real API calls
+  // دالة لتحويل التاريخ إلى وقت نسبي بالعربية
+  const getTimeAgo = (dateString: string): string => {
+    const now = new Date();
+    const orderDate = new Date(dateString);
+    const diffInMinutes = Math.floor((now.getTime() - orderDate.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `منذ ${diffInMinutes} دقيقة`;
+    } else if (diffInMinutes < 1440) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `منذ ${hours} ساعة`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `منذ ${days} يوم`;
+    }
+  };
+
+  // دالة لتحويل حالة الطلب
+  const getOrderStatus = (status: string): 'completed' | 'pending' | 'cancelled' => {
+    switch (status) {
+      case 'shipped':
+      case 'delivered':
+        return 'completed';
+      case 'cancelled':
+        return 'cancelled';
+      default:
+        return 'pending';
+    }
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      setStats({
-        totalRevenue: 125000,
-        totalOrders: 1248,
-        totalProducts: 324,
-        totalCustomers: 892,
-        revenueChange: 12.5,
-        ordersChange: 8.2,
-        productsChange: -2.1,
-        customersChange: 15.3,
-        topProducts: [],
-        recentOrders: [],
-        salesData: [],
-      });
-      setLoading(false);
+      // التحقق من أن storeId محمل ومتاح
+      if (!isLoaded || !storeId) {
+        console.log('Store not loaded yet or storeId is null:', { isLoaded, storeId });
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // إعادة تعيين البيانات قبل جلب البيانات الجديدة
+        setStats(null);
+        setRecentOrders([]);
+        setOrdersStats(null);
+        
+        console.log('🏪 Dashboard fetching data for store:', storeId);
+        
+        // جلب بيانات المتجر والإحصائيات
+        const [storeData, ordersStatsData] = await Promise.all([
+          getStore(storeId),
+          getStoreOrdersStats(storeId)
+        ]);
+
+        // تعيين بيانات الطلبات للاستخدام في SalesChart
+        setOrdersStats(ordersStatsData);
+
+        // استخدام Type Assertion للوصول إلى statistics
+        const storeWithStats = storeData as StoreWithStats;
+
+        // التحقق من وجود statistics
+        if (!storeWithStats.statistics) {
+          console.warn('⚠️ لم يتم العثور على إحصائيات المتجر');
+          return;
+        }
+
+        // إعداد الإحصائيات للوحة التحكم
+        const dashboardStats: DashboardStats = {
+          totalRevenue: parseFloat(storeWithStats.statistics.totalRevenue),
+          totalOrders: storeWithStats.statistics.totalOrders,
+          totalProducts: storeWithStats.statistics.totalProducts,
+          totalCustomers: 0, // سيتم إلغاؤه من العرض
+          revenueChange: 0, // يمكن حسابه لاحقاً إذا توفرت بيانات الفترة السابقة
+          ordersChange: 0,
+          productsChange: 0,
+          customersChange: 0,
+          topProducts: [],
+          recentOrders: [],
+          salesData: [],
+        };
+
+        // إضافة console.log للتحقق من البيانات
+        console.log('🔍 Store Data:', storeWithStats);
+        console.log('📊 Dashboard Stats:', dashboardStats);
+        console.log('📈 Orders Stats:', ordersStatsData);
+        console.log('🏪 Store ID:', storeId);
+
+        // إعداد أحدث 4 طلبات
+        const latestOrders = ordersStatsData.allOrders.orders
+          .slice(0, 4) // أخذ أول 4 طلبات
+          .map((order: any) => ({
+            id: order.order_id,
+            timeAgo: getTimeAgo(order.created_at),
+            amount: parseFloat(order.total_price),
+            status: getOrderStatus(order.status)
+          }));
+
+        setStats(dashboardStats);
+        setRecentOrders(latestOrders);
+        
+      } catch (error) {
+        console.error('خطأ في جلب بيانات لوحة التحكم:', error);
+        // يمكنك إضافة إشعار خطأ هنا
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchDashboardData();
-  }, []);
-
-  // Mock recent orders data
-  const recentOrders = [
-    { id: 1001, timeAgo: "منذ ساعة", amount: 1250, status: 'completed' as const },
-    { id: 1002, timeAgo: "منذ ساعتين", amount: 890, status: 'pending' as const },
-    { id: 1003, timeAgo: "منذ 3 ساعات", amount: 2100, status: 'completed' as const },
-    { id: 1004, timeAgo: "منذ 4 ساعات", amount: 750, status: 'cancelled' as const },
-  ];
+  }, [storeId, isLoaded]); // إضافة dependencies
 
   // Quick actions data
   const quickActions = [
@@ -91,13 +210,6 @@ const AdminDashboardPage = () => {
             مرحباً بك في لوحة تحكم متجرك
           </p>
         </div>
-        
-        <AdminButton
-          icon={MoreHorizontal}
-          variant="secondary"
-          size="md"
-          title="خيارات إضافية"
-        />
       </motion.div>
 
       {/* Stats Cards */}
@@ -111,43 +223,11 @@ const AdminDashboardPage = () => {
 
       {/* Charts and Tables Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Sales Chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className={`
-            lg:col-span-2 p-6 rounded-xl border
-            ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-[#96EDD9]'}
-          `}
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-lg font-semibold ${
-              isDark ? 'text-white' : 'text-[#004D5A]'
-            }`}>
-              تطور المبيعات
-            </h3>
-            <AdminButton
-              variant="ghost"
-              size="sm"
-            >
-              عرض التفاصيل
-            </AdminButton>
-          </div>
-          
-          {loading ? (
-            <AdminSkeleton variant="rectangle" height={256} />
-          ) : (
-            <div className={`
-              h-64 rounded-lg flex items-center justify-center
-              ${isDark ? 'bg-gray-700' : 'bg-[#CFF7EE]'}
-            `}>
-              <p className={`${isDark ? 'text-gray-400' : 'text-[#5CA9B5]'}`}>
-                مخطط المبيعات سيتم إضافته قريباً
-              </p>
-            </div>
-          )}
-        </motion.div>
+        {/* Sales Chart - تحديث لآخر شهر */}
+        <SalesChart 
+          ordersStats={ordersStats}
+          loading={loading}
+        />
 
         {/* Recent Orders */}
         <motion.div
@@ -165,12 +245,12 @@ const AdminDashboardPage = () => {
             }`}>
               أحدث الطلبات
             </h3>
-            <AdminButton
+            {/* <AdminButton
               variant="ghost"
               size="sm"
             >
               عرض الكل
-            </AdminButton>
+            </AdminButton> */}
           </div>
           
           <div className="space-y-3">
@@ -178,7 +258,7 @@ const AdminDashboardPage = () => {
               Array.from({ length: 4 }, (_, i) => (
                 <AdminSkeleton key={i} variant="rectangle" height={60} />
               ))
-            ) : (
+            ) : recentOrders.length > 0 ? (
               recentOrders.map((order) => (
                 <AdminRecentOrderItem
                   key={order.id}
@@ -189,13 +269,19 @@ const AdminDashboardPage = () => {
                   onClick={() => handleOrderClick(order.id)}
                 />
               ))
+            ) : (
+              <div className={`text-center py-8 ${
+                isDark ? 'text-gray-400' : 'text-[#5CA9B5]'
+              }`}>
+                لا توجد طلبات حالياً
+              </div>
             )}
           </div>
         </motion.div>
       </div>
 
       {/* Quick Actions */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
@@ -227,7 +313,7 @@ const AdminDashboardPage = () => {
             </motion.div>
           ))}
         </div>
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 };

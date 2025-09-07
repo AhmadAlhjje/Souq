@@ -1,6 +1,6 @@
-
 // src/api/stores.ts
 import { api } from "./api";
+import { Product } from "./storeProduct";
 
 export interface StoreData {
   name: string;
@@ -94,6 +94,7 @@ export interface ApiProduct {
 }
 
 // نوع للمتجر من الـ API
+// في ملف types أو interfaces
 export interface ApiStore {
   store_id: number;
   user_id: number;
@@ -107,38 +108,58 @@ export interface ApiStore {
     username: string;
     whatsapp_number: string;
   };
-  Products: ApiProduct[];
+  Products: Product[];
+  statistics: {
+    totalProducts: number;
+    availableProducts: number;
+    outOfStockProducts: number;
+    lowStockProducts: number;
+    averageRating: number;
+    totalReviews: number;
+    totalOrders: number;
+    totalRevenue: string;
+    ordersByStatus: {
+      shipped: number;
+      [key: string]: number;
+    };
+    averageOrderValue: string;
+  };
 }
 
 // جلب جميع المتاجر
 export const getStores = async (): Promise<Store[]> => {
   try {
-    console.log('🔄 بدء طلب جلب جميع المتاجر...');
-    console.log('🌐 URL المستخدم:', `${process.env.NEXT_PUBLIC_BASE_URL}/stores/`);
-    
-    const response = await api.get('/stores/');
-    
-    console.log('✅ تم جلب البيانات بنجاح');
-    console.log('📦 البيانات المستلمة:', response.data);
-    console.log('📊 عدد المتاجر:', response.data?.length || 0);
-    
+    console.log("🔄 بدء طلب جلب جميع المتاجر...");
+    console.log(
+      "🌐 URL المستخدم:",
+      `${process.env.NEXT_PUBLIC_BASE_URL}/stores/`
+    );
+
+    const response = await api.get("/stores/");
+
+    console.log("✅ تم جلب البيانات بنجاح");
+    console.log("📦 البيانات المستلمة:", response.data);
+    console.log("📊 عدد المتاجر:", response.data?.length || 0);
+
     // API يرجع مصفوفة من المتاجر
-    const stores = Array.isArray(response.data) ? response.data : [response.data];
-    
+    const stores = Array.isArray(response.data)
+      ? response.data
+      : [response.data];
+
     return stores;
   } catch (error: any) {
-    console.error('❌ خطأ في جلب المتاجر:', error);
-    
+    console.error("❌ خطأ في جلب المتاجر:", error);
+
     if (error.response) {
-      console.error('📡 Status:', error.response.status);
-      console.error('📡 Data:', error.response.data);
-      console.error('📡 Headers:', error.response.headers);
+      console.error("📡 Status:", error.response.status);
+      console.error("📡 Data:", error.response.data);
+      console.error("📡 Headers:", error.response.headers);
     } else if (error.request) {
-      console.error('📨 لم يتم استلام رد من الخادم:', error.request);
+      console.error("📨 لم يتم استلام رد من الخادم:", error.request);
     } else {
-      console.error('⚙️ خطأ في الإعدادات:', error.message);
+      console.error("⚙️ خطأ في الإعدادات:", error.message);
     }
-    
+
     throw error;
   }
 };
@@ -147,25 +168,25 @@ export const getStores = async (): Promise<Store[]> => {
 export const getStore = async (storeId: number): Promise<ApiStore> => {
   try {
     console.log(`🔄 جلب متجر برقم ${storeId}...`);
-    
+
     const response = await api.get<ApiStore>(`/stores/${storeId}`);
-    
-    console.log('✅ تم جلب المتجر بنجاح:', response.data);
-    
+
+    console.log("✅ تم جلب المتجر بنجاح:", response.data);
+
     // التحقق من وجود البيانات
     if (!response.data) {
-      throw new Error('لم يتم العثور على بيانات المتجر');
+      throw new Error("لم يتم العثور على بيانات المتجر");
     }
-    
+
     // التحقق من وجود المنتجات
     if (!response.data.Products) {
-      console.warn('⚠️ المتجر لا يحتوي على منتجات');
+      console.warn("⚠️ المتجر لا يحتوي على منتجات");
       response.data.Products = [];
     }
-    
+
     return response.data;
   } catch (error: any) {
-    console.error('❌ خطأ في جلب المتجر:', error);
+    console.error("❌ خطأ في جلب المتجر:", error);
     throw error;
   }
 };
@@ -174,19 +195,19 @@ export const getStore = async (storeId: number): Promise<ApiStore> => {
 export const getProduct = async (productId: number): Promise<any> => {
   try {
     console.log(`🔄 جلب منتج برقم ${productId}...`);
-    
+
     const response = await api.get(`/products/${productId}`);
-    
-    console.log('✅ تم جلب المنتج بنجاح:', response.data);
-    
+
+    console.log("✅ تم جلب المنتج بنجاح:", response.data);
+
     // التحقق من وجود البيانات
     if (!response.data) {
-      throw new Error('لم يتم العثور على المنتج');
+      throw new Error("لم يتم العثور على المنتج");
     }
-    
+
     return response.data;
   } catch (error: any) {
-    console.error('❌ خطأ في جلب المنتج:', error);
+    console.error("❌ خطأ في جلب المنتج:", error);
     throw error;
   }
 };
@@ -197,7 +218,7 @@ export const parseImages = (imagesString: string): string[] => {
     const parsed = JSON.parse(imagesString);
     return Array.isArray(parsed) ? parsed : [imagesString];
   } catch (error) {
-    console.error('خطأ في تحليل الصور:', error);
+    console.error("خطأ في تحليل الصور:", error);
     return []; // مصفوفة فارغة إذا فشل التحليل
   }
 };
