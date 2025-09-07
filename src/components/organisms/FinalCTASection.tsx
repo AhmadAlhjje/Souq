@@ -20,7 +20,7 @@ const FinalCTASection: React.FC = () => {
         <div className="relative text-center" dir="rtl">
           <IconWrapper 
             icon={<FaRocket className="w-8 h-8 text-[#96EDD9]" />}
-            size="large"
+            size="lg"
             gradient="from-[#96EDD9]/20 to-[#96EDD9]/30"
           />
           
