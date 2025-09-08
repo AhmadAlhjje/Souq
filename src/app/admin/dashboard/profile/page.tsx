@@ -23,6 +23,7 @@ import { useStore } from "@/contexts/StoreContext";
 import { getStoreById, updateStore } from "@/api/stores";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
+import { changePassword } from "@/api/auth";
 
 // تعريف الأنواعx
 type EditingField =
@@ -193,28 +194,45 @@ const ProfilePage = () => {
 
   const handleSave = async (field: EditingField) => {
     if (field === "password") {
-      if (passwordState.step === "verify") {
-        // التحقق من كلمة المرور القديمة (محاكاة)
-        if (passwordState.oldPassword === "123456") {
-          // محاكاة التحقق
-          setPasswordState((prev) => ({ ...prev, step: "new" }));
-          return;
-        } else {
-          alert("كلمة المرور القديمة غير صحيحة");
-          return;
-        }
-      } else {
-        // حفظ كلمة المرور الجديدة
-        if (passwordState.newPassword !== passwordState.confirmPassword) {
-          showToast("كلمة المرور الجديدة غير متطابقة", "error");
-          return;
-        }
-        if (passwordState.newPassword.length < 6) {
-          showToast("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "error");
-          return;
-        }
+      // التحقق من صحة البيانات المدخلة
+      if (!passwordState.oldPassword) {
+        showToast("يرجى إدخال كلمة المرور القديمة", "error");
+        return;
+      }
+      if (!passwordState.newPassword) {
+        showToast("يرجى إدخال كلمة المرور الجديدة", "error");
+        return;
+      }
+      if (passwordState.newPassword !== passwordState.confirmPassword) {
+        showToast("كلمة المرور الجديدة غير متطابقة", "error");
+        return;
+      }
+      if (passwordState.newPassword.length < 6) {
+        showToast("كلمة المرور يجب أن تكون 6 أحرف على الأقل", "error");
+        return;
+      }
+
+      try {
+        setSaving(true);
+
+        // استدعاء API لتغيير كلمة المرور
+        await changePassword({
+          current_password: passwordState.oldPassword,
+          new_password: passwordState.newPassword,
+          confirm_password: passwordState.confirmPassword,
+        });
+
+        // تحديث الواجهة وإظهار رسالة نجاح
         setProfileData((prev) => ({ ...prev, password: "••••••••" }));
         showToast("تم تحديث كلمة المرور بنجاح", "success");
+      } catch (error: any) {
+        console.error("Error changing password:", error);
+        const errorMessage =
+          error.response?.data?.message || "فشل في تحديث كلمة المرور";
+        showToast(errorMessage, "error");
+        return; // منع إغلاق نموذج التعديل في حالة الخطأ
+      } finally {
+        setSaving(false);
       }
     } else if (field === "logo" || field === "coverImage") {
       // معالجة رفع الصورة
@@ -826,141 +844,126 @@ const ProfilePage = () => {
                       </p>
                       {isEditing.password ? (
                         <div className="mt-2 space-y-3">
-                          {passwordState.step === "verify" ? (
-                            <div className="flex gap-2 items-center">
-                              <div className="relative flex-1">
-                                <input
-                                  type={
-                                    passwordState.showOldPassword
-                                      ? "text"
-                                      : "password"
-                                  }
-                                  value={passwordState.oldPassword}
-                                  onChange={(e) =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      oldPassword: e.target.value,
-                                    }))
-                                  }
-                                  className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                                  placeholder="أدخل كلمة المرور القديمة"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      showOldPassword: !prev.showOldPassword,
-                                    }))
-                                  }
-                                  className="absolute left-2 top-2.5"
-                                >
-                                  {passwordState.showOldPassword ? (
-                                    <EyeOff className="w-4 h-4 text-gray-400" />
-                                  ) : (
-                                    <Eye className="w-4 h-4 text-gray-400" />
-                                  )}
-                                </button>
-                              </div>
+                          <div className="space-y-2">
+                            <div className="relative">
+                              <input
+                                type={
+                                  passwordState.showOldPassword
+                                    ? "text"
+                                    : "password"
+                                }
+                                value={passwordState.oldPassword}
+                                onChange={(e) =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    oldPassword: e.target.value,
+                                  }))
+                                }
+                                className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                                placeholder="كلمة المرور القديمة"
+                              />
                               <button
-                                onClick={verifyOldPassword}
-                                className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm"
+                                type="button"
+                                onClick={() =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    showOldPassword: !prev.showOldPassword,
+                                  }))
+                                }
+                                className="absolute left-2 top-2.5"
                               >
-                                تحقق
+                                {passwordState.showOldPassword ? (
+                                  <EyeOff className="w-4 h-4 text-gray-400" />
+                                ) : (
+                                  <Eye className="w-4 h-4 text-gray-400" />
+                                )}
                               </button>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type={
+                                  passwordState.showNewPassword
+                                    ? "text"
+                                    : "password"
+                                }
+                                value={passwordState.newPassword}
+                                onChange={(e) =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    newPassword: e.target.value,
+                                  }))
+                                }
+                                className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                                placeholder="كلمة المرور الجديدة"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    showNewPassword: !prev.showNewPassword,
+                                  }))
+                                }
+                                className="absolute left-2 top-2.5"
+                              >
+                                {passwordState.showNewPassword ? (
+                                  <EyeOff className="w-4 h-4 text-gray-400" />
+                                ) : (
+                                  <Eye className="w-4 h-4 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type={
+                                  passwordState.showConfirmPassword
+                                    ? "text"
+                                    : "password"
+                                }
+                                value={passwordState.confirmPassword}
+                                onChange={(e) =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    confirmPassword: e.target.value,
+                                  }))
+                                }
+                                className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                                placeholder="تأكيد كلمة المرور الجديدة"
+                              />
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPasswordState((prev) => ({
+                                    ...prev,
+                                    showConfirmPassword:
+                                      !prev.showConfirmPassword,
+                                  }))
+                                }
+                                className="absolute left-2 top-2.5"
+                              >
+                                {passwordState.showConfirmPassword ? (
+                                  <EyeOff className="w-4 h-4 text-gray-400" />
+                                ) : (
+                                  <Eye className="w-4 h-4 text-gray-400" />
+                                )}
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <ConfirmButton
+                                onClick={() => handleSave("password")}
+                                text="حفظ"
+                                size="sm"
+                                tooltip="حفظ كلمة المرور الجديدة"
+                                disabled={saving}
+                              />
                               <CancelButton
                                 onClick={() => handleCancel("password")}
+                                text="إلغاء"
                                 size="sm"
                                 tooltip="إلغاء التعديل"
                               />
                             </div>
-                          ) : (
-                            <div className="space-y-2">
-                              <div className="relative">
-                                <input
-                                  type={
-                                    passwordState.showNewPassword
-                                      ? "text"
-                                      : "password"
-                                  }
-                                  value={passwordState.newPassword}
-                                  onChange={(e) =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      newPassword: e.target.value,
-                                    }))
-                                  }
-                                  className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                                  placeholder="كلمة المرور الجديدة"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      showNewPassword: !prev.showNewPassword,
-                                    }))
-                                  }
-                                  className="absolute left-2 top-2.5"
-                                >
-                                  {passwordState.showNewPassword ? (
-                                    <EyeOff className="w-4 h-4 text-gray-400" />
-                                  ) : (
-                                    <Eye className="w-4 h-4 text-gray-400" />
-                                  )}
-                                </button>
-                              </div>
-                              <div className="relative">
-                                <input
-                                  type={
-                                    passwordState.showConfirmPassword
-                                      ? "text"
-                                      : "password"
-                                  }
-                                  value={passwordState.confirmPassword}
-                                  onChange={(e) =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      confirmPassword: e.target.value,
-                                    }))
-                                  }
-                                  className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} ${themeClasses.inputText} border rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-teal-500`}
-                                  placeholder="تأكيد كلمة المرور الجديدة"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setPasswordState((prev) => ({
-                                      ...prev,
-                                      showConfirmPassword:
-                                        !prev.showConfirmPassword,
-                                    }))
-                                  }
-                                  className="absolute left-2 top-2.5"
-                                >
-                                  {passwordState.showConfirmPassword ? (
-                                    <EyeOff className="w-4 h-4 text-gray-400" />
-                                  ) : (
-                                    <Eye className="w-4 h-4 text-gray-400" />
-                                  )}
-                                </button>
-                              </div>
-                              <div className="flex gap-2">
-                                <ConfirmButton
-                                  onClick={() => handleSave("password")}
-                                  text="حفظ"
-                                  size="sm"
-                                  tooltip="حفظ كلمة المرور الجديدة"
-                                />
-                                <CancelButton
-                                  onClick={() => handleCancel("password")}
-                                  text="إلغاء"
-                                  size="sm"
-                                  tooltip="إلغاء التعديل"
-                                />
-                              </div>
-                            </div>
-                          )}
+                          </div>
                         </div>
                       ) : (
                         <p
