@@ -50,8 +50,15 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
           icon: Plus,
           href: "/admin/dashboard/addproducts",
         },
+        {
+          id: "import-products",
+          label: t("sidebar.products.importExcel"), // يمكن إضافة هذا النص في ملف اللغات
+          icon: FileText, // أيقونة تمثل ملفات
+          href: "/admin/dashboard/import-products", // الرابط الجديد
+        },
       ],
     },
+
     {
       id: "orders",
       label: t("sidebar.orders.main"),

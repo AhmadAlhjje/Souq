@@ -18,6 +18,18 @@ export interface ProductUpdateData {
   images?: File[] | null;
 }
 
+// إضافة هذا الinterface
+export interface BulkProductData {
+  store_id: number;
+  products: Array<{
+    name: string;
+    description: string;
+    price: number;
+    stock_quantity: number;
+    images: string[];
+  }>;
+}
+
 // إنشاء منتج جديد
 export const createProduct = async (productData: ProductData) => {
   const formData = new FormData();
@@ -193,4 +205,11 @@ export const filterProducts = async (
     console.error("Error filtering products:", error);
     throw error;
   }
+};
+
+// إضافة هذه الدالة
+export const uploadMultipleProducts = async (productData: BulkProductData) => {
+  const response = await api.post("/products/multiple", productData);
+  console.log("response response",response);
+  return response.data;
 };

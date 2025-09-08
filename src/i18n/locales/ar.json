@@ -588,6 +588,7 @@
     "products": {
       "main": "المنتجات",
       "all": "جميع المنتجات",
+      "importExcel": "إضافة المنتجات عبر Excel",
       "add": "إضافة منتج",
       "categories": "التصنيفات",
       "inventory": "إدارة المخزون"

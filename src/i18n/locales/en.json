@@ -556,6 +556,7 @@
     "products": {
       "main": "Products",
       "all": "All Products",
+      "importExcel": "Import Products via Excel",
       "add": "Add Product",
       "categories": "Categories",
       "inventory": "Inventory Management"
