@@ -11,6 +11,7 @@ export interface Order {
   id: string;
   customerName: string;
   productImage: string;
+  productName?: string;
   status: "active" | "pending";
   orderNumber: string;
   price: number;

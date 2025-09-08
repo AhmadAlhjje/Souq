@@ -3,6 +3,12 @@ import DataTable, { TableColumn } from '../../components/organisms/DataTable';
 import { ViewButton, ShipButton } from '../../components/common/ActionButtons';
 import { Order, TabType } from '../../types/orders';
 
+// نوع البيانات للفلاتر
+interface SearchFilters {
+  customerName: string;
+  productName: string;
+}
+
 interface OrdersTableProps {
   orders: Order[];
   activeTab: TabType;
@@ -10,6 +16,8 @@ interface OrdersTableProps {
   onView: (order: Order) => void;
   onMarkAsShipped: (order: Order) => void;
   onExport: () => void;
+  onSearch?: (searchTerm: string) => void;
+  onApiSearch?: (filters: SearchFilters) => void; // جديد: للبحث عبر API
   isDark: boolean;
 }
 
@@ -20,6 +28,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   onView,
   onMarkAsShipped,
   onExport,
+  onSearch,
+  onApiSearch, // جديد
   isDark
 }) => {
   const columns: TableColumn[] = [
@@ -60,9 +70,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
             {value}
           </div>
           <div>
-            <span className="font-medium">{row.orderNumber}</span>
+            {/* عرض اسم المنتج الأول إذا وجد، وإلا عرض رقم الطلب */}
+            <span className="font-medium">
+              {row.products && row.products.length > 0 
+                ? row.products[0].name 
+                : row.orderNumber
+              }
+            </span>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {row.products?.length || 0} منتج
+              {row.orderNumber} • {row.products?.length || 0} منتج
             </p>
           </div>
         </div>
@@ -146,11 +162,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       data={orders}
       columns={columns}
       loading={loading}
-      searchable={true}
+      searchable={!onApiSearch} // إذا كان هناك API search، نخفي البحث العادي
+      apiSearch={!!onApiSearch} // تفعيل البحث عبر API إذا تم تمرير onApiSearch
       exportable={true}
       onExport={onExport}
+      onSearch={onSearch}
+      onApiSearch={onApiSearch} // تمرير callback للبحث عبر API
       itemsPerPageOptions={[10, 25, 50]}
       className="shadow-sm"
+      emptyMessage={onApiSearch ? "لم يتم العثور على طلبات تطابق معايير البحث" : "لا توجد طلبات للعرض"}
     />
   );
 };

@@ -7,6 +7,12 @@ import OrderDetailsModal from '../organisms/OrderDetailsModal';
 import ConfirmationModal, { ConfirmationVariant } from '../../components/common/ConfirmationModal';
 import { Order, TabType, OrderStats } from '../../types/orders';
 
+// نوع البيانات للفلاتر
+interface SearchFilters {
+  customerName: string;
+  productName: string;
+}
+
 interface ConfirmationState {
   isOpen: boolean;
   title: string;
@@ -33,6 +39,7 @@ interface OrdersTemplateProps {
   onExport: () => void;
   onCloseModal: () => void;
   onCloseConfirmation: () => void;
+  onApiSearch?: (filters: SearchFilters) => void; // جديد: للبحث عبر API
 }
 
 const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
@@ -51,7 +58,8 @@ const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
   onResetTotal,
   onExport,
   onCloseModal,
-  onCloseConfirmation
+  onCloseConfirmation,
+  onApiSearch // جديد
 }) => {
   return (
     <div
@@ -86,6 +94,7 @@ const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
           onView={onView}
           onMarkAsShipped={onMarkAsShipped}
           onExport={onExport}
+          onApiSearch={onApiSearch} // تمرير معالج البحث عبر API
           isDark={isDark}
         />
 
