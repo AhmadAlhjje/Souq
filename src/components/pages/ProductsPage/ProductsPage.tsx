@@ -706,7 +706,7 @@ const ProductsPage: React.FC = () => {
             <div className="flex items-center gap-2 mt-4">
               <button
                 onClick={handleSearchClick}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-teal-600 text-white px-9 py-2 rounded hover:bg-teal-700"
               >
                 بحث
               </button>

@@ -406,7 +406,7 @@ const DataTable: React.FC<DataTableProps> = ({
                     size="sm"
                     onClick={handleApiSearch}
                     text="بحث"
-                    className="!bg-[#004D5A] !text-white hover:!bg-[#4a8b94]"
+                    className="!bg-teal-600 !text-white hover:!bg-[#4a8b94]"
                   />
 
                   {/* زر المسح - أحمر */}

@@ -557,6 +557,7 @@
       "main": "Products",
       "all": "All Products",
       "importExcel": "Import Products via Excel",
+      "excelUI": "Excel-like Entry",
       "add": "Add Product",
       "categories": "Categories",
       "inventory": "Inventory Management"

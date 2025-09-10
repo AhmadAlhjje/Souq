@@ -19,15 +19,16 @@ export interface ProductUpdateData {
 }
 
 // إضافة هذا الinterface
-export interface BulkProductData {
+interface NewBulkProductData {
   store_id: number;
-  products: Array<{
+  products: {
     name: string;
     description: string;
     price: number;
     stock_quantity: number;
-    images: string[];
-  }>;
+    imagesCount: number; // عدد الصور لكل منتج
+  }[];
+  images: File[]; // جميع الصور في مصفوفة واحدة
 }
 
 // إنشاء منتج جديد
@@ -207,9 +208,46 @@ export const filterProducts = async (
   }
 };
 
-// إضافة هذه الدالة
-export const uploadMultipleProducts = async (productData: BulkProductData) => {
-  const response = await api.post("/products/multiple", productData);
-  console.log("response response",response);
-  return response.data;
+// دالة API محدثة للتعامل مع التنسيق الجديد
+export const uploadMultipleProducts = async (
+  productData: NewBulkProductData
+) => {
+  try {
+    // إنشاء FormData لإرسال البيانات والصور
+    const formData = new FormData();
+
+    // إضافة store_id
+    formData.append("store_id", productData.store_id.toString());
+
+    // إضافة بيانات المنتجات كـ JSON
+    formData.append("products", JSON.stringify(productData.products));
+
+    // إضافة جميع الصور
+    productData.images.forEach((image: File, index: number) => {
+      formData.append("images", image);
+    });
+
+    // console.log("إرسال البيانات:", {
+    //   store_id: productData.store_id,
+    //   productsCount: productData.products.length,
+    //   imagesCount: productData.images.length,
+    //   products: productData.products.map((p) => ({
+    //     name: p.name,
+    //     imagesCount: p.imagesCount,
+    //   })),
+    // });
+    console.log("formData",formData);
+    // إرسال الطلب
+    const response = await api.post("/products/multiple", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("response response", response);
+    return response.data;
+  } catch (error) {
+    console.error("خطأ في إرسال البيانات:", error);
+    throw error;
+  }
 };
