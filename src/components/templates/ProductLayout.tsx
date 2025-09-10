@@ -7,13 +7,6 @@ import dynamic from "next/dynamic";
 import { Product } from "@/types/product";
 import { getStore } from "@/api/stores"; // تأكد من المسار الصحيح
 
-// // تحميل المكونات بشكل ديناميكي
-// const DynamicSaleCarousel = dynamic(() => import('../organisms/SaleProductsCarousel'), {
-//   loading: () => (
-//     <div className="animate-pulse bg-gray-200 rounded-2xl h-64 mb-8"></div>
-//   ),
-// });
-
 const DynamicProductsSection = dynamic(
   () => import("../organisms/ProductsSection"),
   {
@@ -23,34 +16,9 @@ const DynamicProductsSection = dynamic(
   }
 );
 
-// نوع للمنتج من الـ API
-interface ApiProduct {
-  product_id: number;
-  store_id: number;
-  name: string;
-  description: string;
-  price: string;
-  stock_quantity: number;
-  images: string;
-  created_at: string;
-}
+// استخدام النوع من API مباشرة بدلاً من تعريف نوع محلي متضارب
+// لا نحتاج لتعريف ApiProduct و ApiStore هنا - سنستخدم ما يرجعه getStore مباشرة
 
-// نوع للمتجر من الـ API
-interface ApiStore {
-  store_id: number;
-  user_id: number;
-  store_name: string;
-  store_address: string;
-  description: string;
-  images: string;
-  logo_image: string;
-  created_at: string;
-  User: {
-    username: string;
-    whatsapp_number: string;
-  };
-  Products: ApiProduct[];
-}
 // تعريف الـ BASE_URL ودالة getFirstImage
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.4:4000";
 
@@ -83,15 +51,15 @@ function getFirstImage(imagesField: string | undefined): string {
   }
 }
 
-// تحويل منتج API إلى المنتج المحلي
+// تحويل منتج API إلى المنتج المحلي - محدث للعمل مع أي نوع منتج
 const convertApiProductToProduct = (
-  apiProduct: ApiProduct,
-  storeInfo?: ApiStore
+  apiProduct: any, // استخدام any لتجنب تضارب الأنواع
+  storeInfo?: any
 ): Product => {
   const imageUrl = getFirstImage(apiProduct.images);
 
   return {
-    id: apiProduct.product_id,
+    id: apiProduct.product_id || apiProduct.id,
     name: apiProduct.name,
     nameAr: apiProduct.name,
     category: "general",
@@ -102,19 +70,19 @@ const convertApiProductToProduct = (
         ? Math.round(parseFloat(apiProduct.price) * 0.8)
         : undefined,
     originalPrice: parseFloat(apiProduct.price),
-    rating: Math.round((Math.random() * 2 + 3) * 10) / 10,
-    reviewCount: Math.floor(Math.random() * 200) + 10,
+    rating: apiProduct.averageRating || Math.round((Math.random() * 2 + 3) * 10) / 10,
+    reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 200) + 10,
     image: imageUrl,
     isNew: Math.random() > 0.8,
-    stock: apiProduct.stock_quantity,
-    status: apiProduct.stock_quantity > 0 ? "active" : "out_of_stock",
+    stock: apiProduct.stock_quantity || apiProduct.stock,
+    status: (apiProduct.stock_quantity || apiProduct.stock) > 0 ? "active" : "out_of_stock",
     description: apiProduct.description,
     descriptionAr: apiProduct.description,
     brand: storeInfo?.store_name || "متجر محلي",
     brandAr: storeInfo?.store_name || "متجر محلي",
     sales: Math.floor(Math.random() * 100) + 5,
-    inStock: apiProduct.stock_quantity > 0,
-    createdAt: apiProduct.created_at,
+    inStock: (apiProduct.stock_quantity || apiProduct.stock) > 0,
+    createdAt: apiProduct.created_at || apiProduct.createdAt,
   };
 };
 
@@ -123,9 +91,9 @@ function ProductContent() {
   const storeId = searchParams?.get("store");
   const storeName = searchParams?.get("storeName");
 
-  // حالات البيانات
+  // حالات البيانات - استخدام أنواع عامة لتجنب التضارب
   const [products, setProducts] = useState<Product[]>([]);
-  const [storeInfo, setStoreInfo] = useState<ApiStore | null>(null);
+  const [storeInfo, setStoreInfo] = useState<any>(null); // استخدام any لتجنب تضارب الأنواع
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,8 +116,9 @@ function ProductContent() {
         console.log("✅ تم جلب البيانات:", storeData);
         setStoreInfo(storeData);
 
-        // تحويل المنتجات
-        const convertedProducts = storeData.Products.map((product) =>
+        // تحويل المنتجات - التعامل مع كلا الحالتين (Products أو products)
+        const productsArray = (storeData as any).Products || (storeData as any).products || [];
+        const convertedProducts = productsArray.map((product: any) =>
           convertApiProductToProduct(product, storeData)
         );
 
@@ -265,25 +234,16 @@ function ProductContent() {
             </div>
             <p className="text-teal-600 mb-2">{storeInfo.description}</p>
             <p className="text-sm text-teal-500">
-              📍 {storeInfo.store_address} | 📞 {storeInfo.User.whatsapp_number}{" "}
+              📍 {storeInfo.store_address} | 📞 {storeInfo.User?.whatsapp_number}{" "}
               | 📦 {products.length} منتج متوفر
             </p>
-            {/* {saleProducts.length > 0 && (
+            {saleProducts.length > 0 && (
               <p className="text-sm text-red-600 mt-2">
                 🔥 {saleProducts.length} منتج مخفض متاح الآن!
               </p>
-            )} */}
+            )}
           </div>
         )}
-
-        {/* عرض المنتجات المخفضة إذا وُجدت
-        {saleProducts.length > 0 && (
-          <DynamicSaleCarousel 
-            saleProducts={saleProducts}
-            onNavigateLeft={handleNavigateLeft}
-            onNavigateRight={handleNavigateRight}
-          />
-        )} */}
 
         <div className="grid grid-cols-1 gap-8">
           <DynamicProductsSection
@@ -310,6 +270,36 @@ function ProductContent() {
             <p className="text-base mb-4" style={{ color: "#374151" }}>
               تجربة تسوق ممتعة ومريحة هي هدفنا الأول
             </p>
+
+            {/* إضافة إحصائيات المتجر إذا كانت متوفرة */}
+            {storeInfo && (storeInfo.totalOrders || storeInfo.averageRating) && (
+              <div className="grid md:grid-cols-3 gap-4 mt-6">
+                {storeInfo.totalOrders && (
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <div className="text-2xl font-bold text-green-600">
+                      {storeInfo.totalOrders}
+                    </div>
+                    <div className="text-sm text-gray-600">طلب مكتمل</div>
+                  </div>
+                )}
+                
+                {storeInfo.averageRating && (
+                  <div className="bg-white p-4 rounded-lg shadow-sm">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {storeInfo.averageRating.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600">تقييم المتجر</div>
+                  </div>
+                )}
+                
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="text-2xl font-bold text-purple-600">
+                    {products.length}
+                  </div>
+                  <div className="text-sm text-gray-600">منتج متوفر</div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -90,7 +90,7 @@ export const updateProduct = async (
   console.log("Product ID:", id);
 
   // طباعة محتويات FormData للتحقق
-  for (let pair of formData.entries()) {
+  for (const pair of formData.entries()) {
     console.log(`${pair[0]}: ${pair[1]}`);
   }
 
