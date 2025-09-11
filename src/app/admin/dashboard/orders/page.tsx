@@ -8,7 +8,7 @@ import {
   getStoreOrdersStats,
   updateOrderStatus,
   updateProgrammaticShipped,
-  getFilteredOrders, // إضافة الدالة الجديدة
+  getFilteredOrders,
 } from "../../../../api/orders";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -22,14 +22,13 @@ const OrdersPageComponent: React.FC = () => {
   // States
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchLoading, setSearchLoading] = useState(false); // جديد: لحالة تحميل البحث
+  const [searchLoading, setSearchLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("all");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [apiStats, setApiStats] = useState<any>(null);
-  const [isSearchMode, setIsSearchMode] = useState(false); // جديد: لتتبع حالة البحث
+  const [isSearchMode, setIsSearchMode] = useState(false);
   const [currentFilters, setCurrentFilters] = useState<SearchFilters>({
-    // جديد: لحفظ الفلاتر الحالية
     customerName: "",
     productName: "",
   });
@@ -45,10 +44,8 @@ const OrdersPageComponent: React.FC = () => {
   const { isDark } = useTheme();
   const { storeId, isLoaded } = useStore();
 
-  // Transform API data to Orders with updated status logic
-  // Transform API data to Orders with updated status logic
+  // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
   const transformApiDataToOrders = (apiData: any): Order[] => {
-    // التحقق من نوع البيانات المرجعة
     let sourceData = [];
 
     if (apiData.Products && Array.isArray(apiData.Products)) {
@@ -82,6 +79,8 @@ const OrdersPageComponent: React.FC = () => {
             totalPrice: parseFloat(product.total_price || product.price || "0"),
           },
         ],
+        // معلومات الشحن للبحث قد تكون محدودة
+        shipping: undefined,
       }));
     } else if (apiData.allOrders?.orders) {
       // البيانات العادية - allOrders.orders
@@ -116,6 +115,24 @@ const OrdersPageComponent: React.FC = () => {
           price: parseFloat(item.price_at_time),
           totalPrice: parseFloat(item.price_at_time) * item.quantity,
         })),
+        // إضافة معلومات الشحن
+        shipping: order.Shipping ? {
+          shipping_id: order.Shipping.shipping_id,
+          customer_name: order.Shipping.customer_name,
+          customer_phone: order.Shipping.customer_phone,
+          customer_whatsapp: order.Shipping.customer_whatsapp,
+          recipient_name: order.Shipping.recipient_name,
+          shipping_address: order.Shipping.shipping_address,
+          source_address: order.Shipping.source_address,
+          destination: order.Shipping.destination,
+          shipping_method: order.Shipping.shipping_method,
+          tracking_number: order.Shipping.tracking_number,
+          shipping_status: order.Shipping.shipping_status,
+          shipped_at: order.Shipping.shipped_at,
+          delivered_at: order.Shipping.delivered_at,
+          identity_images: order.Shipping.identity_images,
+          created_at: order.Shipping.created_at,
+        } : undefined,
       }));
     }
 
@@ -134,7 +151,7 @@ const OrdersPageComponent: React.FC = () => {
         setApiStats(data);
         const transformedOrders = transformApiDataToOrders(data);
         setOrders(transformedOrders);
-        setIsSearchMode(false); // إعادة تعيين حالة البحث
+        setIsSearchMode(false);
       } catch (error) {
         console.error("Error loading orders:", error);
       } finally {
@@ -145,7 +162,7 @@ const OrdersPageComponent: React.FC = () => {
     loadOrdersData();
   }, [storeId, isLoaded]);
 
-  // جديد: دالة البحث عبر API
+  // دالة البحث عبر API
   const handleApiSearch = async (filters: SearchFilters) => {
     if (!storeId) return;
 
@@ -153,7 +170,6 @@ const OrdersPageComponent: React.FC = () => {
       setSearchLoading(true);
       setCurrentFilters(filters);
 
-      // إذا كانت الفلاتر فارغة، نعود للبيانات الأصلية
       if (!filters.customerName.trim() && !filters.productName.trim()) {
         const data = await getStoreOrdersStats(storeId);
         setApiStats(data);
@@ -161,18 +177,15 @@ const OrdersPageComponent: React.FC = () => {
         setOrders(transformedOrders);
         setIsSearchMode(false);
       } else {
-        // البحث عبر API
         const searchData = await getFilteredOrders(storeId, {
           customerName: filters.customerName.trim() || undefined,
           productName: filters.productName.trim() || undefined,
         });
 
-        // تحويل البيانات وتحديث الطلبات
         const transformedOrders = transformApiDataToOrders(searchData);
         setOrders(transformedOrders);
         setIsSearchMode(true);
 
-        // تحديث الإحصائيات للبحث
         setApiStats({
           ...searchData,
           allOrders: { orders: transformedOrders },
@@ -377,7 +390,7 @@ const OrdersPageComponent: React.FC = () => {
       onExport={handleExport}
       onCloseModal={handleCloseModal}
       onCloseConfirmation={handleCloseConfirmation}
-      onApiSearch={handleApiSearch} // إضافة معالج البحث عبر API
+      onApiSearch={handleApiSearch}
     />
   );
 };

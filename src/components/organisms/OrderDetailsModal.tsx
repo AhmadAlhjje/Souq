@@ -3,6 +3,7 @@ import Modal from '../atoms/Modal';
 import CustomerInfo from '../molecules/CustomerInfo';
 import ProductsList from '../molecules/ProductsList';
 import OrderSummary from '../molecules/OrderSummary';
+import ShippingInfoComponent from '../molecules/ShippingInfoComponent';
 import { Order } from '../../types/orders';
 
 interface OrderDetailsModalProps {
@@ -29,8 +30,16 @@ const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
       isDark={isDark}
     >
       <div className="space-y-6">
+        {/* معلومات العميل */}
         <CustomerInfo order={order} isDark={isDark} />
+        
+        {/* قائمة المنتجات */}
         <ProductsList products={order.products || []} isDark={isDark} />
+        
+        {/* معلومات الشحن */}
+        <ShippingInfoComponent shipping={order.shipping} isDark={isDark} />
+        
+        {/* ملخص الطلب */}
         <OrderSummary order={order} isDark={isDark} />
       </div>
     </Modal>
