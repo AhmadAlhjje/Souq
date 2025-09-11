@@ -11,6 +11,7 @@ interface ProductRow {
   name: string;
   description: string;
   price: string;
+  discount_percentage: string; // إضافة نسبة الخصم
   stock_quantity: string;
   images: File[];
 }
@@ -27,6 +28,7 @@ interface BulkProductData {
     name: string;
     description: string;
     price: number;
+    discount_percentage?: number; // اختياري
     stock_quantity: number;
     imagesCount: number; // عدد الصور لكل منتج
   }[];
@@ -53,6 +55,7 @@ const ExcelLikeInterface = () => {
       name: "",
       description: "",
       price: "",
+      discount_percentage: "", // إضافة نسبة الخصم
       stock_quantity: "",
       images: [],
     },
@@ -76,6 +79,7 @@ const ExcelLikeInterface = () => {
     { key: "name", label: "اسم المنتج", width: "200px" },
     { key: "description", label: "الوصف", width: "300px" },
     { key: "price", label: "السعر $", width: "120px" },
+    { key: "discount_percentage", label: "نسبة الخصم %", width: "120px" }, // إضافة عمود الخصم
     { key: "stock_quantity", label: "الكمية المتاحة", width: "120px" },
     { key: "images", label: "الصور (حتى 8 صور)", width: "250px" },
   ];
@@ -86,6 +90,7 @@ const ExcelLikeInterface = () => {
       name: "",
       description: "",
       price: "",
+      discount_percentage: "", // إضافة نسبة الخصم
       stock_quantity: "",
       images: [],
     };
@@ -167,6 +172,13 @@ const ExcelLikeInterface = () => {
       if (!product.stock_quantity || parseInt(product.stock_quantity) < 0) {
         errors.push(`المنتج رقم ${index + 1}: الكمية يجب أن تكون صفر أو أكثر`);
       }
+      // التحقق من نسبة الخصم
+      if (product.discount_percentage) {
+        const discount = parseFloat(product.discount_percentage);
+        if (isNaN(discount) || discount < 0 || discount > 100) {
+          errors.push(`المنتج رقم ${index + 1}: نسبة الخصم يجب أن تكون بين 0 و 100`);
+        }
+      }
     });
 
     return errors;
@@ -190,6 +202,13 @@ const ExcelLikeInterface = () => {
         }
         if (!product.stock_quantity || parseInt(product.stock_quantity) < 0) {
           errors.push(`المنتج ${index + 1}: الكمية يجب أن تكون صفر أو أكثر`);
+        }
+        // التحقق من نسبة الخصم
+        if (product.discount_percentage) {
+          const discount = parseFloat(product.discount_percentage);
+          if (isNaN(discount) || discount < 0 || discount > 100) {
+            errors.push(`المنتج ${index + 1}: نسبة الخصم يجب أن تكون بين 0 و 100`);
+          }
         }
       });
 
@@ -241,13 +260,24 @@ const ExcelLikeInterface = () => {
           `📤 معالجة المنتج ${index + 1} من ${validProducts.length}...`
         );
 
-        return {
+        // تحضير بيانات المنتج
+        const productData: any = {
           name: product.name.trim(),
           description: product.description.trim(),
           price: parseFloat(product.price),
           stock_quantity: parseInt(product.stock_quantity),
           imagesCount: productImages.length, // عدد الصور لهذا المنتج
         };
+
+        // إضافة نسبة الخصم فقط إذا كانت موجودة وصالحة
+        if (product.discount_percentage && product.discount_percentage.trim()) {
+          const discount = parseFloat(product.discount_percentage);
+          if (!isNaN(discount) && discount >= 0 && discount <= 100) {
+            productData.discount_percentage = discount;
+          }
+        }
+
+        return productData;
       });
 
       // تحضير البيانات بالتنسيق الجديد
@@ -277,6 +307,7 @@ const ExcelLikeInterface = () => {
           name: "",
           description: "",
           price: "",
+          discount_percentage: "", // إضافة نسبة الخصم
           stock_quantity: "",
           images: [],
         },
@@ -436,6 +467,9 @@ const ExcelLikeInterface = () => {
                           col.key === "stock_quantity") && (
                           <span className="text-red-500 mr-1">*</span>
                         )}
+                        {col.key === "discount_percentage" && (
+                          <span className="text-gray-400 mr-1 text-xs">(اختياري)</span>
+                        )}
                       </th>
                     ))}
                     <th className="w-16 p-3 text-center text-gray-600 font-medium">
@@ -453,6 +487,7 @@ const ExcelLikeInterface = () => {
                         {rowIndex + 1}
                       </td>
 
+                      {/* اسم المنتج */}
                       <td
                         className={`p-0 border-r border-gray-300 ${
                           selectedCell?.row === rowIndex &&
@@ -475,6 +510,7 @@ const ExcelLikeInterface = () => {
                         />
                       </td>
 
+                      {/* وصف المنتج */}
                       <td
                         className={`p-0 border-r border-gray-300 ${
                           selectedCell?.row === rowIndex &&
@@ -501,6 +537,7 @@ const ExcelLikeInterface = () => {
                         />
                       </td>
 
+                      {/* السعر */}
                       <td
                         className={`p-0 border-r border-gray-300 ${
                           selectedCell?.row === rowIndex &&
@@ -525,6 +562,7 @@ const ExcelLikeInterface = () => {
                         />
                       </td>
 
+                      {/* نسبة الخصم */}
                       <td
                         className={`p-0 border-r border-gray-300 ${
                           selectedCell?.row === rowIndex &&
@@ -536,6 +574,32 @@ const ExcelLikeInterface = () => {
                       >
                         <input
                           type="number"
+                          value={product.discount_percentage}
+                          onChange={(e) =>
+                            updateCell(product.id, "discount_percentage", e.target.value)
+                          }
+                          onKeyDown={(e) => handleKeyDown(e, rowIndex, 3)}
+                          disabled={isLoading}
+                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white text-center disabled:bg-gray-100"
+                          placeholder="0"
+                          step="1"
+                          min="0"
+                          max="100"
+                        />
+                      </td>
+
+                      {/* الكمية المتاحة */}
+                      <td
+                        className={`p-0 border-r border-gray-300 ${
+                          selectedCell?.row === rowIndex &&
+                          selectedCell?.col === 4
+                            ? "ring-2 ring-blue-500"
+                            : ""
+                        }`}
+                        onClick={() => handleCellClick(rowIndex, 4)}
+                      >
+                        <input
+                          type="number"
                           value={product.stock_quantity}
                           onChange={(e) =>
                             updateCell(
@@ -544,7 +608,7 @@ const ExcelLikeInterface = () => {
                               e.target.value
                             )
                           }
-                          onKeyDown={(e) => handleKeyDown(e, rowIndex, 3)}
+                          onKeyDown={(e) => handleKeyDown(e, rowIndex, 4)}
                           disabled={isLoading}
                           className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white text-center disabled:bg-gray-100"
                           placeholder="0"
@@ -552,6 +616,7 @@ const ExcelLikeInterface = () => {
                         />
                       </td>
 
+                      {/* الصور */}
                       <td className="p-3 border-r border-gray-300">
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
@@ -627,6 +692,7 @@ const ExcelLikeInterface = () => {
                         </div>
                       </td>
 
+                      {/* إجراءات */}
                       <td className="p-3 text-center">
                         <button
                           onClick={() => deleteRow(product.id)}

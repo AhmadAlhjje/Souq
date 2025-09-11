@@ -10,6 +10,56 @@ export interface StoreData {
   logoImage?: File | null;
 }
 
+// تحديث نوع ApiStore للتوافق مع البنية الجديدة
+interface ApiStoreResponse {
+  success: boolean;
+  store: {
+    store_id: number;
+    user_id: number;
+    store_name: string;
+    store_address: string;
+    description: string;
+    images: string;
+    logo_image: string;
+    is_blocked: boolean;
+    created_at: string;
+    User: {
+      username: string;
+      whatsapp_number: string;
+      role: string;
+    };
+    reviews: any[];
+    averageRating: number;
+    reviewsCount: number;
+    totalRevenue: number;
+    totalOrders: number;
+    thisMonthRevenue: number;
+    discountStats: {
+      totalProductsWithDiscount: number;
+      totalProducts: number;
+      totalDiscountValue: number;
+      discountPercentage: number;
+    };
+    products: Array<{
+      product_id: number;
+      store_id: number;
+      name: string;
+      description: string;
+      price: string;
+      discount_percentage: string | null;
+      stock_quantity: number;
+      images: string;
+      created_at: string;
+      discounted_price: number;
+      discount_amount: number;
+      has_discount: boolean;
+      averageRating: number;
+      reviewsCount: number;
+      original_price: number;
+    }>;
+  };
+}
+
 // إنشاء متجر جديد
 export const createStore = async (storeData: StoreData) => {
   const formData = new FormData();
@@ -164,25 +214,46 @@ export const getStores = async (): Promise<Store[]> => {
   }
 };
 
-// جلب متجر واحد بمنتجاته
-export const getStore = async (storeId: number): Promise<ApiStore> => {
+
+export const getStore = async (storeId: number): Promise<ApiStoreResponse> => {
   try {
     console.log(`🔄 جلب متجر برقم ${storeId}...`);
 
-    const response = await api.get<ApiStore>(`/stores/${storeId}`);
+    const response = await api.get<ApiStoreResponse>(`/stores/${storeId}`);
 
     console.log("✅ تم جلب المتجر بنجاح:", response.data);
 
-    // التحقق من وجود البيانات
-    if (!response.data) {
+    // التحقق من وجود البيانات ونجاح العملية
+    if (!response.data || !response.data.success) {
+      throw new Error("لم يتم العثور على بيانات المتجر أو فشل في العملية");
+    }
+
+    // التحقق من وجود بيانات المتجر
+    if (!response.data.store) {
       throw new Error("لم يتم العثور على بيانات المتجر");
     }
 
     // التحقق من وجود المنتجات
-    if (!response.data.Products) {
+    if (!response.data.store.products) {
       console.warn("⚠️ المتجر لا يحتوي على منتجات");
-      response.data.Products = [];
+      response.data.store.products = [];
     }
+
+    // طباعة إحصائيات المنتجات للتحقق
+    const totalProducts = response.data.store.products.length;
+    const productsWithDiscount = response.data.store.products.filter(
+      (product) => product.has_discount
+    ).length;
+    const outOfStockProducts = response.data.store.products.filter(
+      (product) => product.stock_quantity === 0
+    ).length;
+
+    console.log("📊 إحصائيات المنتجات:", {
+      totalProducts,
+      productsWithDiscount,
+      outOfStockProducts,
+      discountStats: response.data.store.discountStats,
+    });
 
     return response.data;
   } catch (error: any) {

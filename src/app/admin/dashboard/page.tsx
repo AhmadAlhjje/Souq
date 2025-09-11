@@ -21,35 +21,53 @@ interface RecentOrder {
   status: 'completed' | 'pending' | 'cancelled';
 }
 
-// تحديث نوع ApiStore مؤقتاً أو إنشاء interface محلي
+// تحديث نوع ApiStore للتوافق مع البنية الجديدة
 interface StoreWithStats {
-  store_id: number;
-  user_id: number;
-  store_name: string;
-  store_address: string;
-  description: string;
-  images: string;
-  logo_image: string;
-  created_at: string;
-  User: {
-    username: string;
-    whatsapp_number: string;
-  };
-  Products: any[];
-  statistics: {
-    totalProducts: number;
-    availableProducts: number;
-    outOfStockProducts: number;
-    lowStockProducts: number;
-    averageRating: number;
-    totalReviews: number;
-    totalOrders: number;
-    totalRevenue: string;
-    ordersByStatus: {
-      shipped: number;
-      [key: string]: number;
+  success: boolean;
+  store: {
+    store_id: number;
+    user_id: number;
+    store_name: string;
+    store_address: string;
+    description: string;
+    images: string;
+    logo_image: string;
+    is_blocked: boolean;
+    created_at: string;
+    User: {
+      username: string;
+      whatsapp_number: string;
+      role: string;
     };
-    averageOrderValue: string;
+    reviews: any[];
+    averageRating: number;
+    reviewsCount: number;
+    totalRevenue: number;
+    totalOrders: number;
+    thisMonthRevenue: number;
+    discountStats: {
+      totalProductsWithDiscount: number;
+      totalProducts: number;
+      totalDiscountValue: number;
+      discountPercentage: number;
+    };
+    products: Array<{
+      product_id: number;
+      store_id: number;
+      name: string;
+      description: string;
+      price: string;
+      discount_percentage: string | null;
+      stock_quantity: number;
+      images: string;
+      created_at: string;
+      discounted_price: number;
+      discount_amount: number;
+      has_discount: boolean;
+      averageRating: number;
+      reviewsCount: number;
+      original_price: number;
+    }>;
   };
 }
 
@@ -118,20 +136,29 @@ const AdminDashboardPage = () => {
         // تعيين بيانات الطلبات للاستخدام في SalesChart
         setOrdersStats(ordersStatsData);
 
-        // استخدام Type Assertion للوصول إلى statistics
+        // استخدام Type Assertion للوصول إلى البيانات الجديدة
         const storeWithStats = storeData as StoreWithStats;
 
-        // التحقق من وجود statistics
-        if (!storeWithStats.statistics) {
-          console.warn('⚠️ لم يتم العثور على إحصائيات المتجر');
+        // التحقق من وجود البيانات والنجاح
+        if (!storeWithStats.success || !storeWithStats.store) {
+          console.warn('⚠️ لم يتم العثور على بيانات المتجر أو فشل في جلب البيانات');
           return;
         }
 
+        const storeInfo = storeWithStats.store;
+
+        // حساب إحصائيات المنتجات
+        const totalProducts = storeInfo.products?.length || 0;
+        const availableProducts = storeInfo.products?.filter(product => product.stock_quantity > 0)?.length || 0;
+        const outOfStockProducts = storeInfo.products?.filter(product => product.stock_quantity === 0)?.length || 0;
+        const lowStockProducts = storeInfo.products?.filter(product => product.stock_quantity > 0 && product.stock_quantity <= 5)?.length || 0;
+        const productsWithDiscount = storeInfo.products?.filter(product => product.has_discount)?.length || 0;
+
         // إعداد الإحصائيات للوحة التحكم
         const dashboardStats: DashboardStats = {
-          totalRevenue: parseFloat(storeWithStats.statistics.totalRevenue),
-          totalOrders: storeWithStats.statistics.totalOrders,
-          totalProducts: storeWithStats.statistics.totalProducts,
+          totalRevenue: storeInfo.totalRevenue || 0,
+          totalOrders: storeInfo.totalOrders || 0,
+          totalProducts: totalProducts,
           totalCustomers: 0, // سيتم إلغاؤه من العرض
           revenueChange: 0, // يمكن حسابه لاحقاً إذا توفرت بيانات الفترة السابقة
           ordersChange: 0,
@@ -143,20 +170,31 @@ const AdminDashboardPage = () => {
         };
 
         // إضافة console.log للتحقق من البيانات
-        console.log('🔍 Store Data:', storeWithStats);
+        console.log('🔍 Store Data:', storeInfo);
         console.log('📊 Dashboard Stats:', dashboardStats);
         console.log('📈 Orders Stats:', ordersStatsData);
         console.log('🏪 Store ID:', storeId);
+        console.log('📦 Products Stats:', {
+          totalProducts,
+          availableProducts,
+          outOfStockProducts,
+          lowStockProducts,
+          productsWithDiscount,
+          discountStats: storeInfo.discountStats
+        });
 
-        // إعداد أحدث 4 طلبات
-        const latestOrders = ordersStatsData.allOrders.orders
-          .slice(0, 4) // أخذ أول 4 طلبات
-          .map((order: any) => ({
-            id: order.order_id,
-            timeAgo: getTimeAgo(order.created_at),
-            amount: parseFloat(order.total_price),
-            status: getOrderStatus(order.status)
-          }));
+        // إعداد أحدث 4 طلبات (إذا كانت متوفرة)
+        let latestOrders: RecentOrder[] = [];
+        if (ordersStatsData?.allOrders?.orders) {
+          latestOrders = ordersStatsData.allOrders.orders
+            .slice(0, 4) // أخذ أول 4 طلبات
+            .map((order: any) => ({
+              id: order.order_id,
+              timeAgo: getTimeAgo(order.created_at),
+              amount: parseFloat(order.total_price),
+              status: getOrderStatus(order.status)
+            }));
+        }
 
         setStats(dashboardStats);
         setRecentOrders(latestOrders);

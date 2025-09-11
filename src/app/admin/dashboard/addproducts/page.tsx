@@ -3,21 +3,16 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Upload,
-  Plus,
-  Minus,
   X,
   ImageIcon,
   Edit2,
-  ArrowRight,
-  ArrowLeft,
   HelpCircle,
+  Percent,
 } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
 import AdminLayout from "../../../../components/templates/admin/products/AdminLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
-import { api } from "@/api/api";
 import { createProduct } from "@/api/products";
 import { useStore } from "@/contexts/StoreContext";
 
@@ -34,7 +29,7 @@ interface ProductFormData {
   description: string;
   descriptionAr: string;
   price: string;
-  salePrice: string;
+  discountPercentage: string; // تغيير من salePrice إلى discountPercentage
   quantity: string;
   category: string;
   status: string;
@@ -57,7 +52,7 @@ const AddProductPage: React.FC = () => {
     description: "",
     descriptionAr: "",
     price: "",
-    salePrice: "",
+    discountPercentage: "", // تغيير من salePrice إلى discountPercentage
     quantity: "",
     category: "",
     status: "draft",
@@ -129,7 +124,28 @@ const AddProductPage: React.FC = () => {
       return false;
     }
 
+    // التحقق من صحة نسبة الخصم إذا تم إدخالها
+    if (formData.discountPercentage.trim() !== "") {
+      const discount = parseFloat(formData.discountPercentage);
+      if (isNaN(discount) || discount < 0 || discount > 100) {
+        showToast("يرجى إدخال نسبة خصم صحيحة بين 0 و 100", "error");
+        return false;
+      }
+    }
+
     return true;
+  };
+
+  // دالة لحساب السعر بعد الخصم
+  const calculateDiscountedPrice = (): number | null => {
+    const price = parseFloat(formData.price);
+    const discount = parseFloat(formData.discountPercentage);
+    
+    if (!isNaN(price) && !isNaN(discount) && discount > 0) {
+      return price - (price * discount / 100);
+    }
+    
+    return null;
   };
 
   const handleSubmit = async () => {
@@ -151,7 +167,7 @@ const AddProductPage: React.FC = () => {
       console.log("Store ID:", storeId);
       console.log("User store context:", { storeId, isLoaded });
 
-      const payload = {
+      const payload: any = {
         name: formData.name || formData.nameAr,
         description: formData.description || formData.descriptionAr,
         price: formData.price,
@@ -161,6 +177,14 @@ const AddProductPage: React.FC = () => {
           .filter((img) => img.file)
           .map((img) => img.file!) as File[],
       };
+
+      // إضافة نسبة الخصم إذا كانت موجودة وصحيحة
+      if (formData.discountPercentage.trim() !== "") {
+        const discount = parseFloat(formData.discountPercentage);
+        if (!isNaN(discount) && discount > 0 && discount <= 100) {
+          payload.discount_percentage = discount;
+        }
+      }
 
       console.log("Payload being sent:", payload);
 
@@ -176,7 +200,7 @@ const AddProductPage: React.FC = () => {
         description: "",
         descriptionAr: "",
         price: "",
-        salePrice: "",
+        discountPercentage: "", // تغيير من salePrice إلى discountPercentage
         quantity: "",
         category: "",
         status: "draft",
@@ -337,30 +361,42 @@ const AddProductPage: React.FC = () => {
               className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
               disabled={loading}
             />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">ر.س</span>
           </div>
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            ما هو السعر بعد الخصم؟ إذا كان هناك خصم؟ (اختياري)
+            ما هي نسبة الخصم؟ (اختياري)
           </label>
           <div className="relative">
             <input
               type="text"
-              value={formData.salePrice}
+              value={formData.discountPercentage}
               onChange={(e) => {
                 const value = e.target.value;
+                // السماح بالأرقام والنقاط العشرية فقط
                 if (/^\d*\.?\d*$/.test(value) || value === "") {
-                  handleInputChange("salePrice", value);
+                  // التحقق من أن القيمة لا تتجاوز 100
+                  const numValue = parseFloat(value);
+                  if (value === "" || (!isNaN(numValue) && numValue <= 100)) {
+                    handleInputChange("discountPercentage", value);
+                  }
                 }
               }}
-              placeholder="مثال: 25.99"
+              placeholder="مثال: 15"
               className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
               disabled={loading}
+              max="100"
+              min="0"
             />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+            <Percent className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
           </div>
+          {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 && (
+            <div className="mt-2 text-sm text-green-600">
+              السعر بعد الخصم: {calculateDiscountedPrice()?.toFixed(2)} ر.س
+            </div>
+          )}
         </div>
       </div>
 
@@ -568,6 +604,12 @@ const AddProductPage: React.FC = () => {
                             مسودة
                           </div>
                         )}
+                        {/* عرض شارة الخصم إذا كان موجوداً */}
+                        {currentStep === 2 && formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 && (
+                          <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-bold">
+                            -{formData.discountPercentage}%
+                          </div>
+                        )}
                       </div>
 
                       <div className="p-4 text-center">
@@ -598,12 +640,21 @@ const AddProductPage: React.FC = () => {
                               <div className="text-sm text-gray-500 mb-1">
                                 السعر
                               </div>
-                              <div className="text-2xl font-bold text-gray-900">
-                                {formData.price ? `${formData.price}$` : "65$"}
-                              </div>
-                              {formData.salePrice && (
-                                <div className="text-sm text-green-600 font-medium">
-                                  بعد الخصم: {formData.salePrice}$
+                              {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 ? (
+                                <div>
+                                  <div className="text-lg text-gray-400 line-through">
+                                    {formData.price ? `${formData.price} ر.س` : "65 ر.س"}
+                                  </div>
+                                  <div className="text-2xl font-bold text-green-600">
+                                    {calculateDiscountedPrice()?.toFixed(2) || "55.25"} ر.س
+                                  </div>
+                                  <div className="text-sm text-red-600 font-medium">
+                                    خصم {formData.discountPercentage}%
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-2xl font-bold text-gray-900">
+                                  {formData.price ? `${formData.price} ر.س` : "65 ر.س"}
                                 </div>
                               )}
                             </div>

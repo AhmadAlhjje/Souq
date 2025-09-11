@@ -20,12 +20,12 @@ import {
   CancelButton,
 } from "@/components/common/ActionButtons";
 import { useStore } from "@/contexts/StoreContext";
-import { getStoreById, updateStore } from "@/api/stores";
+import { getStore, updateStore } from "@/api/stores"; // تغيير من getStoreById إلى getStore
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { changePassword } from "@/api/auth";
 
-// تعريف الأنواعx
+// تعريف الأنواع
 type EditingField =
   | "name"
   | "storeName"
@@ -53,6 +53,13 @@ interface ProfileData {
   address: string;
   description: string;
   createdAt: string;
+  // إضافة الحقول الجديدة
+  isBlocked?: boolean;
+  totalRevenue?: number;
+  totalOrders?: number;
+  thisMonthRevenue?: number;
+  averageRating?: number;
+  reviewsCount?: number;
 }
 
 interface PasswordState {
@@ -65,20 +72,38 @@ interface PasswordState {
   step: "verify" | "new";
 }
 
+// تحديث interface للبنية الجديدة
 interface StoreData {
-  store_id: number;
-  user_id: number;
-  store_name: string;
-  store_address: string;
-  description: string;
-  images: string;
-  logo_image: string;
-  created_at: string;
-  User: {
-    username: string;
-    whatsapp_number: string;
+  success: boolean;
+  store: {
+    store_id: number;
+    user_id: number;
+    store_name: string;
+    store_address: string;
+    description: string;
+    images: string;
+    logo_image: string;
+    is_blocked: boolean;
+    created_at: string;
+    User: {
+      username: string;
+      whatsapp_number: string;
+      role: string;
+    };
+    reviews: any[];
+    averageRating: number;
+    reviewsCount: number;
+    totalRevenue: number;
+    totalOrders: number;
+    thisMonthRevenue: number;
+    discountStats: {
+      totalProductsWithDiscount: number;
+      totalProducts: number;
+      totalDiscountValue: number;
+      discountPercentage: number;
+    };
+    products: any[];
   };
-  Products: any[];
 }
 
 const ProfilePage = () => {
@@ -109,6 +134,12 @@ const ProfilePage = () => {
     address: "",
     description: "",
     createdAt: "",
+    isBlocked: false,
+    totalRevenue: 0,
+    totalOrders: 0,
+    thisMonthRevenue: 0,
+    averageRating: 0,
+    reviewsCount: 0,
   });
 
   const [tempData, setTempData] = useState<Partial<ProfileData>>({});
@@ -123,10 +154,10 @@ const ProfilePage = () => {
     step: "verify",
   });
 
-  // جلب بيانات المتجر من الباك إند
+  // جلب بيانات المتجر من الباك إند - محدث للبنية الجديدة
   useEffect(() => {
     const fetchStoreData = async () => {
-      console.log(storeId);
+      console.log("Fetching store data for ID:", storeId);
       if (!storeId) {
         setError("Store ID not found");
         setLoading(false);
@@ -135,27 +166,52 @@ const ProfilePage = () => {
 
       try {
         setLoading(true);
-        const storeData: StoreData = await getStoreById(storeId);
+        const response: StoreData = await getStore(storeId); // استخدام getStore بدلاً من getStoreById
+
+        console.log("Store API Response:", response);
+
+        // التحقق من نجاح العملية والوصول للبيانات
+        if (!response.success || !response.store) {
+          throw new Error("فشل في جلب بيانات المتجر");
+        }
+
+        const storeInfo = response.store;
 
         // تحويل البيانات من صيغة الباك إند إلى صيغة الفرونت إند
-        const images = JSON.parse(storeData.images || "[]");
+        const images = storeInfo.images ? JSON.parse(storeInfo.images) : [];
         const coverImage =
           images.length > 0
             ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
             : null;
 
         setProfileData({
-          name: storeData.User.username,
-          storeName: storeData.store_name,
+          name: storeInfo.User.username,
+          storeName: storeInfo.store_name,
           password: "••••••••",
-          phone: storeData.User.whatsapp_number,
-          logo: storeData.logo_image
-            ? `${process.env.NEXT_PUBLIC_BASE_URL}${storeData.logo_image}`
+          phone: storeInfo.User.whatsapp_number,
+          logo: storeInfo.logo_image
+            ? `${process.env.NEXT_PUBLIC_BASE_URL}${storeInfo.logo_image}`
             : null,
           coverImage: coverImage,
-          address: storeData.store_address,
-          description: storeData.description,
-          createdAt: new Date(storeData.created_at).getFullYear().toString(),
+          address: storeInfo.store_address,
+          description: storeInfo.description,
+          createdAt: new Date(storeInfo.created_at).getFullYear().toString(),
+          // إضافة البيانات الجديدة
+          isBlocked: storeInfo.is_blocked,
+          totalRevenue: storeInfo.totalRevenue,
+          totalOrders: storeInfo.totalOrders,
+          thisMonthRevenue: storeInfo.thisMonthRevenue,
+          averageRating: storeInfo.averageRating,
+          reviewsCount: storeInfo.reviewsCount,
+        });
+
+        console.log("Profile data set:", {
+          name: storeInfo.User.username,
+          storeName: storeInfo.store_name,
+          isBlocked: storeInfo.is_blocked,
+          totalRevenue: storeInfo.totalRevenue,
+          totalOrders: storeInfo.totalOrders,
+          averageRating: storeInfo.averageRating,
         });
 
         setError(null);
@@ -532,14 +588,6 @@ const ProfilePage = () => {
                 </div>
               </div>
             )}
-            {/* <button
-              className={`${themeClasses.buttonBackground} p-3 rounded-xl transition-colors ${themeClasses.borderColor} border shadow-sm`}
-            >
-              <Bell className={`w-5 h-5 ${themeClasses.buttonIcon}`} />
-            </button>
-            <button className="bg-teal-400 hover:bg-teal-500 p-3 rounded-xl transition-colors border border-gray-200 shadow-sm">
-              <Settings className="w-5 h-5 text-gray-50" />
-            </button> */}
           </div>
         </div>
       </div>
@@ -617,18 +665,23 @@ const ProfilePage = () => {
                 </div>
               </div>
 
-              {/* Status Badges */}
-              <div className="flex justify-end gap-2 mb-4">
+              {/* Status Badges - محدث لعرض الحالة الجديدة */}
+              <div className="flex justify-end gap-2 mb-4 flex-wrap">
                 <span className="bg-teal-100 text-teal-600 px-3 py-1 rounded-full text-sm">
                   تاريخ الانضمام {profileData.createdAt}
                 </span>
                 <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">
                   {profileData.address}
                 </span>
+                {profileData.isBlocked && (
+                  <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-sm">
+                    متجر محظور
+                  </span>
+                )}
               </div>
 
-              {/* Statistics */}
-              {/* <div
+              {/* Statistics - محدث لعرض الإحصائيات الجديدة */}
+              <div
                 className={`grid grid-cols-3 text-center w-full border-t ${themeClasses.borderColor} pt-4`}
                 dir="rtl"
               >
@@ -636,7 +689,7 @@ const ProfilePage = () => {
                   <div
                     className={`text-2xl font-bold ${themeClasses.textPrimary}`}
                   >
-                    142
+                    {profileData.totalOrders || 0}
                   </div>
                   <div className={`text-sm ${themeClasses.textMuted}`}>
                     الطلبات
@@ -646,7 +699,7 @@ const ProfilePage = () => {
                   <div
                     className={`text-2xl font-bold ${themeClasses.textPrimary}`}
                   >
-                    4.9
+                    {profileData.averageRating?.toFixed(1) || "0.0"}
                   </div>
                   <div className={`text-sm ${themeClasses.textMuted}`}>
                     التقييم
@@ -656,13 +709,29 @@ const ProfilePage = () => {
                   <div
                     className={`text-2xl font-bold ${themeClasses.textPrimary}`}
                   >
-                    98%
+                    {profileData.totalRevenue || 0} ر.س
                   </div>
                   <div className={`text-sm ${themeClasses.textMuted}`}>
-                    النشاط
+                    الإيرادات
                   </div>
                 </div>
-              </div> */}
+              </div>
+
+              {/* إحصائيات إضافية للشهر الحالي */}
+              {profileData.thisMonthRevenue !== undefined && (
+                <div className={`mt-4 pt-4 border-t ${themeClasses.borderColor}`}>
+                  <div className="text-center">
+                    <div
+                      className={`text-lg font-semibold ${themeClasses.textPrimary}`}
+                    >
+                      {profileData.thisMonthRevenue} ر.س
+                    </div>
+                    <div className={`text-sm ${themeClasses.textMuted}`}>
+                      إيرادات هذا الشهر
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1057,7 +1126,7 @@ const ProfilePage = () => {
 
             {/* Action Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-8">
-              {/* Advanced Settings */}
+              {/* Advanced Settings - يمكن إضافتها لاحقاً */}
               {/* <div
                 className={`${themeClasses.cardBackground} rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center`}
               >
@@ -1077,7 +1146,7 @@ const ProfilePage = () => {
                 </button>
               </div> */}
 
-              {/* Export Data */}
+              {/* Export Data - يمكن إضافتها لاحقاً */}
               {/* <div
                 className={`${themeClasses.cardBackground} rounded-2xl shadow-lg p-6 flex flex-col items-center justify-center`}
               >

@@ -6,7 +6,8 @@ export interface ProductData {
   price: number | string;
   stock_quantity: number | string;
   store_id: number | string;
-  images?: File[]; // مصفوفة صور يمكن إرسال صورة واحدة أو أكثر
+  images?: File[];
+  discount_percentage?: string | number;
 }
 
 // واجهة المنتج للتحديث
@@ -25,6 +26,7 @@ interface NewBulkProductData {
     name: string;
     description: string;
     price: number;
+    discount_percentage?: number; // اختياري - نسبة الخصم
     stock_quantity: number;
     imagesCount: number; // عدد الصور لكل منتج
   }[];
@@ -33,27 +35,88 @@ interface NewBulkProductData {
 
 // إنشاء منتج جديد
 export const createProduct = async (productData: ProductData) => {
-  const formData = new FormData();
+  try {
+    console.log("=== Creating Product ===");
+    console.log("Product data:", productData);
 
-  formData.append("name", productData.name);
-  formData.append("description", productData.description);
-  formData.append("price", String(productData.price));
-  formData.append("stock_quantity", String(productData.stock_quantity));
-  formData.append("store_id", String(productData.store_id));
+    const formData = new FormData();
 
-  if (productData.images && productData.images.length > 0) {
-    productData.images.forEach((file) => {
-      formData.append("images", file);
+    // الحقول الأساسية المطلوبة
+    formData.append("name", productData.name);
+    formData.append("description", productData.description);
+    formData.append("price", String(productData.price));
+    formData.append("stock_quantity", String(productData.stock_quantity));
+    formData.append("store_id", String(productData.store_id));
+
+    // إضافة حقل الخصم إذا كان موجوداً وليس فارغاً
+    if (
+      productData.discount_percentage !== undefined &&
+      productData.discount_percentage !== null &&
+      productData.discount_percentage !== "" &&
+      Number(productData.discount_percentage) > 0
+    ) {
+      formData.append(
+        "discount_percentage",
+        String(productData.discount_percentage)
+      );
+      console.log(
+        "Adding discount_percentage:",
+        productData.discount_percentage
+      );
+    }
+
+    // إضافة الصور إذا كانت موجودة
+    if (productData.images && productData.images.length > 0) {
+      productData.images.forEach((file, index) => {
+        formData.append("images", file);
+        console.log(`Adding image ${index + 1}:`, {
+          name: file.name,
+          size: file.size,
+          type: file.type,
+        });
+      });
+    }
+
+    // طباعة محتويات FormData للتحقق
+    console.log("FormData contents:");
+    for (let [key, value] of formData.entries()) {
+      if (value instanceof File) {
+        console.log(`${key}:`, {
+          name: value.name,
+          size: value.size,
+          type: value.type,
+        });
+      } else {
+        console.log(`${key}:`, value);
+      }
+    }
+
+    const response = await api.post("/products", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
+
+    console.log("✅ Product created successfully:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error("❌ Error creating product:", error);
+
+    // تحسين معالجة الأخطاء
+    if (error.response) {
+      console.error("Response error details:", {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+      });
+    } else if (error.request) {
+      console.error("Request error:", error.request);
+    } else {
+      console.error("General error:", error.message);
+    }
+
+    throw error;
   }
-
-  const response = await api.post("/products", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
-
-  return response.data;
 };
 
 // تعديل منتج معين
@@ -160,9 +223,29 @@ export const deleteProduct = async (id: number | string) => {
 export const getProductById = async (id: number | string) => {
   try {
     const response = await api.get(`/products/${id}`);
-    return response.data;
+
+    // معالجة البيانات المستلمة
+    const productData = response.data;
+
+    // تحويل الصور من JSON string إلى array
+    if (typeof productData.images === "string") {
+      try {
+        productData.images = JSON.parse(productData.images);
+      } catch (e) {
+        productData.images = [productData.images]; // في حال كانت string عادية
+      }
+    }
+
+    // التأكد من وجود الصور أو استخدام صورة افتراضية
+    if (!productData.images || productData.images.length === 0) {
+      productData.images = ["/api/placeholder/400/400"];
+    }
+
+    console.log("بيانات المنتج المحدثة:", productData);
+
+    return productData;
   } catch (error) {
-    console.error("Error fetching product:", error);
+    console.error("خطأ في جلب بيانات المنتج:", error);
     throw error;
   }
 };
@@ -227,27 +310,45 @@ export const uploadMultipleProducts = async (
       formData.append("images", image);
     });
 
-    // console.log("إرسال البيانات:", {
-    //   store_id: productData.store_id,
-    //   productsCount: productData.products.length,
-    //   imagesCount: productData.images.length,
-    //   products: productData.products.map((p) => ({
-    //     name: p.name,
-    //     imagesCount: p.imagesCount,
-    //   })),
-    // });
-    console.log("formData",formData);
-    // إرسال الطلب
+    // طباعة تفاصيل البيانات المرسلة للمراجعة
+    console.log("إرسال البيانات:", {
+      store_id: productData.store_id,
+      products: productData.products.map((product) => ({
+        name: product.name,
+        price: product.price,
+        discount_percentage: product.discount_percentage || "لا يوجد خصم",
+        stock_quantity: product.stock_quantity,
+        imagesCount: product.imagesCount,
+      })),
+      totalImages: productData.images.length,
+    });
+
     const response = await api.post("/products/multiple", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
+      // إضافة timeout أطول للملفات الكبيرة
+      timeout: 30000, // 30 ثانية
     });
 
-    console.log("response response", response);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     console.error("خطأ في إرسال البيانات:", error);
-    throw error;
+
+    // معالجة أفضل للأخطاء
+    if (error.response) {
+      // الخادم رد بخطأ
+      const errorMessage =
+        error.response.data?.message ||
+        error.response.data?.error ||
+        "خطأ من الخادم";
+      throw new Error(errorMessage);
+    } else if (error.request) {
+      // لم يصل الطلب للخادم
+      throw new Error("فشل في الاتصال بالخادم. تحقق من اتصال الإنترنت");
+    } else {
+      // خطأ في إعداد الطلب
+      throw new Error(error.message || "حدث خطأ غير متوقع");
+    }
   }
 };
