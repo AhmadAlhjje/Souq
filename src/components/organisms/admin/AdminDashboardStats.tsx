@@ -45,25 +45,22 @@ const AdminDashboardStats: React.FC<AdminDashboardStatsProps> = ({
 
   const formatValue = (value: number, format: string) => {
     if (format === "currency") {
-      // استخدام الليرة السورية بدلاً من الريال السعودي
-      return new Intl.NumberFormat('ar-SA', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2
-      }).format(value) + ' ل.س';
+      // استخدام الليرة السورية بدلاً من ال$ السعودي
+      return (
+        new Intl.NumberFormat("ar-SA", {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+        }).format(value) + " ل.س"
+      );
     }
-    return new Intl.NumberFormat('ar-SA').format(value);
+    return new Intl.NumberFormat("ar-SA").format(value);
   };
 
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[1, 2, 3].map((i) => (
-          <AdminSkeleton
-            key={i}
-            variant="card"
-            height={120}
-            className="p-6"
-          />
+          <AdminSkeleton key={i} variant="card" height={120} className="p-6" />
         ))}
       </div>
     );

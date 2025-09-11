@@ -17,6 +17,7 @@ export interface ProductUpdateData {
   price?: number;
   stock_quantity?: number;
   images?: File[] | null;
+  discount_percentage?: number | null;
 }
 
 // إضافة هذا الinterface
@@ -143,6 +144,13 @@ export const updateProduct = async (
     formData.append("stock_quantity", String(productData.stock_quantity));
   }
 
+  if (productData.discount_percentage !== undefined) {
+    formData.append(
+      "discount_percentage",
+      String(productData.discount_percentage)
+    );
+  }
+
   // إضافة الصور الجديدة إذا كانت موجودة
   if (productData.images && productData.images.length > 0) {
     productData.images.forEach((file) => {
@@ -158,6 +166,7 @@ export const updateProduct = async (
   }
 
   try {
+    console.log("تعديل", formData);
     const response = await api.put(`/products/${id}`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",

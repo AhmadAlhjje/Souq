@@ -90,8 +90,12 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
       newErrors.price = t("validation.priceRequired");
     }
 
-    if (!formData.stock || formData.stock < 0) {
-      newErrors.stock = t("validation.stockRequired");
+    if (
+      formData.stock_quantity === undefined ||
+      formData.stock_quantity === null ||
+      formData.stock_quantity < 0
+    ) {
+      newErrors.stock_quantity = t("validation.stockRequired");
     }
 
     if (!formData.category) {
@@ -254,10 +258,9 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     `}
                   >
                     <Upload className="w-5 h-5" />
-                    {selectedImages.length > 0 
+                    {selectedImages.length > 0
                       ? `${selectedImages.length} صور محددة`
-                      : t("productEdit.uploadImage")
-                    }
+                      : t("productEdit.uploadImage")}
                   </label>
                 </div>
 
@@ -267,7 +270,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     <p className={`text-sm ${labelClasses}`}>الصور المحددة:</p>
                     <ul className="space-y-1">
                       {selectedImages.map((file, index) => (
-                        <li key={index} className={`text-xs ${labelClasses} truncate`}>
+                        <li
+                          key={index}
+                          className={`text-xs ${labelClasses} truncate`}
+                        >
                           {file.name}
                         </li>
                       ))}
@@ -345,7 +351,8 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                 </div>
 
                 {/* Price and Stock */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Price */}
                   <div>
                     <label
                       className={`block text-sm font-medium ${labelClasses} mb-2`}
@@ -364,10 +371,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                       min="0"
                       step="0.01"
                       className={`
-                        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
-                        transition-colors duration-200 ${inputClasses}
-                        ${errors.price ? "border-red-500" : ""}
-                      `}
+        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
+        transition-colors duration-200 ${inputClasses}
+        ${errors.price ? "border-red-500" : ""}
+      `}
                       placeholder="0.00"
                       disabled={loading}
                     />
@@ -381,6 +388,34 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     )}
                   </div>
 
+                  {/* Discount */}
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${labelClasses} mb-2`}
+                    >
+                      {t("productEdit.discountPercentage")}
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.discount_percentage ?? ""}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "discount_percentage",
+                          parseInt(e.target.value) || 0
+                        )
+                      }
+                      min="0"
+                      max="100"
+                      className={`
+        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
+        transition-colors duration-200 ${inputClasses}
+      `}
+                      placeholder="0"
+                      disabled={loading}
+                    />
+                  </div>
+
+                  {/* Stock */}
                   <div>
                     <label
                       className={`block text-sm font-medium ${labelClasses} mb-2`}
@@ -389,28 +424,28 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                     </label>
                     <input
                       type="number"
-                      value={formData.stock || ""}
+                      value={formData.stock_quantity || ""}
                       onChange={(e) =>
                         handleInputChange(
-                          "stock",
+                          "stock_quantity",
                           parseInt(e.target.value) || 0
                         )
                       }
                       min="0"
                       className={`
-                        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
-                        transition-colors duration-200 ${inputClasses}
-                        ${errors.stock ? "border-red-500" : ""}
-                      `}
+        w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2
+        transition-colors duration-200 ${inputClasses}
+        ${errors.stock_quantity ? "border-red-500" : ""}
+      `}
                       placeholder="0"
                       disabled={loading}
                     />
-                    {errors.stock && (
+                    {errors.stock_quantity && (
                       <p
                         className={`text-sm mt-1 ${errorClasses} flex items-center gap-1`}
                       >
                         <AlertCircle className="w-4 h-4" />
-                        {errors.stock}
+                        {errors.stock_quantity}
                       </p>
                     )}
                   </div>

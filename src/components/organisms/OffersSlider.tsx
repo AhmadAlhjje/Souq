@@ -57,121 +57,128 @@ const OffersSlider: React.FC = () => {
   const { showAddToCartSuccess } = useCartNotifications();
 
   // دالة تحويل منتج المتجر إلى منتج للنظام
-  const convertStoreProductToProduct = useCallback((
-    storeProduct: StoreProduct,
-    storeData: StoreData
-  ): Product => {
-    let images: string[] = [];
-    try {
-      // تنظيف وتحليل صور المنتج
-      const cleanImages = storeProduct.images.replace(/\\"/g, '"');
-      images = JSON.parse(cleanImages);
-    } catch (e) {
-      console.warn("خطأ في تحليل صور المنتج:", e);
-      images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
-    }
+  const convertStoreProductToProduct = useCallback(
+    (storeProduct: StoreProduct, storeData: StoreData): Product => {
+      let images: string[] = [];
+      try {
+        // تنظيف وتحليل صور المنتج
+        const cleanImages = storeProduct.images.replace(/\\"/g, '"');
+        images = JSON.parse(cleanImages);
+      } catch (e) {
+        console.warn("خطأ في تحليل صور المنتج:", e);
+        images = [
+          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+        ];
+      }
 
-    // تحديد السعر والخصم
-    const originalPrice = parseFloat(storeProduct.price);
-    const salePrice = originalPrice * 0.8; // خصم 20% كمثال
+      // تحديد السعر والخصم
+      const originalPrice = parseFloat(storeProduct.price);
+      const salePrice = originalPrice * 0.8; // خصم 20% كمثال
 
-    return {
-      id: storeProduct.product_id,
-      name: storeProduct.name,
-      nameAr: storeProduct.name,
-      category: "store-product",
-      categoryAr: "منتجات المتاجر",
-      price: originalPrice,
-      salePrice: salePrice,
-      originalPrice: originalPrice,
-      rating: 4.5,
-      reviewCount: Math.floor(Math.random() * 100) + 10,
-      image: images[0] || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-      isNew: false,
-      stock: storeProduct.stock_quantity,
-      status: "active",
-      description: storeProduct.description,
-      descriptionAr: storeProduct.description,
-      brand: storeData.store_name,
-      brandAr: storeData.store_name,
-      sales: Math.floor(Math.random() * 50) + 10,
-      inStock: storeProduct.stock_quantity > 0,
-      createdAt: storeProduct.created_at,
-    };
-  }, []);
+      return {
+        id: storeProduct.product_id,
+        name: storeProduct.name,
+        nameAr: storeProduct.name,
+        category: "store-product",
+        categoryAr: "منتجات المتاجر",
+        price: originalPrice,
+        salePrice: salePrice,
+        originalPrice: originalPrice,
+        rating: 4.5,
+        reviewCount: Math.floor(Math.random() * 100) + 10,
+        image:
+          images[0] ||
+          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+        isNew: false,
+        stock: storeProduct.stock_quantity,
+        status: "active",
+        description: storeProduct.description,
+        descriptionAr: storeProduct.description,
+        brand: storeData.store_name,
+        brandAr: storeData.store_name,
+        sales: Math.floor(Math.random() * 50) + 10,
+        inStock: storeProduct.stock_quantity > 0,
+        createdAt: storeProduct.created_at,
+      };
+    },
+    []
+  );
 
   // دالة إنشاء العروض من بيانات المتاجر
-  const createOffersFromStores = useCallback((storeData: StoreData[]): Offer[] => {
-    const offerTypes = [
-      {
-        title: "خصم مميز",
-        description: "على منتجات مختارة",
-        discount: "20%",
-        bgColor: "bg-teal-50",
-        icon: <Tag className="w-5 h-5 text-teal-600" />,
-      },
-      {
-        title: "شحن مجاني",
-        description: "للطلبات فوق 200 ريال",
-        discount: "مجاني",
-        bgColor: "bg-emerald-50",
-        icon: <Truck className="w-5 h-5 text-emerald-600" />,
-      },
-      {
-        title: "عرض خاص",
-        description: "لفترة محدودة فقط",
-        discount: "30%",
-        bgColor: "bg-cyan-50",
-        icon: <Gift className="w-5 h-5 text-cyan-600" />,
-      },
-      {
-        title: "تخفيضات الصيف",
-        description: "على تشكيلة واسعة",
-        discount: "25%",
-        bgColor: "bg-blue-50",
-        icon: <Tag className="w-5 h-5 text-blue-600" />,
-      },
-      {
-        title: "عرض ترحيبي",
-        description: "للعملاء الجدد",
-        discount: "15%",
-        bgColor: "bg-indigo-50",
-        icon: <Gift className="w-5 h-5 text-indigo-600" />,
-      },
-    ];
+  const createOffersFromStores = useCallback(
+    (storeData: StoreData[]): Offer[] => {
+      const offerTypes = [
+        {
+          title: "خصم مميز",
+          description: "على منتجات مختارة",
+          discount: "20%",
+          bgColor: "bg-teal-50",
+          icon: <Tag className="w-5 h-5 text-teal-600" />,
+        },
+        {
+          title: "شحن مجاني",
+          description: "للطلبات فوق 200 $",
+          discount: "مجاني",
+          bgColor: "bg-emerald-50",
+          icon: <Truck className="w-5 h-5 text-emerald-600" />,
+        },
+        {
+          title: "عرض خاص",
+          description: "لفترة محدودة فقط",
+          discount: "30%",
+          bgColor: "bg-cyan-50",
+          icon: <Gift className="w-5 h-5 text-cyan-600" />,
+        },
+        {
+          title: "تخفيضات الصيف",
+          description: "على تشكيلة واسعة",
+          discount: "25%",
+          bgColor: "bg-blue-50",
+          icon: <Tag className="w-5 h-5 text-blue-600" />,
+        },
+        {
+          title: "عرض ترحيبي",
+          description: "للعملاء الجدد",
+          discount: "15%",
+          bgColor: "bg-indigo-50",
+          icon: <Gift className="w-5 h-5 text-indigo-600" />,
+        },
+      ];
 
-    const createdOffers: Offer[] = [];
-    let offerIdCounter = 1;
+      const createdOffers: Offer[] = [];
+      let offerIdCounter = 1;
 
-    storeData.forEach((store) => {
-      store.Products.forEach((storeProduct, index) => {
-        if (createdOffers.length >= 8) return; // حد أقصى 8 عروض
+      storeData.forEach((store) => {
+        store.Products.forEach((storeProduct, index) => {
+          if (createdOffers.length >= 8) return; // حد أقصى 8 عروض
 
-        const offerType = offerTypes[index % offerTypes.length];
-        const product = convertStoreProductToProduct(storeProduct, store);
+          const offerType = offerTypes[index % offerTypes.length];
+          const product = convertStoreProductToProduct(storeProduct, store);
 
-        let storeImages: string[] = [];
-        try {
-          storeImages = JSON.parse(store.images);
-        } catch (e) {
-          storeImages = [product.image];
-        }
+          let storeImages: string[] = [];
+          try {
+            storeImages = JSON.parse(store.images);
+          } catch (e) {
+            storeImages = [product.image];
+          }
 
-        createdOffers.push({
-          id: offerIdCounter++,
-          title: `${offerType.title} - ${store.store_name}`,
-          description: `${offerType.description} من ${store.store_name}`,
-          image: storeImages[0] || product.image,
-          discount: offerType.discount,
-          bgColor: offerType.bgColor,
-          icon: offerType.icon,
-          product: product,
+          createdOffers.push({
+            id: offerIdCounter++,
+            title: `${offerType.title} - ${store.store_name}`,
+            description: `${offerType.description} من ${store.store_name}`,
+            image: storeImages[0] || product.image,
+            discount: offerType.discount,
+            bgColor: offerType.bgColor,
+            icon: offerType.icon,
+            product: product,
+          });
         });
       });
-    });
 
-    return createdOffers;
-  }, [convertStoreProductToProduct]);
+      return createdOffers;
+    },
+    [convertStoreProductToProduct]
+  );
 
   // دالة للحصول على عروض افتراضية في حالة الخطأ
   const getDefaultOffers = useCallback((): Offer[] => {
@@ -186,7 +193,8 @@ const OffersSlider: React.FC = () => {
       originalPrice: 200,
       rating: 4.5,
       reviewCount: 50,
-      image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+      image:
+        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
       isNew: false,
       stock: 10,
       status: "active",
@@ -204,7 +212,8 @@ const OffersSlider: React.FC = () => {
         id: 1,
         title: "عرض تجريبي",
         description: "منتج تجريبي للاختبار",
-        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop",
+        image:
+          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop",
         discount: "25%",
         bgColor: "bg-teal-50",
         icon: <Tag className="w-5 h-5 text-teal-600" />,
@@ -221,8 +230,8 @@ const OffersSlider: React.FC = () => {
 
       // جلب بيانات عدة متاجر (يمكنك تعديل هذا حسب API الخاص بك)
       const storeIds = [1, 2, 3]; // معرفات المتاجر التي تريد جلبها
-      const storePromises = storeIds.map(id => 
-        api.get<StoreData>(`/stores/${id}`).catch(err => {
+      const storePromises = storeIds.map((id) =>
+        api.get<StoreData>(`/stores/${id}`).catch((err) => {
           console.warn(`فشل في جلب بيانات المتجر ${id}:`, err);
           return null;
         })
@@ -230,8 +239,8 @@ const OffersSlider: React.FC = () => {
 
       const storeResponses = await Promise.all(storePromises);
       const validStores = storeResponses
-        .filter(response => response !== null)
-        .map(response => response!.data);
+        .filter((response) => response !== null)
+        .map((response) => response!.data);
 
       if (validStores.length === 0) {
         throw new Error("لم يتم العثور على أي متاجر");
@@ -239,11 +248,10 @@ const OffersSlider: React.FC = () => {
 
       const generatedOffers = createOffersFromStores(validStores);
       setOffers(generatedOffers);
-
     } catch (err: any) {
       console.error("خطأ في جلب بيانات المتاجر:", err);
       setError(err.message || "حدث خطأ أثناء جلب البيانات");
-      
+
       // استخدام بيانات تجريبية في حالة الخطأ
       setOffers(getDefaultOffers());
     } finally {
@@ -460,7 +468,8 @@ const OffersSlider: React.FC = () => {
                       loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop";
+                        target.src =
+                          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop";
                       }}
                     />
                   </div>
@@ -475,7 +484,7 @@ const OffersSlider: React.FC = () => {
                     </p>
                     {/* معلومات المنتج */}
                     <div className="mt-2 text-xs text-gray-500 text-right">
-                      <div>السعر: {offer.product.price} ريال</div>
+                      <div>السعر: {offer.product.price} $</div>
                       <div>المخزون: {offer.product.stock} قطعة</div>
                     </div>
                   </div>

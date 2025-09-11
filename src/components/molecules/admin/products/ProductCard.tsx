@@ -49,38 +49,30 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onDelete,
 }) => {
   const { t, i18n } = useTranslation("");
-  const { isDark, isLight } = useTheme();
+  const { isDark } = useTheme();
   const isRTL = i18n.language === "ar";
 
-  // Theme-based classes
   const cardClasses = isDark
     ? "bg-gray-800 border-gray-700 hover:shadow-lg hover:shadow-gray-900/50"
     : "bg-white border-[#96EDD9] hover:shadow-md";
 
   const titleClasses = isDark ? "text-gray-100" : "text-[#004D5A]";
-
   const categoryClasses = isDark ? "text-gray-400" : "text-gray-600";
-
   const priceClasses = isDark ? "text-gray-100" : "text-[#004D5A]";
-
   const ratingTextClasses = isDark ? "text-gray-300" : "text-gray-700";
-
   const iconClasses = isDark ? "text-gray-500" : "text-gray-500";
-
-  const stockClasses = (stock: number) => {
-    if (stock <= 5) {
-      return isDark ? "text-red-400 font-medium" : "text-red-600 font-medium";
-    }
-    return isDark ? "text-gray-400" : "text-gray-600";
-  };
-
   const salesClasses = isDark
     ? "text-gray-400 font-medium"
     : "text-gray-600 font-medium";
-
   const stockWarningClasses = isDark
     ? "bg-yellow-600 text-yellow-100"
     : "bg-yellow-500 text-white";
+
+  const stockClasses = (stock: number) => {
+    if (stock <= 5)
+      return isDark ? "text-red-400 font-medium" : "text-red-600 font-medium";
+    return isDark ? "text-gray-400" : "text-gray-600";
+  };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -112,42 +104,46 @@ const ProductCard: React.FC<ProductCardProps> = ({
     e.currentTarget.src = "/api/placeholder/300/300";
   };
 
+  // Use fallback string for undefined
+  const productName = isRTL ? product.nameAr || "" : product.name || "";
+  const productCategory = isRTL
+    ? product.categoryAr || ""
+    : product.category || "";
+  const productImage = product.image?.trim() || "/api/placeholder/300/300";
+
   return (
     <div
-      className={`
-      ${cardClasses} 
-      rounded-lg shadow-sm border transition-all duration-200 overflow-hidden group
-    `}
+      className={`${cardClasses} rounded-lg shadow-sm border transition-all duration-200 overflow-hidden group`}
     >
       {/* Image Section */}
       <div className="relative overflow-hidden">
         <img
-          src={
-            product.image && product.image.trim() !== ""
-              ? product.image
-              : "/api/placeholder/300/300"
-          }
-          alt={isRTL ? product.nameAr : product.name}
+          src={productImage}
+          alt={productName}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
           onError={handleImageError}
         />
 
         <div className="absolute top-2 right-2">
-          <Badge variant={getStatusVariant(product.status)} isDark={isDark}>
-            {getStatusText(product.status)}
+          <Badge
+            variant={getStatusVariant(product.status ?? "")}
+            isDark={isDark}
+          >
+            {getStatusText(product.status ?? "")}
           </Badge>
         </div>
 
         {/* Stock warning overlay */}
-        {product.stock <= 5 && product.status !== "out_of_stock" && (
-          <div className="absolute bottom-2 left-2">
-            <div
-              className={`${stockWarningClasses} px-2 py-1 rounded text-xs font-medium transition-colors duration-200`}
-            >
-              {t("stockWarning", { count: product.stock })}
+        {(product.stock_quantity ?? 0) <= 5 &&
+          product.status !== "out_of_stock" && (
+            <div className="absolute bottom-2 left-2">
+              <div
+                className={`${stockWarningClasses} px-2 py-1 rounded text-xs font-medium transition-colors duration-200`}
+              >
+                {t("stockWarning", { count: product.stock_quantity ?? 0 })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
       </div>
 
       {/* Content Section */}
@@ -157,12 +153,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <h3
             className={`font-semibold ${titleClasses} mb-1 line-clamp-2 leading-tight transition-colors duration-200`}
           >
-            {isRTL ? product.nameAr : product.name}
+            {productName}
           </h3>
           <p
             className={`text-sm ${categoryClasses} transition-colors duration-200`}
           >
-            {isRTL ? product.categoryAr : product.category}
+            {productCategory}
           </p>
         </div>
 
@@ -171,14 +167,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <span
             className={`text-xl font-bold ${priceClasses} transition-colors duration-200`}
           >
-            ${product.price.toLocaleString()}
+            ${product.price?.toLocaleString() ?? 0}
           </span>
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span
               className={`text-sm font-medium ${ratingTextClasses} transition-colors duration-200`}
             >
-              {product.rating}
+              {product.rating ?? 0}
             </span>
           </div>
         </div>
@@ -191,16 +187,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             />
             <span
               className={`${stockClasses(
-                product.stock
+                product.stock_quantity ?? 0
               )} transition-colors duration-200`}
             >
-              {t("info.stock")} {product.stock}
+              {t("info.stock")} {product.stock_quantity ?? 0}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <TrendingUp className="w-4 h-4 text-green-500" />
             <span className={`${salesClasses} transition-colors duration-200`}>
-              {product.sales}
+              {product.sales ?? 0}
             </span>
           </div>
         </div>

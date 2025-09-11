@@ -705,6 +705,7 @@
   "productEdit": {
     "title": "Edit Product",
     "basicInfo": "Basic Information",
+    "discountPercentage":"Discount Percentage",
     "image": "Product Image",
     "uploadImage": "Upload Image",
     "imageUrl": "Image URL",

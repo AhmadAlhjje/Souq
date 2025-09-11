@@ -716,22 +716,6 @@ const ProfilePage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* إحصائيات إضافية للشهر الحالي */}
-              {profileData.thisMonthRevenue !== undefined && (
-                <div className={`mt-4 pt-4 border-t ${themeClasses.borderColor}`}>
-                  <div className="text-center">
-                    <div
-                      className={`text-lg font-semibold ${themeClasses.textPrimary}`}
-                    >
-                      {profileData.thisMonthRevenue} ر.س
-                    </div>
-                    <div className={`text-sm ${themeClasses.textMuted}`}>
-                      إيرادات هذا الشهر
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>

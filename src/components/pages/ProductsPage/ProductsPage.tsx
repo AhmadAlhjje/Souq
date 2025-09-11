@@ -15,25 +15,40 @@ import ProductEditModal from "../../molecules/admin/products/ProductEditModal";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { useStore } from "@/contexts/StoreContext";
-import { getStore } from "@/api/stores"; // تغيير من getStoreById إلى getStore
-import {
-  updateProduct,
-  deleteProduct,
-  ProductUpdateData,
-  filterProducts,
-} from "@/api/products";
+import { getStore } from "@/api/stores";
+import { updateProduct, deleteProduct, filterProducts } from "@/api/products";
 import { Product as BaseProduct, ViewMode } from "../../../types/product";
 
-// إنشاء نوع موسع محلياً لدعم خصائص الخصم
+// نوع موسع للمنتج يحتوي على خصائص إضافية للتوافق
 interface ExtendedProduct extends BaseProduct {
-  hasDiscount?: boolean;
-  discountPercentage?: number;
-  discountAmount?: number;
-  discountedPrice?: number; // إضافة السعر المخفض
-  originalPrice?: number; // السعر الأصلي
+  // خصائص إضافية للتوافق مع المكونات الأخرى
+  id?: string;
+  status?: "active" | "out_of_stock" | "low_stock";
+  image?: string;
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  isNew?: boolean;
+  sales?: number;
+  brand?: string;
+  createdAt?: string;
+  category?: string;
+  nameAr?: string;
+  descriptionAr?: string;
+  categoryAr?: string;
+  brandAr?: string;
 }
 
-// استخدام ExtendedProduct كـ Product في هذا الملف
+// نوع محدث لبيانات التحديث يتضمن discount_percentage
+interface ExtendedProductUpdateData {
+  name?: string;
+  description?: string;
+  price?: number;
+  stock_quantity?: number;
+  discount_percentage?: number | null;
+  images?: File[];
+}
+
 type Product = ExtendedProduct;
 
 // دالة بسيطة لتنسيق التاريخ للعرض
@@ -43,7 +58,6 @@ const formatDisplayDate = (dateString: string) => {
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
 
-    // تنسيق بسيط: DD/MM/YYYY
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
@@ -55,100 +69,23 @@ const formatDisplayDate = (dateString: string) => {
   }
 };
 
-// دالة لتنسيق التاريخ بالتقويم الميلادي مع النص
-const formatGregorianDateWithCalendar = (
-  dateString: string,
-  locale: string = "ar-SA"
-) => {
-  try {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString;
-
-    return date.toLocaleDateString(locale, {
-      calendar: "gregory", // تحديد التقويم الميلادي صراحة
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch (error) {
-    console.error("Error formatting gregorian date:", error);
-    return formatDisplayDate(dateString); // fallback إلى التنسيق البسيط
-  }
-};
-
-// دالة لتنسيق التاريخ بالتقويم الميلادي
-const formatGregorianDate = (dateString: string, locale: string = "ar-SA") => {
-  try {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString; // إذا فشل التحويل، أرجع النص الأصلي
-
-    return date.toLocaleDateString(locale, {
-      calendar: "gregory", // تحديد التقويم الميلادي
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch (error) {
-    console.error("Error formatting date:", error);
-    return dateString;
-  }
-};
-
-// دالة لتنسيق التاريخ والوقت بالتقويم الميلادي
-const formatGregorianDateTime = (
-  dateString: string,
-  locale: string = "ar-SA"
-) => {
-  try {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return dateString; // إذا فشل التحويل، أرجع النص الأصلي
-
-    return (
-      date.toLocaleDateString(locale, {
-        calendar: "gregory", // تحديد التقويم الميلادي
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      }) +
-      " " +
-      date.toLocaleTimeString(locale, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      })
-    );
-  } catch (error) {
-    console.error("Error formatting datetime:", error);
-    return dateString;
-  }
-};
-
-// تحويل منتج من API إلى Product interface - محدث للبنية الجديدة
+// تحويل منتج من API إلى Product interface - محدث للبنية الجديدة مع الخصم
 const transformApiProduct = (apiProduct: any): Product => {
   // تحليل الصور
   let images: string[] = [];
   try {
     if (apiProduct.images) {
-      // التعامل مع التشفير المضاعف للصور
       let cleanedImages = apiProduct.images;
 
-      // إزالة الاقتباسات الخارجية إذا وجدت
       if (cleanedImages.startsWith('"') && cleanedImages.endsWith('"')) {
         cleanedImages = cleanedImages.slice(1, -1);
       }
 
-      // إزالة التشفير المضاعف
       cleanedImages = cleanedImages.replace(/\\"/g, '"');
-
-      // تحليل JSON
       images = JSON.parse(cleanedImages);
     }
   } catch (error) {
     console.error("Error parsing product images:", error, apiProduct.images);
-    // في حالة فشل التحليل، محاولة بسيطة
     try {
       if (apiProduct.images && typeof apiProduct.images === "string") {
         images = JSON.parse(apiProduct.images);
@@ -159,6 +96,24 @@ const transformApiProduct = (apiProduct: any): Product => {
     }
   }
 
+  // معالجة الخصم الجديدة
+  const hasDiscount =
+    apiProduct.discount_percentage != null &&
+    parseFloat(apiProduct.discount_percentage.toString()) > 0;
+
+  const originalPrice = parseFloat(apiProduct.price?.toString() || "0");
+  const discountPercentage = hasDiscount
+    ? parseFloat(apiProduct.discount_percentage.toString())
+    : 0;
+
+  // حساب السعر بعد الخصم
+  const discountAmount = hasDiscount
+    ? (originalPrice * discountPercentage) / 100
+    : 0;
+  const finalPrice = hasDiscount
+    ? originalPrice - discountAmount
+    : originalPrice;
+
   // تحديد الحالة بناءً على stock_quantity
   let status: "active" | "out_of_stock" | "low_stock" = "active";
   if (apiProduct.stock_quantity <= 0) {
@@ -167,66 +122,52 @@ const transformApiProduct = (apiProduct: any): Product => {
     status = "low_stock";
   }
 
-  // معالجة معلومات الخصم المحدثة
-  const hasDiscount =
-    apiProduct.has_discount ||
-    (apiProduct.discount_percentage &&
-      parseFloat(apiProduct.discount_percentage) > 0);
-  const originalPrice = hasDiscount
-    ? parseFloat(apiProduct.price)
-    : parseFloat(apiProduct.price);
-  const discountedPrice = hasDiscount
-    ? apiProduct.discounted_price
-    : parseFloat(apiProduct.price);
-  const discountPercentage = apiProduct.discount_percentage
-    ? parseFloat(apiProduct.discount_percentage)
-    : 0;
-  const discountAmount = hasDiscount ? originalPrice - discountedPrice : 0;
-
-  // السعر النهائي المعروض
-  const finalPrice = hasDiscount ? discountedPrice : originalPrice;
-
   return {
-    id: apiProduct.product_id.toString(),
+    // الخصائص الأساسية من Product
+    product_id: apiProduct.product_id,
+    store_id: apiProduct.store_id,
     name: apiProduct.name,
-    nameAr: apiProduct.name, // استخدام نفس الاسم للعربية
     description: apiProduct.description || "",
-    descriptionAr: apiProduct.description || "",
-    price: finalPrice, // السعر النهائي (بعد الخصم إذا وجد)
-    originalPrice: hasDiscount ? originalPrice : undefined, // السعر الأصلي قبل الخصم
-    salePrice: hasDiscount ? discountedPrice : undefined, // السعر بعد الخصم
-    stock: apiProduct.stock_quantity,
-    category: apiProduct.Store?.store_name || "عام", // استخدام اسم المتجر أو قيمة افتراضية
-    categoryAr: apiProduct.Store?.store_name || "عام", // نفس الشيء للعربية
+    price: originalPrice,
+    discount_percentage: hasDiscount ? discountPercentage : null,
+    stock_quantity: apiProduct.stock_quantity || 0,
+    images: images,
+    created_at: apiProduct.created_at,
+    discounted_price: hasDiscount ? finalPrice : undefined,
+    discount_amount: hasDiscount ? discountAmount : undefined,
+    has_discount: hasDiscount,
+    original_price: hasDiscount ? originalPrice : undefined,
+    Store: apiProduct.Store,
+    reviews: apiProduct.reviews || [],
+
+    // الخصائص الإضافية للتوافق
+    id: apiProduct.product_id.toString(),
     status: status,
     image:
       images.length > 0
         ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
-        : "", // الصورة الأولى كصورة رئيسية
+        : "",
     rating: apiProduct.averageRating || 0,
     reviewCount:
       apiProduct.reviewsCount ||
       (apiProduct.reviews ? apiProduct.reviews.length : 0),
     inStock: apiProduct.stock_quantity > 0,
-    isNew: false, // يمكن تحديد هذا بناءً على تاريخ الإنشاء
-    sales: 0, // قيمة افتراضية للمبيعات - يمكن إضافة هذا في API لاحقاً
-    brand: apiProduct.Store?.store_name || "", // استخدام اسم المتجر كعلامة تجارية
-    brandAr: apiProduct.Store?.store_name || "", // نفس الشيء للعربية
-    createdAt: formatDisplayDate(apiProduct.created_at), // تنسيق التاريخ بشكل بسيط
-
-    // معلومات الخصم المحدثة
-    hasDiscount: hasDiscount,
-    discountPercentage: discountPercentage,
-    discountAmount: discountAmount,
-    discountedPrice: hasDiscount ? discountedPrice : undefined,
+    isNew: false,
+    sales: 0,
+    brand: apiProduct.Store?.store_name || "",
+    createdAt: formatDisplayDate(apiProduct.created_at),
+    category: apiProduct.Store?.store_name || "عام",
+    nameAr: apiProduct.name,
+    descriptionAr: apiProduct.description || "",
+    categoryAr: apiProduct.Store?.store_name || "عام",
+    brandAr: apiProduct.Store?.store_name || "",
   };
 };
 
-// تحويل إحصائيات المتجر - محدث للبنية الجديدة
+// تحويل إحصائيات المتجر - محدث للبنية الجديدة مع إحصائيات الخصم
 const transformStoreStats = (storeData: any) => {
   const products = storeData.products || [];
 
-  // حساب الإحصائيات من المنتجات
   const totalProducts = products.length;
   const activeProducts = products.filter(
     (product: any) => product.stock_quantity > 0
@@ -250,20 +191,47 @@ const transformStoreStats = (storeData: any) => {
         ) / productsWithRating.length
       : 0;
 
-  // حساب مجموع التقييمات
   const totalReviews = products.reduce(
     (sum: number, product: any) => sum + (product.reviewsCount || 0),
     0
   );
 
-  // حساب إحصائيات الخصومات
+  // إحصائيات الخصومات المحدثة
   const productsWithDiscount = products.filter(
-    (product: any) => product.has_discount
+    (product: any) =>
+      product.discount_percentage != null &&
+      parseFloat(product.discount_percentage) > 0
   ).length;
-  const totalDiscountValue = products.reduce(
-    (sum: number, product: any) => sum + (product.discount_amount || 0),
-    0
-  );
+
+  // حساب إجمالي قيمة الخصومات
+  const totalDiscountValue = products.reduce((sum: number, product: any) => {
+    if (
+      product.discount_percentage != null &&
+      parseFloat(product.discount_percentage) > 0
+    ) {
+      const originalPrice = parseFloat(product.price);
+      const discountAmount =
+        originalPrice * (parseFloat(product.discount_percentage) / 100);
+      return sum + discountAmount;
+    }
+    return sum;
+  }, 0);
+
+  // حساب متوسط نسبة الخصم
+  const averageDiscountPercentage =
+    productsWithDiscount > 0
+      ? products
+          .filter(
+            (product: any) =>
+              product.discount_percentage != null &&
+              parseFloat(product.discount_percentage) > 0
+          )
+          .reduce(
+            (sum: number, product: any) =>
+              sum + parseFloat(product.discount_percentage),
+            0
+          ) / productsWithDiscount
+      : 0;
 
   return {
     totalProducts,
@@ -272,24 +240,19 @@ const transformStoreStats = (storeData: any) => {
     lowStockProducts,
     averageRating: parseFloat(averageRating.toFixed(1)),
     totalReviews,
-    // إحصائيات الخصومات المحدثة
+
+    // إحصائيات الخصومات
     productsWithDiscount,
     totalDiscountValue: parseFloat(totalDiscountValue.toFixed(2)),
-    // يمكن إضافة إحصائيات أخرى للخصومات
-    averageDiscountPercentage:
-      productsWithDiscount > 0
-        ? parseFloat(
-            (
-              products
-                .filter((product: any) => product.has_discount)
-                .reduce(
-                  (sum: number, product: any) =>
-                    sum + (parseFloat(product.discount_percentage) || 0),
-                  0
-                ) / productsWithDiscount
-            ).toFixed(1)
-          )
+    averageDiscountPercentage: parseFloat(averageDiscountPercentage.toFixed(1)),
+
+    // إحصائيات إضافية
+    discountSavingsTotal: totalDiscountValue,
+    discountPercentageOfProducts:
+      totalProducts > 0
+        ? parseFloat(((productsWithDiscount / totalProducts) * 100).toFixed(1))
         : 0,
+
     // إضافة إحصائيات من البيانات المرسلة من الخادم إذا كانت متوفرة
     ...storeData.discountStats,
   };
@@ -319,7 +282,7 @@ const ProductsPage: React.FC = () => {
   const [storeData, setStoreData] = useState<any>(null);
   const [storeStats, setStoreStats] = useState<any>(null);
 
-  // جلب بيانات المتجر والمنتجات - محدث للبنية الجديدة
+  // جلب بيانات المتجر والمنتجات
   useEffect(() => {
     const fetchStoreData = async () => {
       if (!storeId) {
@@ -329,15 +292,100 @@ const ProductsPage: React.FC = () => {
 
       try {
         setLoading(true);
-        const response = await getStore(storeId); // استخدام getStore بدلاً من getStoreById
+        const response = await getStore(storeId);
         console.log("Store API Response:", response);
 
-        // التحقق من نجاح العملية والوصول للبيانات
         if (!response.success || !response.store) {
           throw new Error("فشل في جلب بيانات المتجر");
         }
 
         const storeInfo = response.store;
+
+        // تحويل المنتجات من API مع التأكد من تحويل المخزون والأسعار للأرقام
+        const transformApiProduct = (apiProduct: any): Product => {
+          let images: string[] = [];
+          try {
+            if (apiProduct.images) {
+              let cleanedImages = apiProduct.images;
+              if (
+                cleanedImages.startsWith('"') &&
+                cleanedImages.endsWith('"')
+              ) {
+                cleanedImages = cleanedImages.slice(1, -1);
+              }
+              cleanedImages = cleanedImages.replace(/\\"/g, '"');
+              images = JSON.parse(cleanedImages);
+            }
+          } catch (error) {
+            console.error(
+              "Error parsing product images:",
+              error,
+              apiProduct.images
+            );
+            images = [];
+          }
+
+          const stockQuantity = Number(apiProduct.stock_quantity) || 0;
+          const originalPrice = Number(apiProduct.price) || 0;
+          const discountPercentage =
+            apiProduct.discount_percentage != null
+              ? Number(apiProduct.discount_percentage)
+              : 0;
+
+          const hasDiscount = discountPercentage > 0;
+          const discountAmount = hasDiscount
+            ? (originalPrice * discountPercentage) / 100
+            : 0;
+          const finalPrice = hasDiscount
+            ? originalPrice - discountAmount
+            : originalPrice;
+
+          let status: "active" | "out_of_stock" | "low_stock" = "active";
+          if (stockQuantity <= 0) status = "out_of_stock";
+          else if (stockQuantity < 10) status = "low_stock";
+
+          return {
+            product_id: apiProduct.product_id,
+            store_id: apiProduct.store_id,
+            name: apiProduct.name,
+            description: apiProduct.description || "",
+            price: originalPrice,
+            discount_percentage: hasDiscount ? discountPercentage : null,
+            stock_quantity: stockQuantity,
+            images: images,
+            created_at: apiProduct.created_at,
+            discounted_price: hasDiscount ? finalPrice : undefined,
+            discount_amount: hasDiscount ? discountAmount : undefined,
+            has_discount: hasDiscount,
+            original_price: hasDiscount ? originalPrice : undefined,
+            Store: apiProduct.Store,
+            reviews: apiProduct.reviews || [],
+            id: apiProduct.product_id.toString(),
+            status: status,
+            image:
+              images.length > 0
+                ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
+                : "",
+            rating: apiProduct.averageRating || 0,
+            reviewCount:
+              apiProduct.reviewsCount ||
+              (apiProduct.reviews ? apiProduct.reviews.length : 0),
+            inStock: stockQuantity > 0,
+            isNew: false,
+            sales: 0,
+            brand: apiProduct.Store?.store_name || "",
+            createdAt: formatDisplayDate(apiProduct.created_at),
+            category: apiProduct.Store?.store_name || "عام",
+            nameAr: apiProduct.name,
+            descriptionAr: apiProduct.description || "",
+            categoryAr: apiProduct.Store?.store_name || "عام",
+            brandAr: apiProduct.Store?.store_name || "",
+          };
+        };
+
+        const transformedProducts =
+          storeInfo.products?.map(transformApiProduct) || [];
+        setProducts(transformedProducts);
 
         // حفظ بيانات المتجر
         setStoreData({
@@ -356,7 +404,6 @@ const ProductsPage: React.FC = () => {
             whatsappNumber: storeInfo.User?.whatsapp_number,
             role: storeInfo.User?.role,
           },
-          // إضافة الإحصائيات الجديدة
           totalRevenue: storeInfo.totalRevenue,
           totalOrders: storeInfo.totalOrders,
           thisMonthRevenue: storeInfo.thisMonthRevenue,
@@ -367,15 +414,6 @@ const ProductsPage: React.FC = () => {
 
         // حفظ إحصائيات المتجر
         setStoreStats(transformStoreStats(storeInfo));
-
-        // تحويل المنتجات من API - استخدام products بدلاً من Products
-        const transformedProducts =
-          storeInfo.products?.map(transformApiProduct) || [];
-        setProducts(transformedProducts);
-
-        console.log("Transformed Products:", transformedProducts);
-        console.log("Store Stats:", transformStoreStats(storeInfo));
-        console.log("Discount Stats:", storeInfo.discountStats);
       } catch (error) {
         console.error("Error fetching store data:", error);
         showToast("فشل في تحميل بيانات المنتجات", "error");
@@ -402,15 +440,19 @@ const ProductsPage: React.FC = () => {
 
     setLoading(true);
     try {
-      // استدعاء API لحذف المنتج
-      await deleteProduct(productToDelete.id);
+      // التأكد من وجود id صالح
+      const productId =
+        productToDelete.id || productToDelete.product_id?.toString();
+      if (!productId) {
+        throw new Error("معرف المنتج غير صالح");
+      }
 
-      // تحديث قائمة المنتجات محلياً
+      await deleteProduct(productId);
+
       setProducts((prevProducts) =>
         prevProducts.filter((p) => p.id !== productToDelete.id)
       );
 
-      // تحديث الإحصائيات
       if (storeStats) {
         setStoreStats((prev: any) => ({
           ...prev,
@@ -427,6 +469,13 @@ const ProductsPage: React.FC = () => {
             productToDelete.status === "low_stock"
               ? prev.lowStockProducts - 1
               : prev.lowStockProducts,
+          // تحديث إحصائيات الخصم عند الحذف
+          productsWithDiscount: productToDelete.has_discount
+            ? prev.productsWithDiscount - 1
+            : prev.productsWithDiscount,
+          totalDiscountValue: productToDelete.has_discount
+            ? prev.totalDiscountValue - (productToDelete.discount_amount || 0)
+            : prev.totalDiscountValue,
         }));
       }
 
@@ -454,7 +503,7 @@ const ProductsPage: React.FC = () => {
     setShowEditModal(true);
   };
 
-  // تحديث handleSaveProduct في ProductsPage.tsx
+  // تحديث handleSaveProduct للتعامل مع الخصم
   const handleSaveProduct = async (
     updatedProduct: Product & { newImages?: File[] }
   ): Promise<void> => {
@@ -467,8 +516,7 @@ const ProductsPage: React.FC = () => {
       console.log("Updated product:", updatedProduct);
       console.log("New images:", updatedProduct.newImages);
 
-      // إعداد البيانات للإرسال إلى updateProduct
-      const updateData: ProductUpdateData = {};
+      const updateData: ExtendedProductUpdateData = {};
 
       // إضافة البيانات المتغيرة فقط
       if (updatedProduct.name !== productToEdit.name) {
@@ -486,9 +534,20 @@ const ProductsPage: React.FC = () => {
         console.log("Adding price:", updatedProduct.price);
       }
 
-      if (updatedProduct.stock !== productToEdit.stock) {
-        updateData.stock_quantity = updatedProduct.stock; // تحويل من stock إلى stock_quantity
-        console.log("Adding stock_quantity:", updatedProduct.stock);
+      if (updatedProduct.stock_quantity !== productToEdit.stock_quantity) {
+        updateData.stock_quantity = updatedProduct.stock_quantity;
+        console.log("Adding stock_quantity:", updatedProduct.stock_quantity);
+      }
+
+      // معالجة الخصم الجديدة
+      if (
+        updatedProduct.discount_percentage !== productToEdit.discount_percentage
+      ) {
+        updateData.discount_percentage = updatedProduct.discount_percentage;
+        console.log(
+          "Adding discount_percentage:",
+          updatedProduct.discount_percentage
+        );
       }
 
       // إضافة الصور الجديدة إذا كانت موجودة
@@ -498,7 +557,6 @@ const ProductsPage: React.FC = () => {
           `Adding ${updatedProduct.newImages.length} images to update data`
         );
 
-        // طباعة تفاصيل الصور
         updatedProduct.newImages.forEach((file, index) => {
           console.log(`Image ${index}:`, {
             name: file.name,
@@ -523,18 +581,48 @@ const ProductsPage: React.FC = () => {
 
       // استدعاء updateProduct API
       console.log("Calling updateProduct API...");
-      const response = await updateProduct(productToEdit.id, updateData);
+      const response = await updateProduct(productToEdit.id, updateData as any);
 
       console.log("API Response:", response);
 
-      // تحديث قائمة المنتجات محلياً
+      // تحديث قائمة المنتجات محلياً مع إعادة حساب الخصم
       setProducts((prevProducts) =>
-        prevProducts.map((p) =>
-          p.id === updatedProduct.id ? { ...updatedProduct } : p
-        )
+        prevProducts.map((p) => {
+          if (p.id === updatedProduct.id) {
+            // إعادة حساب بيانات الخصم
+            const hasDiscount =
+              updatedProduct.discount_percentage != null &&
+              updatedProduct.discount_percentage > 0;
+            const originalPrice = updatedProduct.price || 0;
+            const discountAmount = hasDiscount
+              ? (originalPrice * (updatedProduct.discount_percentage || 0)) /
+                100
+              : 0;
+            const discountedPrice = hasDiscount
+              ? originalPrice - discountAmount
+              : originalPrice;
+
+            return {
+              ...updatedProduct,
+              has_discount: hasDiscount,
+              discount_amount: hasDiscount ? discountAmount : undefined,
+              discounted_price: hasDiscount ? discountedPrice : undefined,
+              original_price: hasDiscount ? originalPrice : undefined,
+            };
+          }
+          return p;
+        })
       );
 
-      // إغلاق Modal
+      // تحديث الإحصائيات
+      if (storeStats) {
+        // إعادة حساب إحصائيات الخصم
+        const updatedProducts = products.map((p) =>
+          p.id === updatedProduct.id ? updatedProduct : p
+        );
+        setStoreStats(transformStoreStats({ products: updatedProducts }));
+      }
+
       setShowEditModal(false);
       setProductToEdit(null);
 
@@ -542,7 +630,6 @@ const ProductsPage: React.FC = () => {
     } catch (error: any) {
       console.error("Error updating product:", error);
 
-      // معالجة أفضل للأخطاء
       if (error?.response) {
         console.error("API Error Details:", {
           status: error.response.status,
@@ -550,7 +637,6 @@ const ProductsPage: React.FC = () => {
           headers: error.response.headers,
         });
 
-        // رسائل خطأ مخصصة
         switch (error.response.status) {
           case 422:
             showToast(
@@ -594,7 +680,6 @@ const ProductsPage: React.FC = () => {
   const handleAddProduct = (): void => {
     console.log("Adding new product");
     // TODO: Navigate to add product page
-    // router.push('/admin/products/add');
   };
 
   const handleViewModeChange = (mode: ViewMode): void => {
@@ -632,7 +717,6 @@ const ProductsPage: React.FC = () => {
     setProductToEdit(null);
   };
 
-  // إضافة هذا داخل ProductsPage.tsx، مع الدوال الأخرى مثل handleAddProduct
   const handleSearchClick = async () => {
     if (!storeId) return;
 
@@ -644,12 +728,10 @@ const ProductsPage: React.FC = () => {
 
       console.log("Filtered Products API Response:", data);
 
-      // تحديث للبنية الجديدة - استخدام products بدلاً من Products
       if (data.success && data.store && data.store.products) {
         setProducts(data.store.products.map(transformApiProduct));
         setStoreStats(transformStoreStats(data.store));
       } else {
-        // للتوافق مع البنية القديمة إذا لم تتغير بعد
         const products = data.Products || data.products || [];
         setProducts(products.map(transformApiProduct));
         if (data.statistics) {
@@ -788,7 +870,7 @@ const ProductsPage: React.FC = () => {
     >
       <div className={containerClasses}>
         <div className={`p-6 space-y-6 ${isRTL ? "rtl" : "ltr"}`}>
-          {/* Store Info Section - محدث لعرض معلومات إضافية */}
+          {/* Store Info Section */}
           {storeData && (
             <section className="bg-white dark:bg-gray-800 rounded-lg p-4 mb-6 shadow-sm">
               <div className="flex items-center gap-4">
@@ -809,6 +891,20 @@ const ProductsPage: React.FC = () => {
                     </span>
                   )}
                 </div>
+
+                {/* إحصائيات الخصم السريعة */}
+                {/* {storeStats && storeStats.productsWithDiscount > 0 && (
+                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                      {storeStats.productsWithDiscount} منتج بخصم
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      إجمالي التوفير: {storeStats.totalDiscountValue} $
+                    </span>
+                  </div>
+                )} */}
               </div>
             </section>
           )}
@@ -895,7 +991,7 @@ const ProductsPage: React.FC = () => {
                       setSearchTerm("");
                       setSelectedCategory("all");
                       setSelectedStatus("all");
-                      handleSearchClick(); // إعادة جلب كل المنتجات من API
+                      handleSearchClick();
                     }}
                     className={`
                       ${emptyStateClasses.clearFilters}

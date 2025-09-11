@@ -1,36 +1,66 @@
 // types/product.ts
 export interface Product {
-  id: number;
+  product_id: number;
+  store_id: number;
   name: string;
-  nameAr: string;
-  category: string;
-  categoryAr: string;
-  price: number;
-  salePrice?: number; // ✅ إضافة للعروض والخصومات
-  originalPrice?: number; // ✅ إضافة للسعر الأصلي
-  stock: number;
-  status: "active" | "out_of_stock" | "low_stock";
-  image: string;
-  rating: number;
-  reviewCount: number; // ✅ إضافة عدد التقييمات
-  sales: number;
-  isNew?: boolean; // ✅ إضافة للمنتجات الجديدة
-  inStock: boolean; // ✅ إضافة حالة التوفر
-  brand: string; // إضافة brand
-  brandAr: string; // إضافة brandAr
-  createdAt: string;
-  updatedAt?: string;
   description?: string;
-  descriptionAr?: string;
-  sku?: string;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
+  price: number;
+  discount_percentage?: number | null; // نسبة الخصم أو null إذا لم يكن هناك خصم
+  stock_quantity: number ;
+  images?: string | string[]; // يمكن أن تكون string (JSON) أو array
+  created_at?: string;
+
+  // خصائص محسوبة (تأتي من الخادم أو يتم تحويلها في الواجهة)
+  discounted_price?: number; // السعر بعد الخصم
+  discount_amount?: number; // مقدار الخصم
+  has_discount?: boolean; // هل يوجد خصم
+  original_price?: number; // السعر الأصلي
+
+  // معلومات المتجر (في حالة جلب بيانات المنتج مع بيانات المتجر)
+  Store?: {
+    store_name: string;
+    logo_image: string;
+    description: string;
   };
-  tags?: string[];
-  tagsAr?: string[];
+
+  // التقييمات (في حالة جلب بيانات المنتج مع التقييمات)
+  reviews?: any[];
+  averageRating?: number;
+  reviewsCount?: number;
+
+  // ✅ إضافات مطلوبة لملف ProductsPage.tsx
+  id?: string; // alias لـ product_id
+  status?: "active" | "out_of_stock" | "low_stock"; // الحالة
+  image?: string; // أول صورة مع baseUrl
+  rating?: number;
+  reviewCount?: number;
+  inStock?: boolean;
+  isNew?: boolean;
+  sales?: number;
+  brand?: string;
+  createdAt?: string; // تاريخ معروض بشكل منسق
+
+  // ✅ إضافات عربية
+  nameAr?: string;
+  descriptionAr?: string;
+  category?: string;
+  categoryAr?: string;
+  brandAr?: string;
+}
+
+// نوع للمنتج عند الإنشاء أو التحديث
+export interface CreateProductData {
+  name: string;
+  description?: string;
+  price: number;
+  discount_percentage?: number | null;
+  stock_quantity: number;
+  images?: File[]; // للصور الجديدة
+}
+
+// نوع للمنتج عند التحديث مع الصور الجديدة
+export interface UpdateProductData extends Partial<Product> {
+  newImages?: File[]; // للصور الجديدة
 }
 
 // نوع عنصر السلة - ✅ إضافة المفقود
