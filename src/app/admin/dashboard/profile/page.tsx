@@ -20,7 +20,7 @@ import {
   CancelButton,
 } from "@/components/common/ActionButtons";
 import { useStore } from "@/contexts/StoreContext";
-import { getStore, updateStore } from "@/api/stores"; // تغيير من getStoreById إلى getStore
+import { getStoreById, updateStore } from "@/api/stores"; // تغيير من getStoreById إلى getStore
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { changePassword } from "@/api/auth";
@@ -90,9 +90,10 @@ interface StoreData {
       whatsapp_number: string;
       role: string;
     };
-    reviews: any[];
-    averageRating: number;
-    reviewsCount: number;
+    storeReviews: any[];
+    storeAverageRating: number;
+    storeReviewsCount: number;
+    overallAverageRating: number;
     totalRevenue: number;
     totalOrders: number;
     thisMonthRevenue: number;
@@ -108,7 +109,7 @@ interface StoreData {
 
 const ProfilePage = () => {
   const { isDark } = useThemeContext();
-  const { storeId } = useStore();
+  const { storeId, isLoaded } = useStore();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -157,7 +158,6 @@ const ProfilePage = () => {
   // جلب بيانات المتجر من الباك إند - محدث للبنية الجديدة
   useEffect(() => {
     const fetchStoreData = async () => {
-      console.log("Fetching store data for ID:", storeId);
       if (!storeId) {
         setError("Store ID not found");
         setLoading(false);
@@ -166,18 +166,14 @@ const ProfilePage = () => {
 
       try {
         setLoading(true);
-        const response: StoreData = await getStore(storeId); // استخدام getStore بدلاً من getStoreById
+        const response: StoreData = await getStoreById(storeId);
 
-        console.log("Store API Response:", response);
-
-        // التحقق من نجاح العملية والوصول للبيانات
         if (!response.success || !response.store) {
           throw new Error("فشل في جلب بيانات المتجر");
         }
 
         const storeInfo = response.store;
 
-        // تحويل البيانات من صيغة الباك إند إلى صيغة الفرونت إند
         const images = storeInfo.images ? JSON.parse(storeInfo.images) : [];
         const coverImage =
           images.length > 0
@@ -196,25 +192,14 @@ const ProfilePage = () => {
           address: storeInfo.store_address,
           description: storeInfo.description,
           createdAt: new Date(storeInfo.created_at).getFullYear().toString(),
-          // إضافة البيانات الجديدة
           isBlocked: storeInfo.is_blocked,
           totalRevenue: storeInfo.totalRevenue,
           totalOrders: storeInfo.totalOrders,
           thisMonthRevenue: storeInfo.thisMonthRevenue,
-          averageRating: storeInfo.averageRating,
-          reviewsCount: storeInfo.reviewsCount,
+          // الحقول الجديدة
+          averageRating: storeInfo.storeAverageRating,
+          reviewsCount: storeInfo.storeReviewsCount,
         });
-
-        console.log("Profile data set:", {
-          name: storeInfo.User.username,
-          storeName: storeInfo.store_name,
-          isBlocked: storeInfo.is_blocked,
-          totalRevenue: storeInfo.totalRevenue,
-          totalOrders: storeInfo.totalOrders,
-          averageRating: storeInfo.averageRating,
-        });
-
-        setError(null);
       } catch (err) {
         console.error("Error fetching store data:", err);
         setError("فشل في جلب بيانات المتجر");
@@ -224,8 +209,11 @@ const ProfilePage = () => {
       }
     };
 
-    fetchStoreData();
-  }, [storeId, showToast]);
+    // انتظر حتى يتم تحميل storeId
+    if (isLoaded) {
+      fetchStoreData();
+    }
+  }, [storeId, isLoaded, showToast]);
 
   const handleEdit = (field: EditingField) => {
     if (field === "password") {
@@ -702,9 +690,10 @@ const ProfilePage = () => {
                     {profileData.averageRating?.toFixed(1) || "0.0"}
                   </div>
                   <div className={`text-sm ${themeClasses.textMuted}`}>
-                    التقييم
+                    ({profileData.reviewsCount || 0}) تقييم
                   </div>
                 </div>
+
                 <div>
                   <div
                     className={`text-2xl font-bold ${themeClasses.textPrimary}`}
