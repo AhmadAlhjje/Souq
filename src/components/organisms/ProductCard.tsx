@@ -5,8 +5,29 @@ import Card from '../atoms/Card';
 import { SimpleStarRating } from '../molecules/StarRating';
 import { SimplePriceDisplay } from '../molecules/PriceDisplay';
 import { CompactQuantityCounter } from '../molecules/QuantityCounter';
-import { Product } from '@/types/product';
 import { useCart, useCartNotifications } from '@/contexts/CartContext';
+
+// تعريف نوع Product محلياً
+interface Product {
+  id: number;
+  product_id: number; // الخاصية المطلوبة من النوع الخارجي
+  name: string;
+  price: number;
+  original_price?: number;
+  originalPrice?: number; // إضافة للتوافق مع الكود الموجود
+  salePrice?: number; // إضافة الخاصية المفقودة
+  discount?: number; // إضافة الخاصية المفقودة
+  store_id: number; // الخاصية المطلوبة من النوع الخارجي
+  stock_quantity: number; // الخاصية المطلوبة من النوع الخارجي
+  image?: string;
+  rating?: number;
+  isNew?: boolean;
+  description?: string;
+  category?: string;
+  brand?: string;
+  stock?: number;
+  [key: string]: any; // للسماح بخصائص إضافية
+}
 
 interface ProductCardProps {
   product: Product;
@@ -33,9 +54,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
   
   // تحديث الكمية المحلية عند تغيير المنتج أو كمية السلة
   useEffect(() => {
-    const cartQuantity = getItemQuantity(product.id);
-    if (cartQuantity > 0) {
-      setLocalQuantity(cartQuantity);
+    // التأكد من وجود product.id وأنه number
+    if (product.id && typeof product.id === 'number') {
+      const cartQuantity = getItemQuantity(product.id);
+      if (cartQuantity > 0) {
+        setLocalQuantity(cartQuantity);
+      }
     }
   }, [product.id, getItemQuantity]);
   
@@ -43,7 +67,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
     const newQuantity = localQuantity + 1;
     setLocalQuantity(newQuantity);
     
-    if (isItemInCart(product.id)) {
+    // التأكد من وجود product.id وأنه number
+    if (product.id && typeof product.id === 'number' && isItemInCart(product.id)) {
       updateQuantity(product.id, newQuantity);
     }
   };
@@ -53,7 +78,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
       const newQuantity = localQuantity - 1;
       setLocalQuantity(newQuantity);
       
-      if (isItemInCart(product.id)) {
+      // التأكد من وجود product.id وأنه number
+      if (product.id && typeof product.id === 'number' && isItemInCart(product.id)) {
         updateQuantity(product.id, newQuantity);
       }
     }
@@ -72,16 +98,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
       
       console.log('Adding product to cart:', product);
       
-      if (isItemInCart(product.id)) {
-        updateQuantity(product.id, localQuantity);
-        showAddToCartSuccess(product.name, localQuantity);
-      } else {
-        addToCart(product, localQuantity);
-        showAddToCartSuccess(product.name, localQuantity);
+      // التأكد من وجود product.id وأنه string
+      if (product.id && typeof product.id === 'string') {
+        if (isItemInCart(product.id)) {
+          updateQuantity(product.id, localQuantity);
+          showAddToCartSuccess(product.name, localQuantity);
+        } else {
+          addToCart({ ...product, id: product.id }, localQuantity);
+          showAddToCartSuccess(product.name, localQuantity);
+        }
+        
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 2000);
       }
-      
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
       
     } catch (error) {
       console.error('خطأ في إضافة المنتج للسلة:', error);
@@ -90,6 +119,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  // حل مشكلة الخصائص المفقودة - استخدام original_price بدلاً من originalPrice
   const calculateDiscountPercentage = (originalPrice?: number, salePrice?: number): number => {
     if (!originalPrice || !salePrice || salePrice >= originalPrice) {
       return 0;
@@ -101,22 +131,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
     setImageError(true);
   };
 
+  // حساب sale price من البيانات المتاحة
+  const getSalePrice = () => {
+    // إذا كان هناك salePrice محدد مسبقاً
+    if (product.salePrice) {
+      return product.salePrice;
+    }
+    // أو إذا كان هناك خصم، احسب السعر المخفض
+    if (product.discount && product.discount > 0 && product.price) {
+      return product.price * (1 - product.discount / 100);
+    }
+    return undefined;
+  };
+
+  const salePrice = getSalePrice();
+  const originalPrice = product.originalPrice || product.original_price || product.price;
 
   return (
     <Card hover className="overflow-hidden group">
       <div className="relative overflow-hidden" style={{ backgroundColor: '#F6F8F9' }}>
-<img
-  src={product.image || 'https://placehold.co/400x250/00C8B8/FFFFFF?text=منتج'}
-  alt={product.name}
-  className="w-full h-44 object-cover"
-/>
+        <img
+          src={product.image || 'https://placehold.co/400x250/00C8B8/FFFFFF?text=منتج'}
+          alt={product.name}
+          className="w-full h-44 object-cover"
+        />
 
-
-
-        
-        {product.salePrice && product.originalPrice && calculateDiscountPercentage(product.originalPrice, product.salePrice) > 0 && (
+        {salePrice && originalPrice && calculateDiscountPercentage(originalPrice, salePrice) > 0 && (
           <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            -{calculateDiscountPercentage(product.originalPrice, product.salePrice)}%
+            -{calculateDiscountPercentage(originalPrice, salePrice)}%
           </div>
         )}
         
@@ -133,13 +175,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </h3>
         
         <div className="mb-1 flex justify-end">
-          <SimpleStarRating rating={product.rating} />
+          <SimpleStarRating rating={product.rating || 0} />
         </div>
         
         <div className="mb-2">
           <SimplePriceDisplay 
-            originalPrice={product.originalPrice || product.price}
-            salePrice={product.salePrice}
+            originalPrice={originalPrice || product.price}
+            salePrice={salePrice}
           />
         </div>
         

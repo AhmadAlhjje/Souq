@@ -22,7 +22,6 @@ import { Product as BaseProduct, ViewMode } from "../../../types/product";
 // نوع موسع للمنتج يحتوي على خصائص إضافية للتوافق
 interface ExtendedProduct extends BaseProduct {
   // خصائص إضافية للتوافق مع المكونات الأخرى
-  id?: string;
   status?: "active" | "out_of_stock" | "low_stock";
   image?: string;
   rating?: number;

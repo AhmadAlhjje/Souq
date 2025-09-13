@@ -8,8 +8,8 @@ export const convertProductToApiFormat = (product: Product & { newImages?: File[
     name: product.name,
     description: product.description,
     price: product.price,
-    stock_quantity: product.stock, // تحويل من stock إلى stock_quantity
-    images: product.newImages || undefined, // استخدام newImages بدلاً من images
+    stock_quantity: typeof product.inStock === "boolean" ? (product.inStock ? 1 : 0) : product.inStock,
+    images: product.newImages || undefined,
   };
 };
 
@@ -17,7 +17,7 @@ export const convertProductToApiFormat = (product: Product & { newImages?: File[
 export const convertApiToProductFormat = (apiData: any): Product => {
   return {
     ...apiData,
-    stock: apiData.stock_quantity, // تحويل من stock_quantity إلى stock
+    inStock: apiData.stock_quantity, // هنا نتركها كما هي، يمكن أن تكون number أو boolean حسب تعريف Product
   };
 };
 
@@ -28,7 +28,6 @@ export const getChangedProductData = (
 ): ProductUpdateData => {
   const changes: ProductUpdateData = {};
 
-  // التحقق من التغييرات في البيانات النصية
   if (original.name !== updated.name) {
     changes.name = updated.name;
   }
@@ -41,11 +40,10 @@ export const getChangedProductData = (
     changes.price = updated.price;
   }
 
-  if (original.stock !== updated.stock) {
-    changes.stock_quantity = updated.stock; // تحويل إلى stock_quantity
+  if (original.inStock !== updated.inStock) {
+    changes.stock_quantity = typeof updated.inStock === "boolean" ? (updated.inStock ? 1 : 0) : updated.inStock;
   }
 
-  // إضافة الصور الجديدة إذا كانت موجودة
   if (updated.newImages && updated.newImages.length > 0) {
     changes.images = updated.newImages;
   }

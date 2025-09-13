@@ -72,6 +72,12 @@ const loadCartFromStorage = (): Partial<CartState> => {
   return {};
 };
 
+// دالة لحساب سعر المنتج (مع مراعاة الخصم)
+const getItemPrice = (item: CartItem): number => {
+  // إذا كان هناك سعر مخفض، استخدمه، وإلا استخدم السعر الأساسي
+  return item.discounted_price || item.price || 0;
+};
+
 const cartReducer = (state: CartState, action: CartAction): CartState => {
   console.log('Cart action:', action.type, 'payload' in action ? action.payload : 'no payload');
   
@@ -117,7 +123,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       
       const totalItems = newItems.reduce((sum, item) => sum + item.cartQuantity, 0);
       const totalPrice = newItems.reduce((sum, item) => {
-        const price = item.salePrice || item.originalPrice || item.price || 0;
+        const price = getItemPrice(item);
         return sum + (price * item.cartQuantity);
       }, 0);
       
@@ -142,7 +148,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       const newItems = state.items.filter(item => item.id !== action.payload.productId);
       const totalItems = newItems.reduce((sum, item) => sum + item.cartQuantity, 0);
       const totalPrice = newItems.reduce((sum, item) => {
-        const price = item.salePrice || item.originalPrice || item.price || 0;
+        const price = getItemPrice(item);
         return sum + (price * item.cartQuantity);
       }, 0);
       
@@ -177,7 +183,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       
       const totalItems = newItems.reduce((sum, item) => sum + item.cartQuantity, 0);
       const totalPrice = newItems.reduce((sum, item) => {
-        const price = item.salePrice || item.originalPrice || item.price || 0;
+        const price = getItemPrice(item);
         return sum + (price * item.cartQuantity);
       }, 0);
       

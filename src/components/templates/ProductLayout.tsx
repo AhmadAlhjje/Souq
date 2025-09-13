@@ -58,23 +58,29 @@ const convertApiProductToProduct = (
 ): Product => {
   const imageUrl = getFirstImage(apiProduct.images);
 
+  // حساب السعر المخفض إذا كان يوجد خصم
+  const originalPrice = parseFloat(apiProduct.price);
+  const hasDiscount = Math.random() > 0.7; // 30% احتمالية وجود خصم
+  const discountedPrice = hasDiscount 
+    ? Math.round(originalPrice * 0.8) 
+    : originalPrice;
+
   return {
     id: apiProduct.product_id || apiProduct.id,
+    product_id: apiProduct.product_id || apiProduct.id, // إضافة الخاصية المفقودة
+    store_id: storeInfo?.store_id || storeInfo?.id, // إضافة الخاصية المفقودة
+    stock_quantity: apiProduct.stock_quantity || apiProduct.stock || 0, // إضافة الخاصية المفقودة
     name: apiProduct.name,
     nameAr: apiProduct.name,
     category: "general",
     categoryAr: "عام",
-    price: parseFloat(apiProduct.price),
-    salePrice:
-      Math.random() > 0.7
-        ? Math.round(parseFloat(apiProduct.price) * 0.8)
-        : undefined,
-    originalPrice: parseFloat(apiProduct.price),
+    price: discountedPrice, // استخدام السعر المخفض كسعر أساسي
+    original_price: originalPrice, // السعر الأصلي قبل الخصم
+    discounted_price: hasDiscount ? discountedPrice : undefined, // السعر المخفض فقط إذا كان هناك خصم
     rating: apiProduct.averageRating || Math.round((Math.random() * 2 + 3) * 10) / 10,
     reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 200) + 10,
     image: imageUrl,
     isNew: Math.random() > 0.8,
-    stock: apiProduct.stock_quantity || apiProduct.stock,
     status: (apiProduct.stock_quantity || apiProduct.stock) > 0 ? "active" : "out_of_stock",
     description: apiProduct.description,
     descriptionAr: apiProduct.description,
@@ -139,9 +145,10 @@ function ProductContent() {
     fetchStoreData();
   }, [storeId]);
 
-  // المنتجات المخفضة
+  // المنتجات المخفضة - استخدام discounted_price بدلاً من salePrice
   const saleProducts = products.filter(
-    (product) => product.salePrice && product.salePrice > 0
+    (product) => product.discounted_price && product.original_price && 
+    product.discounted_price < product.original_price
   );
 
   const handleNavigateLeft = () => {

@@ -224,18 +224,23 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setSelectedImage(index);
   };
 
-  // باقي الدوال (نفس الكود السابق)
+  // باقي الدوال (نفس الكود السابق مع إصلاح مشاكل TypeScript)
   useEffect(() => {
-    const cartQuantity = getItemQuantity(product.id);
-    if (cartQuantity > 0) {
-      setQuantity(cartQuantity);
+    // التأكد من وجود product.id قبل استخدامه
+    if (product.id !== undefined) {
+      const cartQuantity = getItemQuantity(product.id);
+      if (cartQuantity > 0) {
+        setQuantity(cartQuantity);
+      }
     }
   }, [product.id, getItemQuantity]);
 
   const handleQuantityChange = (newQuantity: number) => {
-    if (newQuantity >= 1 && newQuantity <= (product.stock || 20)) {
+    const stockValue = typeof product.inStock === 'number' ? product.inStock : 20;
+    if (newQuantity >= 1 && newQuantity <= stockValue) {
       setQuantity(newQuantity);
-      if (isItemInCart(product.id)) {
+      // التأكد من وجود product.id قبل استخدامه
+      if (product.id !== undefined && isItemInCart(product.id)) {
         updateQuantity(product.id, newQuantity);
       }
     }
@@ -247,12 +252,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       if (onAddToCart) {
         onAddToCart(product, quantity);
       } else {
-        if (isItemInCart(product.id)) {
-          updateQuantity(product.id, quantity);
-          showAddToCartSuccess(product.name, quantity);
-        } else {
-          addToCart(product, quantity);
-          showAddToCartSuccess(product.name, quantity);
+        // التأكد من وجود product.id قبل استخدامه
+        if (product.id !== undefined) {
+          if (isItemInCart(product.id)) {
+            updateQuantity(product.id, quantity);
+            showAddToCartSuccess(product.name, quantity);
+          } else {
+            addToCart(product, quantity);
+            showAddToCartSuccess(product.name, quantity);
+          }
         }
       }
       setShowSuccess(true);
@@ -267,10 +275,13 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const handleBuyNow = async () => {
     try {
       setIsAdding(true);
-      if (!isItemInCart(product.id)) {
-        addToCart(product, quantity);
-      } else {
-        updateQuantity(product.id, quantity);
+      // التأكد من وجود product.id قبل استخدامه
+      if (product.id !== undefined) {
+        if (!isItemInCart(product.id)) {
+          addToCart(product, quantity);
+        } else {
+          updateQuantity(product.id, quantity);
+        }
       }
       setTimeout(() => openCart(), 500);
     } catch (error) {
@@ -288,17 +299,19 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     }
   };
 
-  const renderStars = (rating: number) =>
-    Array.from({ length: 5 }, (_, i) => (
+  const renderStars = (rating?: number) => {
+    const ratingValue = rating || 0;
+    return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
         className={`w-3 h-3 ${
-          i < Math.floor(rating)
+          i < Math.floor(ratingValue)
             ? "text-yellow-400 fill-current"
             : "text-gray-300"
         }`}
       />
     ));
+  };
 
   const handleImageError = (index: number) => {
     setImageError((prev) => ({ ...prev, [index]: true }));
@@ -311,10 +324,35 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     return productImages[index] || "/images/default-product.jpg";
   };
 
-  const productInCart = isItemInCart(product.id);
-  const cartQuantity = getItemQuantity(product.id);
-  const isMaxQuantityReached = quantity >= (product.stock || 20);
+  // حساب السعر النهائي والسعر الأصلي
+  const getCurrentPrice = () => {
+    return product.discounted_price || product.price;
+  };
+
+  const getOriginalPrice = () => {
+    return product.original_price || product.price;
+  };
+
+  const hasDiscount = () => {
+    return product.discounted_price && product.original_price && 
+           product.discounted_price < product.original_price;
+  };
+
+  const getDiscountPercentage = () => {
+    if (!hasDiscount()) return 0;
+    const original = getOriginalPrice();
+    const discounted = getCurrentPrice();
+    return Math.round(((original - discounted) / original) * 100);
+  };
+
+  // التحقق من صحة product.id قبل الاستخدام
+  const productInCart = product.id !== undefined ? isItemInCart(product.id) : false;
+  const cartQuantity = product.id !== undefined ? getItemQuantity(product.id) : 0;
+  const stockValue = typeof product.inStock === 'number' ? product.inStock : 20;
+  const isMaxQuantityReached = quantity >= stockValue;
   const isMinQuantityReached = quantity <= 1;
+  const isProductInStock = typeof product.inStock === 'boolean' ? product.inStock : 
+                          typeof product.inStock === 'number' ? product.inStock > 0 : true;
 
   return (
     <div className="min-h-screen mt-10 text-gray-800 font-cairo" dir="rtl">
@@ -360,29 +398,20 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               <div className="flex items-center gap-1 text-sm">
                 <div className="flex">{renderStars(product.rating)}</div>
-                <span>({product.rating}) - {product.reviewCount} تقييم</span>
+                <span>({product.rating || 0}) - {product.reviewCount || 0} تقييم</span>
               </div>
 
               {/* السعر */}
               <div className="font-bold text-teal-600 py-2 text-base">
-                <span>
-                  {product.salePrice
-                    ? product.salePrice
-                    : product.originalPrice || product.price}
-                </span>
+                <span>{getCurrentPrice()}</span>
                 <span className="text-gray-500 mr-1">ر.س</span>
-                {product.salePrice && product.originalPrice && (
+                {hasDiscount() && (
                   <>
                     <span className="text-gray-400 line-through text-sm mr-2">
-                      {product.originalPrice} ر.س
+                      {getOriginalPrice()} ر.س
                     </span>
                     <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
-                      وفر{" "}
-                      {Math.round(
-                        ((product.originalPrice - product.salePrice) /
-                          product.originalPrice) *
-                          100
-                      )}%
+                      وفر {getDiscountPercentage()}%
                     </span>
                   </>
                 )}
@@ -399,20 +428,20 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* المخزون */}
-              {product.stock && product.stock > 0 && (
+              {typeof product.inStock === 'number' && product.inStock > 0 && (
                 <div className="py-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-600">المتوفر في المخزون:</span>
                     <span
                       className={`font-medium ${
-                        product.stock > 10
+                        product.inStock > 10
                           ? "text-green-600"
-                          : product.stock > 5
+                          : product.inStock > 5
                           ? "text-yellow-600"
                           : "text-red-600"
                       }`}
                     >
-                      {product.stock} قطعة
+                      {product.inStock} قطعة
                     </span>
                   </div>
                 </div>
@@ -453,16 +482,16 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               <div className="space-y-3 py-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={isAdding || !product.inStock}
+                  disabled={isAdding || !isProductInStock}
                   className={`w-full py-3 rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
-                    !product.inStock
+                    !isProductInStock
                       ? "bg-gray-400 cursor-not-allowed text-white"
                       : showSuccess
                       ? "bg-green-500 hover:bg-green-600 text-white"
                       : "bg-teal-600 hover:bg-teal-700 text-white"
                   } ${isAdding ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
-                  {!product.inStock ? (
+                  {!isProductInStock ? (
                     "غير متوفر"
                   ) : showSuccess ? (
                     <>
@@ -484,10 +513,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
                 <button
                   onClick={handleBuyNow}
-                  disabled={isAdding || !product.inStock}
+                  disabled={isAdding || !isProductInStock}
                   className="w-full border-2 border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {!product.inStock
+                  {!isProductInStock
                     ? "غير متوفر"
                     : isAdding
                     ? "جاري التحضير..."
@@ -518,26 +547,21 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   </div>
                   
                   {/* شارة الخصم */}
-                  {product.salePrice && product.originalPrice && (
+                  {hasDiscount() && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded">
-                      -
-                      {Math.round(
-                        ((product.originalPrice - product.salePrice) /
-                          product.originalPrice) *
-                          100
-                      )}%
+                      -{getDiscountPercentage()}%
                     </div>
                   )}
                   
                   {/* شارة جديد */}
-                  {product.isNew && !product.salePrice && (
+                  {product.isNew && !hasDiscount() && (
                     <div className="absolute top-2 right-2 bg-green-700 text-white text-[10px] px-2 py-0.5 rounded">
                       جديد
                     </div>
                   )}
                   
                   {/* شارة نفاد المخزون */}
-                  {!product.inStock && (
+                  {!isProductInStock && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <span className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium">
                         نفد المخزون
@@ -601,7 +625,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 )}
                 <div className="flex justify-between">
                   <span className="text-gray-600">عدد التقييمات:</span>
-                  <span className="font-medium">{product.reviewCount}</span>
+                  <span className="font-medium">{product.reviewCount || 0}</span>
                 </div>
               </div>
             </div>

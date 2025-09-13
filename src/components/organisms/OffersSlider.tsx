@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
 import { useCart, useCartNotifications } from "@/contexts/CartContext";
-import { Product } from "@/types/product";
 import { api } from "@/api/api";
 
 interface StoreProduct {
@@ -29,6 +28,31 @@ interface StoreData {
     whatsapp_number: string;
   };
   Products: StoreProduct[];
+}
+
+// تعريف نوع Product خاص بهذه الصفحة
+interface Product {
+  id: number;
+  name: string;
+  nameAr: string;
+  category: string;
+  categoryAr: string;
+  price: number;
+  salePrice: number;
+  originalPrice: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  isNew: boolean;
+  stock: number;
+  status: string;
+  description: string;
+  descriptionAr: string;
+  brand: string;
+  brandAr: string;
+  sales: number;
+  inStock: boolean;
+  createdAt: string;
 }
 
 interface Offer {
@@ -315,8 +339,36 @@ const OffersSlider: React.FC = () => {
       // تعيين حالة التحميل
       setAddingStates((prev) => ({ ...prev, [offer.id]: true }));
 
+      // تحويل المنتج للنوع المطلوب من Cart Context
+      const cartProduct = {
+        id: offer.product.id.toString(), // تحويل إلى string كما هو مطلوب
+        name: offer.product.name,
+        nameAr: offer.product.nameAr,
+        category: offer.product.category,
+        categoryAr: offer.product.categoryAr,
+        price: offer.product.price,
+        salePrice: offer.product.salePrice,
+        originalPrice: offer.product.originalPrice,
+        rating: offer.product.rating,
+        reviewCount: offer.product.reviewCount,
+        image: offer.product.image,
+        isNew: offer.product.isNew,
+        status: offer.product.status,
+        description: offer.product.description,
+        descriptionAr: offer.product.descriptionAr,
+        brand: offer.product.brand,
+        brandAr: offer.product.brandAr,
+        sales: offer.product.sales,
+        inStock: offer.product.inStock,
+        createdAt: offer.product.createdAt,
+        // إضافة الخصائص المفقودة المطلوبة من النوع الخارجي
+        product_id: offer.product.id,
+        store_id: 1, // قيمة افتراضية
+        stock_quantity: offer.product.stock,
+      };
+
       // إضافة المنتج للسلة
-      addToCart(offer.product, 1);
+      addToCart(cartProduct as any, 1);
 
       // إظهار رسالة النجاح
       showAddToCartSuccess(offer.product.nameAr || offer.product.name, 1);

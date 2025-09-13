@@ -29,7 +29,7 @@ export interface Product {
   reviewsCount?: number;
 
   // ✅ إضافات مطلوبة لملف ProductsPage.tsx
-  id?: string; // alias لـ product_id
+  id?: number ; // alias لـ product_id
   status?: "active" | "out_of_stock" | "low_stock"; // الحالة
   image?: string; // أول صورة مع baseUrl
   rating?: number;

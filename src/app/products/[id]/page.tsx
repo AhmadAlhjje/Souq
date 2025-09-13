@@ -4,8 +4,49 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import ProductDetailsPage from '@/components/templates/ProductDetailsPage';
-import { Product } from '@/types/product';
 import { getProduct } from '@/api/stores';
+
+// تعريف Product محلي للصفحة
+interface LocalProduct {
+  id: number;
+  name: string;
+  nameAr: string;
+  category: string;
+  categoryAr: string;
+  price: number;
+  salePrice?: number;
+  originalPrice: number;
+  rating: number;
+  reviewCount: number;
+  image: string;
+  isNew: boolean;
+  stock: number;
+  status: 'active' | 'out_of_stock';
+  description: string;
+  descriptionAr: string;
+  brand: string;
+  brandAr: string;
+  sales: number;
+  inStock: boolean;
+  createdAt: string;
+  storeInfo: {
+    store_name: string;
+    store_description: string;
+    logo_image: string;
+  };
+  reviews: Array<{
+    review_id: number;
+    product_id: number;
+    reviewer_name: string;
+    reviewer_phone: string;
+    rating: number;
+    comment: string;
+    is_verified: boolean;
+    created_at: string;
+    updated_at: string;
+  }>;
+  images: string;
+}
 
 // نوع للمنتج من الـ API مع التفاصيل
 interface ApiProductDetails {
@@ -35,8 +76,8 @@ interface ApiProductDetails {
   }>;
 }
 
-// دالة لتحويل بيانات الـ API إلى Product
-const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
+// دالة لتحويل بيانات الـ API إلى LocalProduct
+const convertApiProductToLocalProduct = (apiProduct: ApiProductDetails): LocalProduct => {
   // تحليل الصور باستخدام نفس الطريقة المستخدمة في المتاجر
   let images: string[] = [];
   try {
@@ -92,9 +133,8 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
       logo_image: apiProduct.Store.logo_image
     },
     reviews: apiProduct.Reviews,
-    // إضافة الصور كحقل منفصل
-    ...({ images: apiProduct.images })
-  } as Product;
+    images: apiProduct.images
+  };
 };
 
 export default function ProductPage() {
@@ -102,7 +142,7 @@ export default function ProductPage() {
   const router = useRouter();
   const productId = parseInt(params?.id as string);
   
-  const [product, setProduct] = useState<Product | null>(null);
+  const [product, setProduct] = useState<LocalProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,7 +162,7 @@ export default function ProductPage() {
         const productData = await getProduct(productId);
         
         console.log('✅ تم جلب المنتج:', productData);
-        const convertedProduct = convertApiProductToProduct(productData);
+        const convertedProduct = convertApiProductToLocalProduct(productData);
         setProduct(convertedProduct);
         
       } catch (err: any) {
@@ -188,7 +228,7 @@ export default function ProductPage() {
     );
   }
 
-  const handleAddToCart = (product: Product, quantity: number) => {
+  const handleAddToCart = (product: LocalProduct, quantity: number) => {
     console.log(`إضافة ${quantity} من ${product.nameAr} للسلة`);
   };
 
@@ -198,8 +238,8 @@ export default function ProductPage() {
 
   return (
     <ProductDetailsPage
-      product={product}
-      onAddToCart={handleAddToCart}
+      product={product as any}
+      onAddToCart={handleAddToCart as any}
       onBackToProducts={handleBackToProducts}
     />
   );
