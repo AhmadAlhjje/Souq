@@ -1,13 +1,8 @@
-// contexts/CartContext.tsx
-'use client';
+// src/contexts/CartContext.tsx
+"use client";
 
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
-import { Product } from '@/types/product';
-
-export interface CartItem extends Product {
-  cartQuantity: number;
-  addedAt: Date;
-}
+import { Product, CartItem } from '@/types/product'; // ✅ استيراد CartItem من product.ts
 
 interface CartState {
   items: CartItem[];
@@ -84,12 +79,28 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'ADD_TO_CART': {
       const { product, quantity } = action.payload;
       
-      // التحقق من بيانات المنتج
-      if (!product || !product.id) {
-        console.error('Product must have an id:', product);
+      // ✅ التحقق 1: إذا المنتج غير متوفر أصلاً
+      if (!product.inStock) {
+        console.warn(`Product "${product.name}" is out of stock and cannot be added to cart.`);
         return state;
       }
-      
+
+      // ✅ التحقق 2: إذا الكمية المطلوبة أكبر من المخزون
+      if (quantity > product.stock) {
+        console.warn(`Requested quantity (${quantity}) exceeds available stock (${product.stock}) for product "${product.name}".`);
+        return state;
+      }
+
+      // ✅ التحقق 3: إذا المنتج موجود بالفعل، تحقق من أن المجموع لا يتجاوز المخزون
+      const existingItem = state.items.find(item => item.id === product.id);
+      if (existingItem) {
+        const totalAfterAdd = existingItem.cartQuantity + quantity;
+        if (totalAfterAdd > product.stock) {
+          console.warn(`Total quantity after add (${totalAfterAdd}) exceeds available stock (${product.stock}) for product "${product.name}".`);
+          return state;
+        }
+      }
+
       console.log('Adding to cart:', { product, quantity });
       
       const existingItemIndex = state.items.findIndex(item => item.id === product.id);
@@ -97,7 +108,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       let newItems: CartItem[];
       
       if (existingItemIndex >= 0) {
-        // المنتج موجود بالفعل، قم بتحديث الكمية
         console.log('Product exists, updating quantity');
         newItems = state.items.map(item =>
           item.id === product.id
@@ -105,7 +115,6 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
             : item
         );
       } else {
-        // منتج جديد، أضفه للسلة
         console.log('New product, adding to cart');
         const newItem: CartItem = {
           ...product,
@@ -129,10 +138,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       };
       
       console.log('New cart state:', newState);
-      
-      // حفظ في localStorage
       saveCartToStorage(newState);
-      
       return newState;
     }
     
@@ -153,9 +159,7 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         totalPrice,
       };
       
-      // حفظ في localStorage
       saveCartToStorage(newState);
-      
       return newState;
     }
     
@@ -165,8 +169,13 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       console.log('Updating quantity:', { productId, quantity });
       
       if (quantity <= 0) {
-        // إذا كانت الكمية 0 أو أقل، احذف المنتج
         return cartReducer(state, { type: 'REMOVE_FROM_CART', payload: { productId } });
+      }
+      
+      const existingItem = state.items.find(item => item.id === productId);
+      if (existingItem && quantity > existingItem.stock) {
+        console.warn(`Quantity ${quantity} exceeds available stock ${existingItem.stock} for product ${existingItem.name}`);
+        return state;
       }
       
       const newItems = state.items.map(item =>
@@ -188,15 +197,12 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         totalPrice,
       };
       
-      // حفظ في localStorage
       saveCartToStorage(newState);
-      
       return newState;
     }
     
     case 'CLEAR_CART':
       console.log('Clearing cart');
-      // حذف من localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('cart');
       }
@@ -254,6 +260,30 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   
   const addToCart = (product: Product, quantity: number) => {
     console.log('addToCart function called:', { product, quantity });
+
+    // ✅ التحقق 1: إذا المنتج غير متوفر أصلاً
+    if (!product.inStock) {
+      console.warn(`Product "${product.name}" is out of stock and cannot be added to cart.`);
+      return;
+    }
+
+    // ✅ التحقق 2: إذا الكمية المطلوبة أكبر من المخزون
+    if (quantity > product.stock) {
+      console.warn(`Requested quantity (${quantity}) exceeds available stock (${product.stock}) for product "${product.name}".`);
+      return;
+    }
+
+    // ✅ التحقق 3: إذا المنتج موجود بالفعل، تحقق من أن المجموع لا يتجاوز المخزون
+    const existingItem = state.items.find(item => item.id === product.id);
+    if (existingItem) {
+      const totalAfterAdd = existingItem.cartQuantity + quantity;
+      if (totalAfterAdd > product.stock) {
+        console.warn(`Total quantity after add (${totalAfterAdd}) exceeds available stock (${product.stock}) for product "${product.name}".`);
+        return;
+      }
+    }
+
+    // ✅ إذا اجتاز كل التحققات، أضف للسلة
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
   };
   
@@ -332,14 +362,10 @@ export const useCart = (): CartContextType => {
 export const useCartNotifications = () => {
   const showAddToCartSuccess = (productName: string, quantity: number) => {
     console.log(`تم إضافة ${quantity} من ${productName} إلى السلة`);
-    
-    // مثال على توست بسيط:
-    // toast.success(`تم إضافة ${quantity} من ${productName} إلى السلة`);
   };
   
   const showRemoveFromCartSuccess = (productName: string) => {
     console.log(`تم حذف ${productName} من السلة`);
-    // toast.success(`تم حذف ${productName} من السلة`);
   };
   
   return {

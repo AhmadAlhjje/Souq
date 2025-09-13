@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// StoresSection.tsx - محدث لعرض العروض العامة
+import React, { useState, useCallback } from 'react';
 import Button from '../atoms/Button';
 import Typography from '../atoms/Typography';
 import Icon from '../atoms/Icon';
 import StoreCard from '../organisms/StoreCard';
 import OffersSlider from '../organisms/OffersSlider';
-import SearchInput from '../molecules/SearchInput';
+import SearchWithApi from '../molecules/SearchWithApi';
+import SearchResults from '../molecules/SearchResults';
+import { SearchStoreResponse } from '../../api/stores';
 
 // نفس interface المحلي بدون تغيير
 interface Store {
@@ -25,21 +28,125 @@ const StoresSection: React.FC<StoresSectionProps> = ({
   stores,
   onViewDetails
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchStoreResponse | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [currentSearchTerm, setCurrentSearchTerm] = useState('');
 
-  // فلترة المتاجر حسب الاسم (بنفس المنطق السابق)
-  const filteredStores = stores.filter(store =>
-    store.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // استخدام useCallback لمنع إعادة إنشاء الدوال
+  const handleSearchResults = useCallback((results: SearchStoreResponse | null) => {
+    setSearchResults(results);
+  }, []);
+
+  const handleSearchError = useCallback((error: string | null) => {
+    setSearchError(error);
+  }, []);
+
+  const handleSearchLoading = useCallback((loading: boolean) => {
+    setIsSearching(loading);
+  }, []);
+
+  const handleSearchTermChange = useCallback((term: string) => {
+    setCurrentSearchTerm(term);
+  }, []);
+
+  // تحويل متجر API إلى متجر محلي
+  const convertApiStoreToLocal = useCallback((apiStore: any): Store => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+    
+    let imageUrl = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
+    
+    // أولاً جرب الصور العادية (images) - الأولوية الأولى
+    if (apiStore.images) {
+      try {
+        let images;
+        if (typeof apiStore.images === 'string') {
+          images = JSON.parse(apiStore.images);
+        } else {
+          images = apiStore.images;
+        }
+        
+        if (Array.isArray(images) && images.length > 0) {
+          const firstImage = images[0];
+          if (firstImage && firstImage !== 'null' && firstImage !== '') {
+            if (firstImage.startsWith('/uploads')) {
+              imageUrl = `${baseUrl}${firstImage}`;
+            } else if (firstImage.startsWith('http')) {
+              imageUrl = firstImage;
+            } else {
+              imageUrl = `${baseUrl}/${firstImage}`;
+            }
+            // إذا وجدنا صورة صالحة، استخدمها ولا تكمل
+            return {
+              id: apiStore.store_id,
+              name: apiStore.store_name,
+              image: imageUrl,
+              location: apiStore.store_address,
+              rating: apiStore.averageRating || undefined,
+              reviewsCount: apiStore.reviewsCount || undefined
+            };
+          }
+        }
+      } catch (error) {
+        console.error('خطأ في تحليل صور المتجر:', error);
+      }
+    }
+    
+    // إذا لم توجد صور عادية، استخدم الشعار كبديل
+    if (apiStore.logo_image && apiStore.logo_image !== 'null' && apiStore.logo_image !== '') {
+      if (apiStore.logo_image.startsWith('/uploads')) {
+        imageUrl = `${baseUrl}${apiStore.logo_image}`;
+      } else if (apiStore.logo_image.startsWith('http')) {
+        imageUrl = apiStore.logo_image;
+      } else {
+        imageUrl = `${baseUrl}/${apiStore.logo_image}`;
+      }
+    }
+
+    return {
+      id: apiStore.store_id,
+      name: apiStore.store_name,
+      image: imageUrl,
+      location: apiStore.store_address,
+      rating: apiStore.averageRating || undefined,
+      reviewsCount: apiStore.reviewsCount || undefined
+    };
+  }, []);
+
+  // تحديد المتاجر المعروضة (نتائج البحث أو المتاجر الأصلية)
+  const displayedStores = searchResults 
+    ? searchResults.stores.map(convertApiStoreToLocal)
+    : stores;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* العروض - بنفس التنسيق السابق */}
+      {/* العروض العامة من جميع المتاجر - بدون تمرير storeId */}
       <OffersSlider />
 
-      {/* Stores Grid - بنفس التنسيق السابق */}
+      {/* Search Section */}
+      <div className="my-8">
+        <div className="max-w-2xl mx-auto">
+          <SearchWithApi
+            onSearchResults={handleSearchResults}
+            onSearchError={handleSearchError}
+            onSearchLoading={handleSearchLoading}
+            onSearchTermChange={handleSearchTermChange}
+            placeholder="ابحث عن المتاجر..."
+            className="w-full"
+          />
+          
+          <SearchResults
+            searchResults={searchResults}
+            searchError={searchError}
+            isSearching={isSearching}
+            searchTerm={currentSearchTerm}
+          />
+        </div>
+      </div>
+
+      {/* Stores Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {filteredStores.map((store) => (
+        {displayedStores.map((store) => (
           <StoreCard
             key={store.id}
             store={store}
@@ -48,27 +155,21 @@ const StoresSection: React.FC<StoresSectionProps> = ({
         ))}
       </div>
 
-      {/* No Results Message - بنفس التنسيق السابق */}
-      {filteredStores.length === 0 && searchTerm && (
+      {/* No Results Message */}
+      {displayedStores.length === 0 && currentSearchTerm && !isSearching && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🔍</div>
           <Typography variant="h3" className="text-gray-500 mb-4">
             لا توجد نتائج
           </Typography>
           <Typography variant="body" className="text-gray-400 mb-6">
-            لم نجد أي متاجر تطابق بحثك عن “{searchTerm}”
+            لم نجد أي متاجر تطابق بحثك عن &quot;{currentSearchTerm}&quot;
           </Typography>
-          <button 
-            onClick={() => setSearchTerm('')}
-            className="bg-teal-100 text-teal-700 px-6 py-2 rounded-lg hover:bg-teal-200 transition-colors"
-          >
-            إزالة الفلتر
-          </button>
         </div>
       )}
 
-      {/* Load More Button - بنفس التنسيق السابق */}
-      {filteredStores.length > 0 && (
+      {/* Load More Button */}
+      {displayedStores.length > 0 && !currentSearchTerm && (
         <div className="text-center">
           <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
             <span>استكشف جميع المتاجر</span>

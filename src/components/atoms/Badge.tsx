@@ -1,10 +1,11 @@
+// components/atoms/Badge.tsx
 import React from 'react';
 
 interface BadgeProps {
   children?: React.ReactNode;
-  text?: string; // إضافة text property
-  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary' | 'hero';
-  className?: string; // إضافة className للمرونة
+  text?: string;
+  variant?: 'default' | 'sale' | 'new' | 'saleNew' | 'defaultNew' | 'newNew' | 'primary' | 'hero' | 'success' | 'danger' | 'info' | 'warning';
+  className?: string;
 }
 
 const Badge: React.FC<BadgeProps> = ({
@@ -21,10 +22,13 @@ const Badge: React.FC<BadgeProps> = ({
     defaultNew: "bg-[#CFF7EE] text-[#004D5A]",
     newNew: "bg-[#BAF3E6] text-[#004D5A]",
     primary: "bg-[#004D5A] text-white",
-    hero: "bg-gradient-to-r from-[#96EDD9] to-[#7dd3bf] text-[#004D5A] font-semibold"
+    hero: "bg-gradient-to-r from-[#96EDD9] to-[#7dd3bf] text-[#004D5A] font-semibold",
+    success: "bg-green-100 text-green-800",
+    danger: "bg-red-100 text-red-800", 
+    info: "bg-blue-100 text-blue-800",
+    warning: "bg-yellow-100 text-yellow-800"
   };
 
-  // تحديد المحتوى - إما text أو children
   const content = children || text;
                   
   return (

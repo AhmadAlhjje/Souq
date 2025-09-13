@@ -38,7 +38,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
   mainImageClassName = '',
   thumbnailsClassName = '',
   aspectRatio = 'square',
-  maxThumbnails = 12
+  maxThumbnails = 8 // تم تغييرها إلى 8 كما طُلب
 }) => {
   const [internalSelectedIndex, setInternalSelectedIndex] = useState(0);
   
@@ -47,6 +47,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
     : internalSelectedIndex;
 
   const handleImageSelect = useCallback((index: number) => {
+    console.log('تم اختيار الصورة:', index);
     if (externalSelectedIndex === undefined) {
       setInternalSelectedIndex(index);
     }
@@ -57,6 +58,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
 
   const handleMainImageClick = useCallback(() => {
     if (onImageClick) {
+      console.log('نقر على الصورة الرئيسية:', selectedIndex);
       onImageClick(selectedIndex);
     }
   }, [onImageClick, selectedIndex]);
@@ -80,7 +82,12 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
   const currentBadgeType = getBadgeType();
   const currentBadgeText = getBadgeText();
 
+  // معلومات التشخيص
+  console.log('ProductGallery - عدد الصور:', images?.length || 0);
+  console.log('ProductGallery - الصورة المحددة:', selectedIndex);
+
   if (!images || images.length === 0) {
+    console.log('لا توجد صور، عرض الصورة الافتراضية');
     return (
       <div className={`space-y-6 ${className}`}>
         <ProductImage
@@ -102,7 +109,7 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
       <div className="bg-white rounded-xl overflow-hidden shadow-lg w-full">
         <ProductImage
           src={images[selectedIndex] || images[0]}
-          alt={productName}
+          alt={`${productName} - صورة ${selectedIndex + 1}`}
           className={`w-full ${mainImageClassName}`}
           onClick={onImageClick ? handleMainImageClick : undefined}
           aspectRatio={aspectRatio}
@@ -113,8 +120,8 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
         />
       </div>
 
-      {/* الصور المصغرة */}
-      {images.length > 1 && (
+      {/* الصور المصغرة - تظهر دائماً مع محلات للصور الفارغة */}
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
         <ImageThumbnails
           images={images}
           selectedIndex={selectedIndex}
@@ -123,7 +130,8 @@ const ProductGallery: React.FC<ProductGalleryProps> = ({
           maxVisible={maxThumbnails}
           className={thumbnailsClassName}
         />
-      )}
+      </div>
+
     </div>
   );
 };

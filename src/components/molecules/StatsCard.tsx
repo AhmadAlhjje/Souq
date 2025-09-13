@@ -1,42 +1,100 @@
-// ===========================================
-// 4. StatsCard.tsx
-// ===========================================
-'use client';
-import React from 'react';
-import Typography from '@/components/atoms/Typography';
-import useTheme from '@/hooks/useTheme';
+// src/components/molecules/StatsCard.tsx
+"use client";
 
-export interface StatCardProps {
-  value: string;
-  label: string;
-  className?: string;
+import React from "react";
+import { LucideIcon } from "lucide-react";
+import { useThemeContext } from "@/contexts/ThemeContext";
+
+interface StatsCardProps {
+  title: string;
+  value: number | string;
+  icon: LucideIcon;
+  color: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
+  loading?: boolean;
 }
 
-const StatsCard: React.FC<StatCardProps> = ({ value, label, className = '' }) => {
-  const { isDark } = useTheme();
+const StatsCard: React.FC<StatsCardProps> = ({
+  title,
+  value,
+  icon: Icon,
+  color,
+  loading = false
+}) => {
+  const { isDark } = useThemeContext();
+
+  const colorClasses = {
+    blue: {
+      bg: isDark ? 'bg-[#5CA9B5]/15' : 'bg-[#5CA9B5]/10',
+      icon: isDark ? 'text-[#004D5A]' : 'text-[#004D5A]',
+      border: isDark ? 'border-[#5CA9B5]/40' : 'border-[#5CA9B5]/30'
+    },
+    green: {
+      bg: isDark ? 'bg-green-900/20' : 'bg-green-50',
+      icon: isDark ? 'text-green-400' : 'text-green-500',
+      border: isDark ? 'border-green-800' : 'border-green-200'
+    },
+    red: {
+      bg: isDark ? 'bg-red-900/20' : 'bg-red-50',
+      icon: isDark ? 'text-red-400' : 'text-red-500',
+      border: isDark ? 'border-red-800' : 'border-red-200'
+    },
+    yellow: {
+      bg: isDark ? 'bg-yellow-900/20' : 'bg-yellow-50',
+      icon: isDark ? 'text-yellow-400' : 'text-yellow-500',
+      border: isDark ? 'border-yellow-800' : 'border-yellow-200'
+    },
+    purple: {
+      bg: isDark ? 'bg-[#004D5A]/15' : 'bg-[#004D5A]/8',
+      icon: isDark ? 'text-[#5CA9B5]' : 'text-[#5CA9B5]',
+      border: isDark ? 'border-[#004D5A]/40' : 'border-[#004D5A]/25'
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={`rounded-lg border p-6 animate-pulse ${
+        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className={`h-4 rounded w-20 mb-2 ${
+              isDark ? 'bg-gray-700' : 'bg-gray-200'
+            }`}></div>
+            <div className={`h-8 rounded w-16 ${
+              isDark ? 'bg-gray-700' : 'bg-gray-200'
+            }`}></div>
+          </div>
+          <div className={`w-12 h-12 rounded-lg ${
+            isDark ? 'bg-gray-700' : 'bg-gray-200'
+          }`}></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={`group space-y-3 p-3 lg:p-4 rounded-2xl transition-all duration-300 ${
+    <div className={`rounded-lg border p-6 hover:shadow-md transition-shadow ${
       isDark 
-        ? 'hover:bg-slate-700/40 border border-slate-600/30' 
-        : 'hover:bg-white/20 border border-white/20'
-    } ${className}`}>
-      <Typography 
-        variant="h1" 
-        className={`group-hover:scale-110 transition-all duration-300 text-2xl lg:text-3xl xl:text-4xl ${
-          isDark ? 'text-emerald-300' : 'text-teal-800'
-        }`}
-      >
-        {value}
-      </Typography>
-      <Typography 
-        variant="caption" 
-        className={`font-medium transition-colors duration-300 ${
-          isDark ? 'text-slate-300' : 'text-teal-800/80'
-        }`}
-      >
-        {label}
-      </Typography>
+        ? 'bg-gray-800 border-gray-700 hover:shadow-gray-900/50' 
+        : 'bg-white border-gray-200'
+    }`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className={`text-sm font-medium mb-1 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {title}
+          </p>
+          <p className={`text-2xl font-bold ${
+            isDark ? 'text-white' : 'text-gray-900'
+          }`}>
+            {value}
+          </p>
+        </div>
+        <div className={`w-12 h-12 rounded-lg border flex items-center justify-center ${colorClasses[color].bg} ${colorClasses[color].border}`}>
+          <Icon className={`w-6 h-6 ${colorClasses[color].icon}`} />
+        </div>
+      </div>
     </div>
   );
 };

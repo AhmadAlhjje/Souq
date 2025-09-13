@@ -4,15 +4,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Product } from "@/types/product";
-import { getStore } from "@/api/stores"; // تأكد من المسار الصحيح
-
-// // تحميل المكونات بشكل ديناميكي
-// const DynamicSaleCarousel = dynamic(() => import('../organisms/SaleProductsCarousel'), {
-//   loading: () => (
-//     <div className="animate-pulse bg-gray-200 rounded-2xl h-64 mb-8"></div>
-//   ),
-// });
+import { Product } from "@/api/storeProduct";
+import { getStore, ApiStore as ImportedApiStore } from "@/api/stores";
 
 const DynamicProductsSection = dynamic(
   () => import("../organisms/ProductsSection"),
@@ -30,12 +23,18 @@ interface ApiProduct {
   name: string;
   description: string;
   price: string;
+  discount_percentage: string | null;
   stock_quantity: number;
   images: string;
   created_at: string;
+  discounted_price: number;
+  discount_amount: number;
+  has_discount: boolean;
+  averageRating: number;
+  reviewsCount: number;
+  original_price: number;
 }
-
-// نوع للمتجر من الـ API
+// في ProductLayout.tsx - استبدل interface ApiStore بهذا:
 interface ApiStore {
   store_id: number;
   user_id: number;
@@ -50,9 +49,21 @@ interface ApiStore {
     whatsapp_number: string;
   };
   Products: ApiProduct[];
+  discountStats?: {
+    totalProductsWithDiscount: number;
+    totalProducts: number;
+    totalDiscountValue: number;
+    discountPercentage: number;
+  };
+  averageRating?: number;
+  reviewsCount?: number;
+  totalRevenue?: number;
+  totalOrders?: number;
+  thisMonthRevenue?: number;
 }
+
 // تعريف الـ BASE_URL ودالة getFirstImage
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.152:4000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 function getFirstImage(imagesField: string | undefined): string {
   if (!imagesField) return `${BASE_URL}/default-product.jpg`;
@@ -63,7 +74,7 @@ function getFirstImage(imagesField: string | undefined): string {
     // إذا كان النص نفسه عبارة عن JSON string لمصفوفة
     if (typeof parsed === "string" && parsed.startsWith("[")) {
       parsed = JSON.parse(parsed);
-    }
+    } 
 
     const firstImage: unknown =
       Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : parsed;
@@ -82,13 +93,24 @@ function getFirstImage(imagesField: string | undefined): string {
     return `${BASE_URL}/default-product.jpg`;
   }
 }
+// في ProductLayout.tsx - استبدل دالة convertApiProductToProduct بهذا:
 
-// تحويل منتج API إلى المنتج المحلي
 const convertApiProductToProduct = (
   apiProduct: ApiProduct,
   storeInfo?: ApiStore
 ): Product => {
   const imageUrl = getFirstImage(apiProduct.images);
+
+  // إصلاح نوع status - استخدام النوع الصحيح
+  let productStatus: "active" | "out_of_stock" | "low_stock";
+  
+  if (apiProduct.stock_quantity <= 0) {
+    productStatus = "out_of_stock";
+  } else if (apiProduct.stock_quantity <= 5) {
+    productStatus = "low_stock";
+  } else {
+    productStatus = "active";
+  }
 
   return {
     id: apiProduct.product_id,
@@ -97,17 +119,14 @@ const convertApiProductToProduct = (
     category: "general",
     categoryAr: "عام",
     price: parseFloat(apiProduct.price),
-    salePrice:
-      Math.random() > 0.7
-        ? Math.round(parseFloat(apiProduct.price) * 0.8)
-        : undefined,
-    originalPrice: parseFloat(apiProduct.price),
-    rating: Math.round((Math.random() * 2 + 3) * 10) / 10,
-    reviewCount: Math.floor(Math.random() * 200) + 10,
+    salePrice: apiProduct.has_discount ? apiProduct.discounted_price : undefined,
+    originalPrice: apiProduct.original_price,
+    rating: apiProduct.averageRating || Math.round((Math.random() * 2 + 3) * 10) / 10,
+    reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 200) + 10,
     image: imageUrl,
     isNew: Math.random() > 0.8,
     stock: apiProduct.stock_quantity,
-    status: apiProduct.stock_quantity > 0 ? "active" : "out_of_stock",
+    status: productStatus, // استخدام النوع المُصحح
     description: apiProduct.description,
     descriptionAr: apiProduct.description,
     brand: storeInfo?.store_name || "متجر محلي",
@@ -115,8 +134,14 @@ const convertApiProductToProduct = (
     sales: Math.floor(Math.random() * 100) + 5,
     inStock: apiProduct.stock_quantity > 0,
     createdAt: apiProduct.created_at,
+    
+    // الحقول الجديدة للخصومات
+    discountPercentage: apiProduct.discount_percentage ? parseFloat(apiProduct.discount_percentage) : undefined,
+    discountAmount: apiProduct.has_discount ? apiProduct.discount_amount : undefined,
+    hasDiscount: apiProduct.has_discount,
   };
 };
+
 
 function ProductContent() {
   const searchParams = useSearchParams();
@@ -129,51 +154,62 @@ function ProductContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // جلب البيانات عند تحميل الصفحة
-  useEffect(() => {
-    const fetchStoreData = async () => {
-      if (!storeId) {
-        setError("معرف المتجر مطلوب");
-        setLoading(false);
-        return;
-      }
+useEffect(() => {
+  const fetchStoreData = async () => {
+    if (!storeId) {
+      setError("معرف المتجر مطلوب");
+      setLoading(false);
+      return;
+    }
 
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        console.log("🔄 جلب بيانات المتجر...", storeId);
-        const storeData = await getStore(parseInt(storeId));
+      console.log("🔄 جلب بيانات المتجر...", storeId);
+      const storeData = await getStore(parseInt(storeId));
+      
+      console.log("✅ تم استلام بيانات المتجر:", storeData);
+      console.log("📦 عدد المنتجات:", storeData.Products?.length || 0);
+      console.log("🛍️ مصفوفة المنتجات:", storeData.Products);
 
-        console.log("✅ تم جلب البيانات:", storeData);
-        setStoreInfo(storeData);
-
+      // التحقق من وجود المنتجات بعد الجلب
+      if (!storeData.Products || storeData.Products.length === 0) {
+        console.error("❌ لا توجد منتجات في بيانات المتجر!");
+        console.log("📊 البيانات الكاملة للمتجر:", storeData);
+        
+        // إعداد المتجر حتى لو لم توجد منتجات
+        setStoreInfo(storeData as ApiStore);
+        setProducts([]);
+      } else {
         // تحويل المنتجات
-        const convertedProducts = storeData.Products.map((product) =>
-          convertApiProductToProduct(product, storeData)
-        );
-
+        console.log("🔄 بدء تحويل المنتجات...");
+        const convertedProducts = storeData.Products.map((product, index) => {
+          console.log(`تحويل منتج ${index + 1}:`, product);
+          return convertApiProductToProduct(product as ApiProduct, storeData as ApiStore);
+        });
+        
+        setStoreInfo(storeData as ApiStore);
         setProducts(convertedProducts);
-        console.log(`✅ تم تحويل ${convertedProducts.length} منتج`);
-      } catch (err: any) {
-        console.error("❌ خطأ في جلب البيانات:", err);
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "حدث خطأ في جلب البيانات"
-        );
-      } finally {
-        setLoading(false);
+        
+        console.log('🔢 عدد المنتجات المحولة:', convertedProducts.length);
+        console.log('📦 أول منتج محول:', convertedProducts[0]);
       }
-    };
+      
+    } catch (err: any) {
+      console.error("❌ خطأ في جلب البيانات:", err);
+      setError(
+        err.response?.data?.message ||
+          err.message ||
+          "حدث خطأ في جلب البيانات"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchStoreData();
-  }, [storeId]);
-
-  // المنتجات المخفضة
-  const saleProducts = products.filter(
-    (product) => product.salePrice && product.salePrice > 0
-  );
+  fetchStoreData();
+}, [storeId]);
 
   const handleNavigateLeft = () => {
     console.log("التنقل لليسار");
@@ -254,7 +290,7 @@ function ProductContent() {
       style={{ backgroundColor: "#F6F8F9" }}
     >
       <div className="mx-auto">
-        {/* رسالة ترحيب مع معلومات المتجر الحقيقية */}
+        {/* رسالة ترحيب مع معلومات المتجر الحقيقية ومعلومات الخصومات */}
         {storeInfo && (
           <div className="p-6 mb-6 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 text-center shadow-sm">
             <div className="flex items-center justify-center gap-3 mb-2">
@@ -264,33 +300,21 @@ function ProductContent() {
               </h2>
             </div>
             <p className="text-teal-600 mb-2">{storeInfo.description}</p>
-            <p className="text-sm text-teal-500">
-              📍 {storeInfo.store_address} | 📞 {storeInfo.User.whatsapp_number}{" "}
-              | 📦 {products.length} منتج متوفر
+            <p className="text-sm text-teal-500 mb-3">
+              📍 {storeInfo.store_address} | 📞 {storeInfo.User.whatsapp_number} | 📦 {products.length} منتج متوفر
             </p>
-            {/* {saleProducts.length > 0 && (
-              <p className="text-sm text-red-600 mt-2">
-                🔥 {saleProducts.length} منتج مخفض متاح الآن!
-              </p>
-            )} */}
+            
           </div>
         )}
 
-        {/* عرض المنتجات المخفضة إذا وُجدت
-        {saleProducts.length > 0 && (
-          <DynamicSaleCarousel 
-            saleProducts={saleProducts}
-            onNavigateLeft={handleNavigateLeft}
-            onNavigateRight={handleNavigateRight}
-          />
-        )} */}
-
-        <div className="grid grid-cols-1 gap-8">
-          <DynamicProductsSection
-            products={products}
-            onViewDetails={handleViewDetails}
-          />
-        </div>
+<div className="grid grid-cols-1 gap-8">
+  <DynamicProductsSection
+    products={products}
+    onViewDetails={handleViewDetails}
+    storeId={storeInfo?.store_id} // تمرير معرف المتجر
+    storeName={storeInfo?.store_name} // تمرير اسم المتجر
+  />
+</div>
 
         {/* قسم الشكر مع إحصائيات المتجر */}
         <div

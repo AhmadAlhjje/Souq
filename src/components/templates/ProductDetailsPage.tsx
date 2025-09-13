@@ -17,15 +17,16 @@ import {
   ZoomIn,
 } from "lucide-react";
 import { Product } from "@/types/product";
-import { useCart, useCartNotifications } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/useCart"; // استخدام Hook الجديد
+import { useSessionContext } from '@/components/SessionProvider';
+import { useToast } from '@/hooks/useToast';
 
 interface ProductDetailsPageProps {
   product: Product;
-  onAddToCart?: (product: Product, quantity: number) => void;
   onBackToProducts?: () => void;
 }
 
-// مكون عرض الصور المتقدم
+// مكون عرض الصور المتقدم (نفس الكود السابق)
 interface ImageGalleryProps {
   images: string[];
   currentIndex: number;
@@ -47,7 +48,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
   onSelectImage,
   productName,
 }) => {
-  // إغلاق المعرض بالضغط على Escape
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -70,12 +70,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center">
-      {/* أزرار التحكم العلوية */}
       <div className="absolute top-4 left-4 right-4 flex justify-between items-center text-white z-10">
         <div className="flex items-center gap-4">
-          <span className="text-sm">
-            {currentIndex + 1} من {images.length}
-          </span>
+          <span className="text-sm">{currentIndex + 1} من {images.length}</span>
           <span className="text-sm opacity-75">{productName}</span>
         </div>
         <button
@@ -86,7 +83,6 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
         </button>
       </div>
 
-      {/* الصورة الرئيسية */}
       <div className="flex items-center justify-center w-full h-full px-20">
         <div className="relative max-w-4xl max-h-[80vh] w-full h-full flex items-center justify-center">
           <img
@@ -95,17 +91,15 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
             className="max-w-full max-h-full object-contain"
             style={{ userSelect: 'none' }}
           />
-          
-          {/* أيقونة التكبير */}
           <div className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full">
             <ZoomIn className="w-4 h-4" />
           </div>
         </div>
       </div>
 
-      {/* أزرار التنقل */}
       {images.length > 1 && (
-        <>   <button
+        <>
+          <button
             onClick={onNext}
             className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 rounded-full bg-black bg-opacity-50 text-white hover:bg-opacity-75 transition-all"
             disabled={currentIndex === images.length - 1}
@@ -119,12 +113,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
           >
             <ChevronRight className="w-6 h-6" />
           </button>
-          
-       
         </>
       )}
 
-      {/* الصور المصغرة في الأسفل */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-md overflow-x-auto">
         {images.map((img, idx) => (
           <button
@@ -134,16 +125,11 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
               idx === currentIndex ? 'border-white' : 'border-gray-400 opacity-70'
             }`}
           >
-            <img
-              src={img}
-              alt=""
-              className="w-full h-full object-cover"
-            />
+            <img src={img} alt="" className="w-full h-full object-cover" />
           </button>
         ))}
       </div>
 
-      {/* مؤشر النقاط */}
       <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 flex gap-2">
         {images.map((_, idx) => (
           <div
@@ -160,10 +146,21 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({
 
 const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   product,
-  onAddToCart,
   onBackToProducts,
 }) => {
   const router = useRouter();
+  const { sessionId } = useSessionContext();
+  const { showToast } = useToast();
+  
+  // استخدام Hook السلة الجديد
+  const { 
+    addToCart, 
+    cartData, 
+    isLoading: cartLoading,
+    fetchCart
+  } = useCart();
+
+  // State المحلي
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
@@ -171,18 +168,14 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
-  const { addToCart, isItemInCart, getItemQuantity, openCart, updateQuantity } =
-    useCart();
-  const { showAddToCartSuccess } = useCartNotifications();
-
-  // إنشاء مصفوفة الصور من المنتج
+  // معالجة الصور
   const getProductImages = () => {
     if ((product as any).images) {
       try {
         console.log("Raw images data:", (product as any).images);
         const parsed = JSON.parse((product as any).images);
         const images = Array.isArray(parsed) ? parsed : [(product as any).images];
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.152:4000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
         
         const imageUrls = images.map((img: string) => {
           const cleanImg = img.replace(/^\/uploads\//, "");
@@ -201,6 +194,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   };
 
   const productImages = getProductImages();
+
+  // التحقق من وجود المنتج في السلة
+  const isInCart = cartData?.items?.some(item => item.product_id === product.id) || false;
+  const cartItem = cartData?.items?.find(item => item.product_id === product.id);
+  const cartQuantity = cartItem?.quantity || 0;
 
   // دوال التحكم في المعرض
   const openGallery = (index: number = selectedImage) => {
@@ -224,59 +222,78 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     setSelectedImage(index);
   };
 
-  // باقي الدوال (نفس الكود السابق)
-  useEffect(() => {
-    const cartQuantity = getItemQuantity(product.id);
-    if (cartQuantity > 0) {
-      setQuantity(cartQuantity);
-    }
-  }, [product.id, getItemQuantity]);
-
+  // تحديث الكمية
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity >= 1 && newQuantity <= (product.stock || 20)) {
       setQuantity(newQuantity);
-      if (isItemInCart(product.id)) {
-        updateQuantity(product.id, newQuantity);
-      }
     }
   };
 
+  // إضافة للسلة
   const handleAddToCart = async () => {
+    if (!sessionId) {
+      showToast('يرجى تسجيل الدخول أولاً', 'error');
+      return;
+    }
+
+    if (!product.inStock || (product.stock && product.stock <= 0)) {
+      showToast('المنتج غير متوفر', 'error');
+      return;
+    }
+
     try {
       setIsAdding(true);
-      if (onAddToCart) {
-        onAddToCart(product, quantity);
-      } else {
-        if (isItemInCart(product.id)) {
-          updateQuantity(product.id, quantity);
-          showAddToCartSuccess(product.name, quantity);
+      console.log('🛒 Adding to cart:', {
+        productId: product.id,
+        quantity: quantity,
+        sessionId
+      });
+
+      await addToCart(product.id, quantity);
+      
+      setShowSuccess(true);
+      showToast(`تم إضافة ${quantity} من ${product.nameAr || product.name} للسلة`, 'success');
+      
+      // إخفاء رسالة النجاح بعد 2 ثانية
+      setTimeout(() => setShowSuccess(false), 2000);
+      
+    } catch (error: any) {
+      console.error('خطأ في إضافة المنتج للسلة:', error);
+      
+      // معالجة رسائل الخطأ
+      let errorMessage = 'فشل في إضافة المنتج للسلة';
+      
+      if (error.message) {
+        if (error.message.includes('المخزون غير كافٍ')) {
+          errorMessage = 'الكمية المطلوبة غير متوفرة';
+        } else if (error.message.includes('المنتج غير متوفر')) {
+          errorMessage = 'المنتج غير متوفر حالياً';
         } else {
-          addToCart(product, quantity);
-          showAddToCartSuccess(product.name, quantity);
+          errorMessage = error.message;
         }
       }
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-    } catch (error) {
-      console.error("خطأ في إضافة المنتج للسلة:", error);
+      
+      showToast(errorMessage, 'error');
     } finally {
       setIsAdding(false);
     }
   };
 
+  // الشراء المباشر
   const handleBuyNow = async () => {
     try {
-      setIsAdding(true);
-      if (!isItemInCart(product.id)) {
-        addToCart(product, quantity);
-      } else {
-        updateQuantity(product.id, quantity);
+      if (!isInCart) {
+        await handleAddToCart();
       }
-      setTimeout(() => openCart(), 500);
+      
+      // انتظار قليلاً ثم التوجه للدفع
+      setTimeout(() => {
+        router.push('/checkout');
+      }, 500);
+      
     } catch (error) {
       console.error("خطأ في الشراء المباشر:", error);
-    } finally {
-      setIsAdding(false);
+      showToast('حدث خطأ أثناء تحضير الطلب', 'error');
     }
   };
 
@@ -311,15 +328,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     return productImages[index] || "/images/default-product.jpg";
   };
 
-  const productInCart = isItemInCart(product.id);
-  const cartQuantity = getItemQuantity(product.id);
   const isMaxQuantityReached = quantity >= (product.stock || 20);
   const isMinQuantityReached = quantity <= 1;
 
   return (
     <div className="min-h-screen mt-10 text-gray-800 font-cairo" dir="rtl">
       <div className="mx-auto px-6 py-12 max-w-6xl">
-        {/* الحاوية الرئيسية */}
         <div className="rounded-2xl shadow-lg shadow-gray-200/50 p-8">
           <div className="flex items-center justify-between mb-8">
             <button
@@ -330,7 +344,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               العودة للخلف
             </button>
 
-            {productInCart && (
+            {isInCart && (
               <div className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
                 <Check className="w-4 h-4" />
                 المنتج في السلة ({cartQuantity} قطعة)
@@ -339,16 +353,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start relative">
-            {/* خط فاصل أخضر متدرج بين الأقسام */}
+            {/* خط فاصل */}
             <div
               className="absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 hidden lg:block"
               style={{
-                background:
-                  "linear-gradient(to bottom, transparent 0%, #0d9488 10%, #0d9488 50%, #0d9488 90%, transparent 100%)",
+                background: "linear-gradient(to bottom, transparent 0%, #0d9488 10%, #0d9488 50%, #0d9488 90%, transparent 100%)",
                 width: "1px",
                 backgroundSize: "100% 100%",
               }}
-            ></div>
+            />
 
             {/* القسم 1: التفاصيل */}
             <div className="space-y-3 lg:order-1 pr-4">
@@ -366,9 +379,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               {/* السعر */}
               <div className="font-bold text-teal-600 py-2 text-base">
                 <span>
-                  {product.salePrice
-                    ? product.salePrice
-                    : product.originalPrice || product.price}
+                  {product.salePrice ? product.salePrice : product.originalPrice || product.price}
                 </span>
                 <span className="text-gray-500 mr-1">ر.س</span>
                 {product.salePrice && product.originalPrice && (
@@ -377,22 +388,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       {product.originalPrice} ر.س
                     </span>
                     <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
-                      وفر{" "}
-                      {Math.round(
-                        ((product.originalPrice - product.salePrice) /
-                          product.originalPrice) *
-                          100
-                      )}%
+                      وفر {Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
                     </span>
                   </>
                 )}
               </div>
 
-              {/* وصف مفصل */}
+              {/* الوصف */}
               <div className="py-3">
-                <h3 className="font-semibold text-gray-900 mb-2 text-sm">
-                  وصف المنتج
-                </h3>
+                <h3 className="font-semibold text-gray-900 mb-2 text-sm">وصف المنتج</h3>
                 <p className="text-gray-600 leading-relaxed text-sm">
                   {product.descriptionAr || product.description}
                 </p>
@@ -403,15 +407,10 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <div className="py-2">
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-600">المتوفر في المخزون:</span>
-                    <span
-                      className={`font-medium ${
-                        product.stock > 10
-                          ? "text-green-600"
-                          : product.stock > 5
-                          ? "text-yellow-600"
-                          : "text-red-600"
-                      }`}
-                    >
+                    <span className={`font-medium ${
+                      product.stock > 10 ? "text-green-600" :
+                      product.stock > 5 ? "text-yellow-600" : "text-red-600"
+                    }`}>
                       {product.stock} قطعة
                     </span>
                   </div>
@@ -430,9 +429,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="px-2 py-1 bg-gray-50 w-8 text-sm">
-                      {quantity}
-                    </span>
+                    <span className="px-2 py-1 bg-gray-50 w-8 text-sm">{quantity}</span>
                     <button
                       onClick={() => handleQuantityChange(quantity + 1)}
                       disabled={isMaxQuantityReached}
@@ -441,10 +438,8 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
-                  {productInCart && (
-                    <span className="text-xs text-teal-600">
-                      (في السلة: {cartQuantity})
-                    </span>
+                  {isInCart && (
+                    <span className="text-xs text-teal-600">(في السلة: {cartQuantity})</span>
                   )}
                 </div>
               </div>
@@ -453,14 +448,14 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               <div className="space-y-3 py-2">
                 <button
                   onClick={handleAddToCart}
-                  disabled={isAdding || !product.inStock}
+                  disabled={isAdding || !product.inStock || cartLoading}
                   className={`w-full py-3 rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
                     !product.inStock
                       ? "bg-gray-400 cursor-not-allowed text-white"
                       : showSuccess
                       ? "bg-green-500 hover:bg-green-600 text-white"
                       : "bg-teal-600 hover:bg-teal-700 text-white"
-                  } ${isAdding ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${isAdding || cartLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {!product.inStock ? (
                     "غير متوفر"
@@ -469,7 +464,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       <Check className="w-4 h-4" />
                       تمت الإضافة
                     </>
-                  ) : isAdding ? (
+                  ) : isAdding || cartLoading ? (
                     <>
                       <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
                       جاري الإضافة
@@ -477,19 +472,19 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   ) : (
                     <>
                       <ShoppingCart className="w-4 h-4" />
-                      {productInCart ? "تحديث الكمية" : "إضافة للسلة"}
+                      {isInCart ? "تحديث الكمية" : "إضافة للسلة"}
                     </>
                   )}
                 </button>
 
                 <button
                   onClick={handleBuyNow}
-                  disabled={isAdding || !product.inStock}
+                  disabled={isAdding || !product.inStock || cartLoading}
                   className="w-full border-2 border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {!product.inStock
                     ? "غير متوفر"
-                    : isAdding
+                    : isAdding || cartLoading
                     ? "جاري التحضير..."
                     : "اشتري الآن"}
                 </button>
@@ -498,7 +493,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
             {/* القسم 2: الصور */}
             <div className="space-y-6 lg:order-2 pl-4">
-              {/* الصورة الرئيسية - قابلة للضغط */}
+              {/* الصورة الرئيسية */}
               <div className="bg-white rounded-xl overflow-hidden shadow-lg w-full">
                 <div
                   className="aspect-square relative bg-gray-100 w-full cursor-pointer group"
@@ -512,31 +507,23 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     onError={() => handleImageError(selectedImage)}
                   />
                   
-                  {/* أيقونة التكبير */}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all duration-300 flex items-center justify-center">
                     <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   
-                  {/* شارة الخصم */}
+                  {/* الشارات */}
                   {product.salePrice && product.originalPrice && (
                     <div className="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded">
-                      -
-                      {Math.round(
-                        ((product.originalPrice - product.salePrice) /
-                          product.originalPrice) *
-                          100
-                      )}%
+                      -{Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
                     </div>
                   )}
                   
-                  {/* شارة جديد */}
                   {product.isNew && !product.salePrice && (
                     <div className="absolute top-2 right-2 bg-green-700 text-white text-[10px] px-2 py-0.5 rounded">
                       جديد
                     </div>
                   )}
                   
-                  {/* شارة نفاد المخزون */}
                   {!product.inStock && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <span className="bg-red-500 text-white px-4 py-2 rounded text-sm font-medium">
@@ -547,51 +534,61 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 </div>
               </div>
 
-              {/* الصور المصغرة - قابلة للضغط */}
-              <div
-                className={`grid gap-2 ${
-                  productImages.length <= 4
-                    ? "grid-cols-4"
-                    : productImages.length <= 6
-                    ? "grid-cols-3"
-                    : "grid-cols-4"
-                }`}
-              >
-                {productImages
-                  .slice(0, Math.min(productImages.length, 12))
-                  .map((img: string, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => openGallery(idx)}
-                      className={`w-full h-16 rounded-lg overflow-hidden border-2 hover:border-teal-400 transition-all duration-200 transform hover:scale-105 ${
-                        selectedImage === idx
-                          ? "border-teal-500"
-                          : "border-gray-200"
-                      }`}
-                    >
-                      <img
-                        src={getImageSrc(idx)}
-                        alt=""
-                        className="w-full h-full object-cover"
-                        onError={() => handleImageError(idx)}
-                      />
-                    </button>
-                  ))}
+              {/* الصور المصغرة - 8 محلات دائمة */}
+              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                <div className="grid grid-cols-4 gap-2">
+                  {Array.from({ length: 8 }).map((_, idx) => {
+                    const hasImage = idx < productImages.length;
+                    const isSelected = selectedImage === idx;
+
+                    if (!hasImage) {
+                      return (
+                        <div
+                          key={`placeholder-${idx}`}
+                          className="aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors cursor-default"
+                        >
+                          <div className="flex flex-col items-center text-gray-300">
+                            <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            <span className="text-xs">إضافة صورة</span>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setSelectedImage(idx);
+                          openGallery(idx);
+                        }}
+                        className={`aspect-square rounded-lg overflow-hidden border-2 hover:border-teal-400 transition-all duration-200 transform hover:scale-105 ${
+                          isSelected ? "border-teal-500 ring-2 ring-teal-200" : "border-gray-200"
+                        }`}
+                      >
+                        <img
+                          src={getImageSrc(idx)}
+                          alt={`صورة ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                          onError={() => handleImageError(idx)}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* معلومات إضافية */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">المتجر:</span>
-                  <span className="font-medium">
-                    {product.brandAr || product.brand || "غير محدد"}
-                  </span>
+                  <span className="font-medium">{product.brandAr || product.brand || "غير محدد"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">التصنيف:</span>
-                  <span className="font-medium">
-                    {product.categoryAr || product.category}
-                  </span>
+                  <span className="font-medium">{product.categoryAr || product.category}</span>
                 </div>
                 {product.sales && (
                   <div className="flex justify-between">

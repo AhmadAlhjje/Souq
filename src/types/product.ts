@@ -1,4 +1,6 @@
-// types/product.ts
+// src/types/product.ts
+
+// ✅ المنتج الأساسي — متوافق تمامًا مع page.tsx و ProductDetailsPageTemplate.tsx
 export interface Product {
   id: number;
   name: string;
@@ -6,49 +8,69 @@ export interface Product {
   category: string;
   categoryAr: string;
   price: number;
-  salePrice?: number; // ✅ إضافة للعروض والخصومات
-  originalPrice?: number; // ✅ إضافة للسعر الأصلي
+  salePrice?: number;
+  originalPrice?: number;
+  rating: number;
+  reviewCount: number;
+  image: string; // الصورة الرئيسية
+  images: string[]; // ✅ مصفوفة مباشرة من أسماء الملفات (مثل: ["img1.jpg", "img2.jpg"])
+  isNew: boolean;
   stock: number;
   status: "active" | "out_of_stock" | "low_stock";
-  image: string;
-  rating: number;
-  reviewCount: number; // ✅ إضافة عدد التقييمات
+  description: string;
+  descriptionAr: string;
+  brand: string;
+  brandAr: string;
   sales: number;
-  isNew?: boolean; // ✅ إضافة للمنتجات الجديدة
-  inStock: boolean; // ✅ إضافة حالة التوفر
-  brand: string; // إضافة brand
-  brandAr: string; // إضافة brandAr
+  inStock: boolean;
   createdAt: string;
-  updatedAt?: string;
-  description?: string;
-  descriptionAr?: string;
-  sku?: string;
-  weight?: number;
-  dimensions?: {
-    length: number;
-    width: number;
-    height: number;
-  };
-  tags?: string[];
-  tagsAr?: string[];
+  discountPercentage?: number;
+  discountAmount?: number;
+  hasDiscount?: boolean;
 }
 
-// نوع عنصر السلة - ✅ إضافة المفقود
-export interface CartItem {
+// ✅ عنصر في سلة التسوق — متوافق مع CartContext.tsx
+export interface CartItem extends Product {
+  cartQuantity: number;
+  addedAt: Date;
+}
+
+// ⭐️ إضافات لتفاصيل المنتج (للصفحة الداخلية)
+export interface ProductDetails extends Product {
+  longDescription?: string;
+  features?: string[];
+  warranty?: string;
+  shippingInfo?: string;
+  returnPolicy?: string;
+}
+
+// ⭐️ مراجعات المنتج
+export interface ProductReview {
   id: number;
-  nameAr?: string;
   productId: number;
-  name: string;
-  price: number;
-  salePrice?: number;
-  image: string;
-  quantity: number;
-  selectedSize?: string;
-  selectedColor?: string;
-  originalPrice?: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  comment: string;
+  verified: boolean;
+  helpful: number;
+  createdAt: Date;
 }
 
-// أنواع متغيرات النجوم - ✅ إضافة المفقود
+// ⭐️ ملخص المراجعات
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
+// ✅ أنواع متغيرات النجوم
 export type StarVariant =
   | "filled"
   | "outlined"
@@ -58,6 +80,7 @@ export type StarVariant =
   | "default"
   | "new";
 
+// ✅ فلاتر المنتجات
 export interface ProductFilters {
   search: string;
   category: string;
@@ -66,6 +89,7 @@ export interface ProductFilters {
   ratingRange?: [number, number];
 }
 
+// ✅ إحصائيات المنتجات
 export interface ProductStats {
   total: number;
   active: number;
@@ -74,17 +98,19 @@ export interface ProductStats {
   totalValue: number;
 }
 
+// ✅ حالة المنتج — موسعة قليلاً
 export type ProductStatus =
   | "active"
   | "out_of_stock"
   | "low_stock"
   | "discontinued";
 
-// ViewMode types - مع دعم أفضل للأنواع المختلفة
+// ✅ أنماط العرض
 export type ViewMode = "grid" | "table" | "list";
 export type SupportedViewMode = "grid" | "table"; // الأنواع المدعومة حالياً
 export type FutureViewMode = "list"; // الأنواع المخططة للمستقبل
 
+// ✅ الفرز
 export type SortBy =
   | "name"
   | "price"
@@ -100,7 +126,7 @@ export interface ProductSorting {
   sortOrder: SortOrder;
 }
 
-// Props interfaces for components
+// ✅ واجهات مكونات البطاقات والجداول
 export interface ProductCardProps {
   product: Product;
   onView?: (product: Product) => void;
@@ -126,7 +152,7 @@ export interface ProductsTableProps {
   onSort?: (sortBy: SortBy) => void;
 }
 
-// محدث ليدعم showListView
+// ✅ فلاتر العرض
 export interface ProductsFilterProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -142,12 +168,13 @@ export interface ProductsFilterProps {
   showListView?: boolean; // خيار لإظهار List View
 }
 
+// ✅ إحصائيات المنتجات
 export interface ProductsStatsProps {
   products: Product[];
   loading?: boolean;
 }
 
-// Search Box Props
+// ✅ مربع البحث
 export interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
@@ -156,7 +183,7 @@ export interface SearchBoxProps {
   disabled?: boolean;
 }
 
-// Badge Props
+// ✅ الشارات (Badges)
 export interface BadgeProps {
   variant: "success" | "warning" | "danger" | "info" | "neutral";
   children: React.ReactNode;
@@ -164,7 +191,7 @@ export interface BadgeProps {
   size?: "sm" | "md" | "lg";
 }
 
-// Button Props (Updated to match current Button component)
+// ✅ الأزرار — متوافقة مع Button component
 export interface ButtonProps {
   text: string;
   onClick?: () => void;
@@ -185,7 +212,7 @@ export interface ButtonProps {
   children?: React.ReactNode;
 }
 
-// Input Props
+// ✅ الحقول النصية
 export interface InputProps {
   type?: "text" | "email" | "password" | "number" | "search" | "tel" | "url";
   placeholder?: string;
@@ -202,13 +229,13 @@ export interface InputProps {
   name?: string;
 }
 
-// Common component props
+// ✅ واجهات عامة
 export interface BaseComponentProps {
   className?: string;
   children?: React.ReactNode;
 }
 
-// API Response interfaces
+// ✅ استجابات API
 export interface ProductsResponse {
   data: Product[];
   total: number;
@@ -218,15 +245,17 @@ export interface ProductsResponse {
   hasPrev: boolean;
 }
 
+// ✅ طلبات إنشاء/تحديث المنتج
 export interface ProductCreateRequest {
   name: string;
   nameAr: string;
   category: string;
   categoryAr: string;
   price: number;
-  salePrice?: number; // ✅ إضافة للطلبات
+  salePrice?: number;
   stock: number;
   image: string;
+  images?: string; // ✅ سلسلة JSON أو اسم ملف واحد — سيتم تحويلها في الخلفية
   description?: string;
   descriptionAr?: string;
   sku?: string;
@@ -238,23 +267,24 @@ export interface ProductCreateRequest {
   };
   tags?: string[];
   tagsAr?: string[];
-  isNew?: boolean; // ✅ إضافة للطلبات
+  isNew?: boolean;
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
   id: number;
 }
 
-// Form validation interfaces
+// ✅ أخطاء النماذج
 export interface ProductFormErrors {
   name?: string;
   nameAr?: string;
   category?: string;
   categoryAr?: string;
   price?: string;
-  salePrice?: string; // ✅ إضافة للتحقق
+  salePrice?: string;
   stock?: string;
   image?: string;
+  images?: string; // ✅ للتحقق من صحة سلسلة JSON
   description?: string;
   descriptionAr?: string;
   sku?: string;
@@ -266,7 +296,7 @@ export interface ProductFormErrors {
   };
 }
 
-// Filter options
+// ✅ خيارات الفلاتر
 export interface FilterOption {
   value: string;
   label: string;
@@ -280,7 +310,7 @@ export interface StatusOption extends FilterOption {
   color?: string;
 }
 
-// Pagination
+// ✅ التصفح
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -288,10 +318,10 @@ export interface PaginationProps {
   loading?: boolean;
 }
 
-// Loading states
+// ✅ حالات التحميل
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
-// Error handling
+// ✅ الأخطاء العامة
 export interface ApiError {
   message: string;
   code?: string;
@@ -304,47 +334,37 @@ export interface ErrorState {
   errors?: ApiError[];
 }
 
-// ✅ إضافة واجهات جديدة للمكونات المحدثة
-export interface ProductDetails extends Product {
-  longDescription?: string;
-  features?: string[];
-  warranty?: string;
-  shippingInfo?: string;
-  returnPolicy?: string;
-}
-
-export interface ProductReview {
-  id: number;
-  productId: number;
-  userId: number;
-  userName: string;
-  rating: number;
-  comment: string;
-  verified: boolean;
-  helpful: number;
-  createdAt: Date;
-}
-
-export interface ReviewSummary {
-  averageRating: number;
-  totalReviews: number;
-  ratingDistribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
-}
-
-// ViewMode utilities
+// ✅ أدوات دعم ViewMode
 export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ["grid", "table"];
 export const ALL_VIEW_MODES: ViewMode[] = ["grid", "table", "list"];
 
-export const isViewModeSupported = (
-  mode: ViewMode
-): mode is SupportedViewMode => {
+export const isViewModeSupported = (mode: ViewMode): mode is SupportedViewMode => {
   return SUPPORTED_VIEW_MODES.includes(mode as SupportedViewMode);
 };
 
+// ✅ أدوات معالجة الصور — متوافقة تمامًا مع page.tsx و ProductDetailsPageTemplate.tsx
+export const parseProductImages = (images?: string): string[] => {
+  if (!images) return [];
+
+  try {
+    const parsed = JSON.parse(images);
+    return Array.isArray(parsed) ? parsed : [images];
+  } catch (error) {
+    console.warn('⚠️ تعذر تحليل images كـ JSON، سيتم اعتبارها كصورة واحدة:', images);
+    return [images];
+  }
+};
+
+export const formatImageUrls = (images: string[], baseUrl?: string): string[] => {
+  const defaultBaseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127";
+  const imageBaseUrl = baseUrl || defaultBaseUrl;
+
+  return images.map((img) => {
+    // تنظيف المسار إذا كان يبدأ بـ /uploads/
+    const cleanImg = img.replace(/^\/uploads\//, "");
+    return `${imageBaseUrl}/uploads/${cleanImg}`;
+  });
+};
+
+// ✅ تصدير افتراضي لتسهيل الاستيراد
 export default Product;

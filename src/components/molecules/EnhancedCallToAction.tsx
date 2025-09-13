@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import React from "react";
 import { useTranslation } from "react-i18next";
 
@@ -45,9 +46,15 @@ export default function EnhancedCallToAction() {
           </div>
 
           {/* CTA Button */}
-          <button className="bg-gradient-to-r from-[#004D5A] to-[#005965] hover:from-[#005965] hover:to-[#006670] text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-            {t('enhancedCallToAction.buttonText')}
-          </button>
+            <Link
+        href="/LoginPage"
+           className="flex justify-center group relative bg-[#004D5A] hover:bg-[#003940] text-white font-bold py-4 px-8 sm:px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg" 
+
+      
+        prefetch={true}
+      >
+        {t("create_store_free")}
+      </Link>
         </div>
 
         {/* Visual Side */}

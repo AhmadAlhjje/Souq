@@ -9,13 +9,15 @@ interface QuantityCounterProps {
   onIncrease: () => void;
   onDecrease: () => void;
   min?: number;
+  max?: number;
 }
 
 const QuantityCounter: React.FC<QuantityCounterProps> = ({
   quantity,
   onIncrease,
   onDecrease,
-  min = 0
+  min = 0,
+  max = 999
 }) => (
   <div className="flex items-center space-x-2 bg-gray-50 rounded-lg p-1">
     <Button
@@ -25,16 +27,17 @@ const QuantityCounter: React.FC<QuantityCounterProps> = ({
       disabled={quantity <= min}
       className="w-8 h-8 p-0 rounded-md hover:bg-red-100 hover:text-red-600"
     >
-      <Minus className="w-6 h-6" /> {/* تكبير من w-10 h-10 إلى w-6 h-6 */}
+      <Minus className="w-6 h-6" />
     </Button>
     <span className="mx-3 font-medium text-teal-800 min-w-[2rem] text-center">{quantity}</span>
     <Button
       variant="ghost"
       size="sm"
       onClick={onIncrease}
+      disabled={quantity >= max}
       className="w-8 h-8 p-0 rounded-md hover:bg-green-100 hover:text-green-600"
     >
-      <Plus className="w-6 h-6" /> {/* تكبير من w-5 h-5 إلى w-6 h-6 */}
+      <Plus className="w-6 h-6" />
     </Button>
   </div>
 );
@@ -48,6 +51,7 @@ const CompactQuantityCounter: React.FC<CompactQuantityCounterProps> = ({
   onIncrease,
   onDecrease,
   min = 0,
+  max = 999,
   variant = 'default'
 }) => {
   const bgColor = variant === 'new' ? 'bg-[#CFF7EE]' : 'bg-gray-50';
@@ -71,7 +75,8 @@ const CompactQuantityCounter: React.FC<CompactQuantityCounterProps> = ({
       <span className={`mx-2 text-xs font-medium ${textColor} min-w-[1rem] text-center`}>{quantity}</span>
       <button
         onClick={onIncrease}
-        className={`w-10 h-10 rounded text-lg font-bold ${increaseHoverColors} transition-colors`} 
+        disabled={quantity >= max}
+        className={`w-10 h-10 rounded text-lg font-bold ${increaseHoverColors} disabled:opacity-50 transition-colors`} 
       >
         +
       </button>

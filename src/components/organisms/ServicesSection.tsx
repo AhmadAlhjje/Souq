@@ -17,22 +17,16 @@ export default function ServicesSection() {
       title: t("services.ecommerce.title"),
       description: t("services.ecommerce.description"),
       imageSrc: "/images/image 1.png",
-      buttonText: t("services.ecommerce.buttonText"),
-      gradient: "from-blue-500 to-blue-600",
     },
     {
       title: t("services.payments.title"),
       description: t("services.payments.description"),
       imageSrc: "/images/image22.png",
-      buttonText: t("services.payments.buttonText"),
-      gradient: "from-emerald-500 to-emerald-600",
     },
     {
       title: t("services.shipping.title"),
       description: t("services.shipping.description"),
       imageSrc: "/images/image3.png",
-      buttonText: t("services.shipping.buttonText"),
-      gradient: "from-purple-500 to-purple-600",
     },
   ];
 
@@ -66,7 +60,7 @@ export default function ServicesSection() {
         <div
           className={`${
             isRTL ? "text-right" : "text-left"
-          } bg-gradient-to-br from-[#96EDD9] via-[#96EDD9]/90 to-[#96EDD9]/80 p-8 md:p-12 rounded-3xl shadow-xl border border-[#96EDD9]/20`}
+          } bg-gradient-to-br from-[#96EDD9] via-[#96EDD9]/90 to-[#96EDD9]/80 p-8 md:p-16 rounded-3xl shadow-xl border border-[#96EDD9]/20`}
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {services.map((service, index) => (
@@ -75,8 +69,7 @@ export default function ServicesSection() {
                 title={service.title}
                 description={service.description}
                 imageSrc={service.imageSrc}
-                buttonText={service.buttonText}
-                gradient={service.gradient}
+                
               />
             ))}
           </div>

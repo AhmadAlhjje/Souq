@@ -24,6 +24,7 @@ import {
   FaHandshake,
   FaShoppingCart,
 } from "react-icons/fa";
+import Link from "next/link";
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -61,11 +62,11 @@ interface IconWrapperProps {
 
 function IconWrapper({
   icon,
-  gradient = "from-[#5CA9B5] to-[#4a9aa7]",
+  gradient = "bg-[#004D5A]",
 }: IconWrapperProps) {
   return (
     <div
-      className={`w-10 h-10 bg-gradient-to-br ml-4 ${gradient} rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300`}
+      className={`w-10 h-10 bg-[#004D5A] ml-4  rounded-xl flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300`}
     >
       <div className="text-white text-base text-right">{icon}</div>
     </div>
@@ -205,7 +206,7 @@ export default function FeaturesSection() {
         },
         {
           icon: (
-            <IconWrapper icon={<FaGlobe />} gradient="from-blue-500 to-blue-600" />
+            <IconWrapper icon={<FaGlobe />} gradient="bg-[#004D5A]" />
           ),
           title: t(
             "featuresSection.solutions.solution3.features.feature2.title"
@@ -297,7 +298,7 @@ export default function FeaturesSection() {
         },
         {
           icon: (
-            <IconWrapper icon={<FaBullhorn />} gradient="from-purple-500 to-purple-600" />
+            <IconWrapper icon={<FaBullhorn />} gradient="" />
           ),
           title: t(
             "featuresSection.solutions.solution4.features.feature5.title"
@@ -434,9 +435,14 @@ export default function FeaturesSection() {
               text={t("featuresSection.cta.description")}
               className="text-white text-base mb-6 max-w-2xl mx-auto"
             />
-            <button className="bg-[#96EDD9] hover:bg-[#7dd3bf] text-[#004D5A] font-bold py-3 px-6 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm">
-              {t("featuresSection.cta.buttonText")}
-            </button>
+            <Link
+        href="/LoginPage"
+        className={`bg-slate-50 hover:bg-slate-200 text-[#004D5A] px-5 py-2 rounded-full transition-all duration-200 ease-in-out transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 inline-block text-center font-medium whitespace-nowrap shadow-sm 
+      `}
+        prefetch={true}
+      >
+        {t("create_store_free")}
+      </Link>
           </div>
         </div>
       </div>

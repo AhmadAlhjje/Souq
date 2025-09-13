@@ -1,81 +1,82 @@
+// ========================================
+// 1. src/components/organisms/ShippingForm.tsx - بدون سكرول
+// ========================================
+
+'use client';
+
 import React, { useState } from 'react';
-import { FileText, User, Phone, MapPin, Hash } from 'lucide-react';
-import { COLORS } from '../../constants/colors';
-import FormField from '../molecules/FormField';
-import FileUpload from '../molecules/FileUpload';
-import Button from '../atoms/Button';
-import Label from '../atoms/Label';
+import { FileText, User, Phone, MapPin, MessageSquare } from 'lucide-react';
+import { COLORS } from '@/constants/colors';
+import FormField from '@/components/molecules/FormField';
+import FileUpload from '@/components/molecules/FileUpload';
+import Button from '@/components/atoms/Button';
+import Label from '@/components/atoms/Label';
 import { shippingService } from '@/api/shipping';
 import { useToast } from '@/hooks/useToast';
+import { SessionManager } from '@/utils/SessionManager';
 
 interface ShippingFormData {
-  title: string;
-  fullName: string;
-  phoneNumber: string;
-  address: string;
-  identityFile: File | null;
-  addressFile: File | null;
+  customer_name: string;
+  customer_phone: string;
+  customer_whatsapp: string;
+  recipient_name: string;
+  shipping_address: string;
+  destination: string;
+  identity_front_file: File | null;
+  identity_back_file: File | null;
 }
 
 interface FormErrors {
-  title?: string;
-  fullName?: string;
-  phoneNumber?: string;
-  address?: string;
-  identityFile?: string;
-  addressFile?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_whatsapp?: string;
+  recipient_name?: string;
+  shipping_address?: string;
+  destination?: string;
+  identity_front_file?: string;
+  identity_back_file?: string;
 }
 
 interface ShippingFormProps {
   theme?: 'light' | 'dark';
-  orderId?: number; // رقم الطلبية إذا كان متوفراً
 }
 
-const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light', orderId }) => {
+const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
   const colors = COLORS[theme];
   const { showToast } = useToast();
-  
+
   const [formData, setFormData] = useState<ShippingFormData>({
-    title: '',
-    fullName: '',
-    phoneNumber: '',
-    address: '',
-    identityFile: null,
-    addressFile: null
+    customer_name: '',
+    customer_phone: '',
+    customer_whatsapp: '',
+    recipient_name: '',
+    shipping_address: '',
+    destination: '',
+    identity_front_file: null,
+    identity_back_file: null,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+  const isValidImage = (file: File) => {
+    return file.type.startsWith('image/');
+  };
+
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    
-    if (!formData.title.trim()) {
-      newErrors.title = 'العنوان مطلوب';
-    }
-    
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'اسم المستلم مطلوب';
-    }
-    
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'رقم الهاتف مطلوب';
-    } else if (!/^[0-9+\-\s()]+$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'رقم الهاتف غير صحيح';
-    }
-    
-    if (!formData.address.trim()) {
-      newErrors.address = 'العنوان التفصيلي مطلوب';
-    }
-    
-    if (!formData.identityFile) {
-      newErrors.identityFile = 'صورة الهوية الخلفية مطلوبة';
-    }
-    
-    if (!formData.addressFile) {
-      newErrors.addressFile = 'صورة الهوية الأمامية مطلوبة';
-    }
-    
+
+    if (!formData.customer_name.trim()) newErrors.customer_name = 'اسم العميل مطلوب';
+    if (!formData.customer_phone.trim()) newErrors.customer_phone = 'رقم هاتف العميل مطلوب';
+    if (!formData.customer_whatsapp.trim()) newErrors.customer_whatsapp = 'رقم واتساب العميل مطلوب';
+    if (!formData.recipient_name.trim()) newErrors.recipient_name = 'اسم المستلم مطلوب';
+    if (!formData.shipping_address.trim()) newErrors.shipping_address = 'عنوان المصدر مطلوب';
+    if (!formData.destination.trim()) newErrors.destination = 'عنوان الوجهة مطلوب';
+    if (!formData.identity_front_file) newErrors.identity_front_file = 'صورة الهوية الأمامية مطلوبة';
+    if (!formData.identity_back_file) newErrors.identity_back_file = 'صورة الهوية الخلفية مطلوبة';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -83,210 +84,262 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light', orderId })
   const handleInputChange = (field: keyof ShippingFormData) => (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: e.target.value
+      [field]: e.target.value,
     }));
-    
+
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: undefined
+        [field]: undefined,
       }));
     }
   };
 
-  const handleFileChange = (field: 'identityFile' | 'addressFile') => (file: File | null) => {
-    setFormData(prev => ({
+  const handleFileChange = (field: 'identity_front_file' | 'identity_back_file') => (file: File | null) => {
+    if (file) {
+      if (!isValidImage(file)) {
+        showToast('يرجى اختيار صورة فقط', 'error');
+        return;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        showToast('حجم الملف كبير جدًا (الحد الأقصى 5MB)', 'error');
+        return;
+      }
+    }
+
+    setFormData((prev) => ({
       ...prev,
-      [field]: file
+      [field]: file,
     }));
-    
+
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: undefined
+        [field]: undefined,
       }));
     }
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) {
-      showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
-      return;
-    }
-    
-    // التأكد من وجود رقم الطلبية
-    if (!orderId) {
-      showToast('رقم الطلبية مطلوب', 'error');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
-    try {
-      // تحضير البيانات للإرسال إلى API
-      const shippingData = {
-        order_id: orderId,
-        customer_name: formData.fullName.trim(),
-        customer_phone: formData.phoneNumber.trim(),
-        customer_whatsapp: formData.phoneNumber.trim(), // نفس رقم الهاتف
-        recipient_name: formData.fullName.trim(), // نفس اسم العميل
-        shipping_address: formData.address.trim(),
-        source_address: formData.title.trim(), // استخدام العنوان كمصدر
-        destination: formData.address.trim(), // استخدام العنوان التفصيلي كوجهة
-        shipping_method: 'standard' // طريقة شحن افتراضية
-      };
+ const handleSubmit = async () => {
+if (!validateForm()) {
+  showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
+  return;
+}
 
-      console.log('إرسال البيانات:', shippingData);
-      
-      // إرسال البيانات إلى API
-      const response = await shippingService.createShipping(shippingData);
-      
-      console.log('استجابة API:', response);
-      
-      // إظهار رسالة النجاح
-      showToast(
-        `تم إنشاء معلومات الشحن بنجاح! رقم الشحن: ${response.shipping_id}`, 
-        'success'
-      );
-      
-      // إعادة تعيين النموذج
-      setFormData({
-        title: '',
-        fullName: '',
-        phoneNumber: '',
-        address: '',
-        identityFile: null,
-        addressFile: null
-      });
-      
-    } catch (error: any) {
-      console.error('خطأ في إرسال معلومات الشحن:', error);
-      
-      const errorMessage = error.message || 'حدث خطأ غير متوقع';
-      showToast(errorMessage, 'error');
-      
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+setIsSubmitting(true);
+try {
+  // الحصول على الـ session الثابت للمستخدم
+  const userSessionId = SessionManager.getOrCreateSessionId();
+  SessionManager.extendSession();
+
+  // إنشاء معرف فريد للطلب
+  const timestamp = Date.now();
+  const requestId = `req_${timestamp}_${Math.random().toString(36).substr(2, 6)}`;
+  
+  console.log('📋 معلومات الطلب:');
+  console.log('  - User Session (ثابت):', userSessionId);
+  console.log('  - Request ID (فريد):', requestId);
+  console.log('  - Timestamp:', new Date(timestamp).toLocaleString());
+
+  const formDataToSend = new FormData();
+
+  // استخدام الـ session الثابت (سيتم تعديله تلقائياً في حالة 409)
+  formDataToSend.append('customer_session_id', userSessionId);
+  formDataToSend.append('request_id', requestId);
+  formDataToSend.append('request_timestamp', timestamp.toString());
+  
+  formDataToSend.append('customer_name', formData.customer_name.trim());
+  formDataToSend.append('customer_phone', formData.customer_phone.trim());
+  formDataToSend.append('customer_whatsapp', formData.customer_whatsapp.trim());
+  formDataToSend.append('recipient_name', formData.recipient_name.trim());
+  
+  formDataToSend.append('shipping_address', formData.shipping_address.trim());
+  formDataToSend.append('destination', formData.destination.trim());
+  formDataToSend.append('shipping_method', 'express');
+
+  // إضافة الملفات
+  if (formData.identity_front_file && formData.identity_back_file) {
+    const frontFileName = `front_${requestId}.jpg`;
+    const backFileName = `back_${requestId}.jpg`;
+    
+    formDataToSend.append('identity_front', formData.identity_front_file, frontFileName);
+    formDataToSend.append('identity_back', formData.identity_back_file, backFileName);
+  }
+
+  console.log('📤 إرسال طلب شحن جديد...');
+  const result = await shippingService.createShipping(formDataToSend);
+
+  console.log('✅ تم إنشاء طلب الشحن بنجاح:', result);
+  showToast(result.message || 'تم إنشاء الشحن بنجاح', 'success');
+
+  // إعادة تعيين النموذج للطلب التالي
+  setFormData({
+    customer_name: '',
+    customer_phone: '',
+    customer_whatsapp: '',
+    recipient_name: '',
+    shipping_address: '',
+    destination: '',
+    identity_front_file: null,
+    identity_back_file: null,
+  });
+
+  console.log('🔄 النموذج جاهز لطلب شحن جديد');
+
+} catch (error: any) {
+  console.error('❌ خطأ في إرسال معلومات الشحن:', error);
+  showToast(error.message || 'حدث خطأ غير متوقع', 'error');
+} finally {
+  setIsSubmitting(false);
+}
+};
 
   return (
-    <div 
-      className="mt-16 w-full max-w-2xl mx-auto p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 max-h-[90vh] overflow-y-auto" 
-      style={{ 
-        background: 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
-        direction: 'rtl' 
-      }}
-    >
-      <div className="text-center mb-4 sm:mb-6">
-        <h2 
-          className="text-lg sm:text-xl font-bold mb-2" 
-          style={{ color: colors.text.primary }}
-        >
-          معلومات الشحن
-          {orderId && <span className="text-sm font-normal text-gray-500 block">للطلبية رقم: {orderId}</span>}
-        </h2>
-        <p className="text-sm text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
-      </div>
+    <div className="w-full  flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-7xl p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20"
+        style={{
+          background: 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
+          direction: 'rtl',
+          height: 'fit-content',
+          maxHeight: '95vh',
+        }}
+      >
+        {/* العنوان - مدمج */}
+        <div className="text-center mb-4">
+          <h2
+            className="text-lg sm:text-xl font-bold mb-1"
+            style={{ color: colors.text.primary }}
+          >
+            معلومات الشحن
+          </h2>
+          <p className="text-xs text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
+ 
+        </div>
 
-      {/* Grid Layout - 2 columns on larger screens */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        {/* العنوان */}
-        <FormField
-          label="العنوان"
-          type="text"
-          placeholder="أدخل العنوان"
-          value={formData.title}
-          onChange={handleInputChange('title')}
-          icon={Hash}
-          id="title"
-          required
-          theme={theme}
-          error={errors.title}
-          className="mb-2 sm:mb-3"
-        />
-
-        {/* اسم المستلم */}
-        <FormField
-          label="اسم المستلم"
-          type="text"
-          placeholder="الاسم الكامل"
-          value={formData.fullName}
-          onChange={handleInputChange('fullName')}
-          icon={User}
-          id="fullName"
-          required
-          theme={theme}
-          error={errors.fullName}
-          className="mb-2 sm:mb-3"
-        />
-
-        {/* رقم الهاتف */}
-        <FormField
-          label="رقم الهاتف"
-          type="tel"
-          placeholder="رقم الهاتف"
-          value={formData.phoneNumber}
-          onChange={handleInputChange('phoneNumber')}
-          icon={Phone}
-          id="phoneNumber"
-          required
-          theme={theme}
-          error={errors.phoneNumber}
-          className="mb-2 sm:mb-3"
-        />
-
-        {/* العنوان التفصيلي */}
-        <FormField
-          label="العنوان التفصيلي"
-          type="text"
-          placeholder="العنوان التفصيلي"
-          value={formData.address}
-          onChange={handleInputChange('address')}
-          icon={MapPin}
-          id="address"
-          required
-          theme={theme}
-          error={errors.address}
-          className="mb-2 sm:mb-3"
-        />
-      </div>
-
-      {/* File Upload Section */}
-      <div className="mt-4 sm:mt-6 mb-4 sm:mb-6">
-        <Label>صورة الهوية</Label>
-        <div className="grid grid-cols-2 gap-2 sm:gap-4">
-          <FileUpload
-            label="الوجه الخلفي"
-            icon={<FileText size={18} />}
-            accept="image/*"
-            onChange={handleFileChange('identityFile')}
+        {/* الحقول الأساسية - صف واحد */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+          <FormField
+            label="اسم العميل"
+            type="text"
+            placeholder="أحمد محمد علي"
+            value={formData.customer_name}
+            onChange={handleInputChange('customer_name')}
+            icon={User}
+            id="customer_name"
+            required
             theme={theme}
-            error={errors.identityFile}
+            error={errors.customer_name}
           />
-          <FileUpload
-            label="الوجه الأمامي"
-            icon={<FileText size={18} />}
-            accept="image/*"
-            onChange={handleFileChange('addressFile')}
+
+          <FormField
+            label="رقم هاتف العميل"
+            type="tel"
+            placeholder="+201234567890"
+            value={formData.customer_phone}
+            onChange={handleInputChange('customer_phone')}
+            icon={Phone}
+            id="customer_phone"
+            required
             theme={theme}
-            error={errors.addressFile}
+            error={errors.customer_phone}
+          />
+
+          <FormField
+            label="رقم واتساب العميل"
+            type="tel"
+            placeholder="+201234567891"
+            value={formData.customer_whatsapp}
+            onChange={handleInputChange('customer_whatsapp')}
+            icon={MessageSquare}
+            id="customer_whatsapp"
+            required
+            theme={theme}
+            error={errors.customer_whatsapp}
+          />
+
+          <FormField
+            label="اسم المستلم"
+            type="text"
+            placeholder="اسم المستلم"
+            value={formData.recipient_name}
+            onChange={handleInputChange('recipient_name')}
+            icon={User}
+            id="recipient_name"
+            required
+            theme={theme}
+            error={errors.recipient_name}
+          />
+
+          <FormField
+            label="عنوان المصدر"
+            type="text"
+            placeholder="عنوان المصدر"
+            value={formData.shipping_address}
+            onChange={handleInputChange('shipping_address')}
+            icon={MapPin}
+            id="shipping_address"
+            required={true}
+            theme={theme}
+            error={errors.shipping_address}
+          />
+
+          <FormField
+            label="عنوان الوجهة"
+            type="text"
+            placeholder="عنوان الوجهة"
+            value={formData.destination}
+            onChange={handleInputChange('destination')}
+            icon={MapPin}
+            id="destination"
+            required
+            theme={theme}
+            error={errors.destination}
           />
         </div>
-      </div>
 
-      {/* Submit Button */}
-      <Button 
-        text={isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
-        onClick={handleSubmit}
-        className="w-full"
-        size="lg"
-        loading={isSubmitting}
-        disabled={isSubmitting}
-        variant="primary"
-      />
+        {/* صور الهوية والزر - صف واحد */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-end">
+          {/* صور الهوية */}
+          <div className="lg:col-span-2">
+            <Label>صور الهوية للمستلم</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <FileUpload
+                label="الوجه الأمامي"
+                icon={<FileText size={16} />}
+                accept="image/*"
+                onChange={handleFileChange('identity_front_file')}
+                theme={theme}
+                error={errors.identity_front_file}
+              />
+              <FileUpload
+                label="الوجه الخلفي"
+                icon={<FileText size={16} />}
+                accept="image/*"
+                onChange={handleFileChange('identity_back_file')}
+                theme={theme}
+                error={errors.identity_back_file}
+              />
+            </div>
+          </div>
+
+      
+        </div>
+            {/* زر التأكيد */}
+          <div className="mt-6 mb-4 flex justify-center ">
+  <Button
+    text={isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
+    onClick={handleSubmit}
+    className="w-full max-w-md h-16"
+    size="lg"
+    loading={isSubmitting}
+    disabled={isSubmitting}
+    variant="primary"
+  />
+</div>
+      </div>
     </div>
   );
 };

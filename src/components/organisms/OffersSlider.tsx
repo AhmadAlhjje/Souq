@@ -1,34 +1,32 @@
+// components/organisms/OffersSlider.tsx - النسخة المحدثة والمضمونة
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
-import { useCart, useCartNotifications } from "@/contexts/CartContext";
-import { Product } from "@/types/product";
+import { Product } from '@/api/storeProduct';
 import { api } from "@/api/api";
+import { useCart } from '@/hooks/useCart'; // ⬅️ الهوك الصحيح الذي يتصل بالخادم
+import { useSessionContext } from '@/components/SessionProvider'; // ⬅️ للحصول على sessionId
 
-interface StoreProduct {
+// نوع المنتج من API مع التحديثات الجديدة
+interface ApiProduct {
   product_id: number;
   store_id: number;
   name: string;
   description: string;
   price: string;
+  discount_percentage: string | null;
   stock_quantity: number;
   images: string;
   created_at: string;
-}
-
-interface StoreData {
-  store_id: number;
-  user_id: number;
-  store_name: string;
-  store_address: string;
-  description: string;
-  images: string;
-  logo_image: string;
-  created_at: string;
-  User: {
-    username: string;
-    whatsapp_number: string;
+  Store?: {
+    store_name: string;
+    logo_image: string;
   };
-  Products: StoreProduct[];
+  discounted_price: number;
+  discount_amount: number;
+  has_discount: boolean;
+  original_price: number;
+  averageRating?: number;
+  reviewsCount?: number;
 }
 
 interface Offer {
@@ -42,219 +40,255 @@ interface Offer {
   product: Product;
 }
 
-const OffersSlider: React.FC = () => {
+interface OffersSliderProps {
+  storeId?: number; // إضافة prop اختياري لمعرف المتجر
+  storeName?: string; // إضافة اسم المتجر للعرض
+}
+
+const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(1);
-  const [addingStates, setAddingStates] = useState<{ [key: number]: boolean }>(
-    {}
-  );
+  const [addingStates, setAddingStates] = useState<{ [key: number]: boolean }>({});
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // استخدام Cart Context
-  const { addToCart } = useCart();
-  const { showAddToCartSuccess } = useCartNotifications();
+  // ✅ استخدام الهوك الصحيح الذي يتصل بالخادم
+  const { addToCart: addToCartAPI, fetchCart } = useCart();
+  const { sessionId } = useSessionContext();
 
-  // دالة تحويل منتج المتجر إلى منتج للنظام
-  const convertStoreProductToProduct = useCallback((
-    storeProduct: StoreProduct,
-    storeData: StoreData
+  // في OffersSlider.tsx - إصلاح دالة convertApiProductToProduct
+  const convertApiProductToProduct = useCallback((
+    apiProduct: ApiProduct
   ): Product => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+    
     let images: string[] = [];
     try {
-      // تنظيف وتحليل صور المنتج
-      const cleanImages = storeProduct.images.replace(/\\"/g, '"');
-      images = JSON.parse(cleanImages);
+      if (apiProduct.images) {
+        const cleanImages = apiProduct.images.replace(/\\"/g, '"');
+        const parsedImages = JSON.parse(cleanImages);
+        if (Array.isArray(parsedImages)) {
+          images = parsedImages.map(img => {
+            if (img.startsWith('/uploads')) {
+              return `${baseUrl}${img}`;
+            } else if (img.startsWith('http')) {
+              return img;
+            } else {
+              return `${baseUrl}/${img}`;
+            }
+          });
+        }
+      }
     } catch (e) {
       console.warn("خطأ في تحليل صور المنتج:", e);
       images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
     }
 
-    // تحديد السعر والخصم
-    const originalPrice = parseFloat(storeProduct.price);
-    const salePrice = originalPrice * 0.8; // خصم 20% كمثال
+    // إذا لم توجد صور، استخدم صورة افتراضية
+    if (images.length === 0) {
+      images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
+    }
+
+    // إصلاح نوع status - تحويل "inactive" إلى "out_of_stock" و تحديد low_stock
+    let productStatus: "active" | "out_of_stock" | "low_stock";
+    
+    if (apiProduct.stock_quantity <= 0) {
+      productStatus = "out_of_stock";
+    } else if (apiProduct.stock_quantity <= 5) {
+      productStatus = "low_stock";
+    } else {
+      productStatus = "active";
+    }
 
     return {
-      id: storeProduct.product_id,
-      name: storeProduct.name,
-      nameAr: storeProduct.name,
+      id: apiProduct.product_id,
+      name: apiProduct.name,
+      nameAr: apiProduct.name,
       category: "store-product",
       categoryAr: "منتجات المتاجر",
-      price: originalPrice,
-      salePrice: salePrice,
-      originalPrice: originalPrice,
-      rating: 4.5,
-      reviewCount: Math.floor(Math.random() * 100) + 10,
-      image: images[0] || "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
+      price: apiProduct.has_discount ? apiProduct.discounted_price : apiProduct.original_price,
+      salePrice: apiProduct.has_discount ? apiProduct.discounted_price : undefined,
+      originalPrice: apiProduct.original_price,
+      rating: apiProduct.averageRating || 4.5,
+      reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 100) + 10,
+      image: images[0],
       isNew: false,
-      stock: storeProduct.stock_quantity,
-      status: "active",
-      description: storeProduct.description,
-      descriptionAr: storeProduct.description,
-      brand: storeData.store_name,
-      brandAr: storeData.store_name,
+      stock: apiProduct.stock_quantity,
+      status: productStatus, // استخدام النوع المُصحح
+      description: apiProduct.description,
+      descriptionAr: apiProduct.description,
+      brand: apiProduct.Store?.store_name || storeName || "متجر محلي",
+      brandAr: apiProduct.Store?.store_name || storeName || "متجر محلي",
       sales: Math.floor(Math.random() * 50) + 10,
-      inStock: storeProduct.stock_quantity > 0,
-      createdAt: storeProduct.created_at,
+      inStock: apiProduct.stock_quantity > 0,
+      createdAt: apiProduct.created_at,
+      
+      // الحقول الجديدة للخصومات
+      discountPercentage: apiProduct.discount_percentage ? parseFloat(apiProduct.discount_percentage) : undefined,
+      discountAmount: apiProduct.has_discount ? apiProduct.discount_amount : undefined,
+      hasDiscount: apiProduct.has_discount,
     };
-  }, []);
+  }, [storeName]);
 
-  // دالة إنشاء العروض من بيانات المتاجر
-  const createOffersFromStores = useCallback((storeData: StoreData[]): Offer[] => {
+  // دالة إنشاء العروض من المنتجات المخفضة
+  const createOffersFromProducts = useCallback((products: ApiProduct[]): Offer[] => {
     const offerTypes = [
       {
         title: "خصم مميز",
-        description: "على منتجات مختارة",
-        discount: "20%",
+        description: "عرض لفترة محدودة",
+        bgColor: "bg-red-50",
+        icon: <Tag className="w-5 h-5 text-red-600" />,
+      },
+      {
+        title: "تخفيضات هائلة",
+        description: "وفر أكثر مع هذا العرض",
+        bgColor: "bg-orange-50",
+        icon: <Gift className="w-5 h-5 text-orange-600" />,
+      },
+      {
+        title: "عرض حصري",
+        description: "احصل عليه قبل انتهاء الكمية",
         bgColor: "bg-teal-50",
         icon: <Tag className="w-5 h-5 text-teal-600" />,
       },
       {
-        title: "شحن مجاني",
-        description: "للطلبات فوق 200 ريال",
-        discount: "مجاني",
+        title: "خصم استثنائي",
+        description: "فرصة ذهبية للتوفير",
         bgColor: "bg-emerald-50",
-        icon: <Truck className="w-5 h-5 text-emerald-600" />,
+        icon: <Gift className="w-5 h-5 text-emerald-600" />,
       },
       {
-        title: "عرض خاص",
-        description: "لفترة محدودة فقط",
-        discount: "30%",
+        title: "تخفيض كبير",
+        description: "عرض محدود الوقت",
         bgColor: "bg-cyan-50",
-        icon: <Gift className="w-5 h-5 text-cyan-600" />,
-      },
-      {
-        title: "تخفيضات الصيف",
-        description: "على تشكيلة واسعة",
-        discount: "25%",
-        bgColor: "bg-blue-50",
-        icon: <Tag className="w-5 h-5 text-blue-600" />,
-      },
-      {
-        title: "عرض ترحيبي",
-        description: "للعملاء الجدد",
-        discount: "15%",
-        bgColor: "bg-indigo-50",
-        icon: <Gift className="w-5 h-5 text-indigo-600" />,
+        icon: <Tag className="w-5 h-5 text-cyan-600" />,
       },
     ];
 
     const createdOffers: Offer[] = [];
-    let offerIdCounter = 1;
+    
+    products.forEach((apiProduct, index) => {
+      if (createdOffers.length >= 8) return; // حد أقصى 8 عروض
 
-    storeData.forEach((store) => {
-      store.Products.forEach((storeProduct, index) => {
-        if (createdOffers.length >= 8) return; // حد أقصى 8 عروض
+      const offerType = offerTypes[index % offerTypes.length];
+      const product = convertApiProductToProduct(apiProduct);
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
 
-        const offerType = offerTypes[index % offerTypes.length];
-        const product = convertStoreProductToProduct(storeProduct, store);
-
-        let storeImages: string[] = [];
-        try {
-          storeImages = JSON.parse(store.images);
-        } catch (e) {
-          storeImages = [product.image];
+      // تحديد صورة العرض (أولوية للمنتج، ثم شعار المتجر)
+      let offerImage = product.image;
+      
+      if (!product.image || product.image.includes('placehold.co')) {
+        if (apiProduct.Store?.logo_image) {
+          if (apiProduct.Store.logo_image.startsWith('/uploads')) {
+            offerImage = `${baseUrl}${apiProduct.Store.logo_image}`;
+          } else if (apiProduct.Store.logo_image.startsWith('http')) {
+            offerImage = apiProduct.Store.logo_image;
+          } else {
+            offerImage = `${baseUrl}/${apiProduct.Store.logo_image}`;
+          }
         }
+      }
 
-        createdOffers.push({
-          id: offerIdCounter++,
-          title: `${offerType.title} - ${store.store_name}`,
-          description: `${offerType.description} من ${store.store_name}`,
-          image: storeImages[0] || product.image,
-          discount: offerType.discount,
-          bgColor: offerType.bgColor,
-          icon: offerType.icon,
-          product: product,
-        });
+      const storeDisplayName = apiProduct.Store?.store_name || storeName || "متجر محلي";
+
+      createdOffers.push({
+        id: apiProduct.product_id,
+        title: storeId 
+          ? `${offerType.title} - ${apiProduct.name}`
+          : `${offerType.title} - ${storeDisplayName}`,
+        description: storeId 
+          ? `${offerType.description} في ${storeName}`
+          : `${offerType.description} من ${storeDisplayName}`,
+        image: offerImage,
+        discount: `${apiProduct.discount_percentage}%`,
+        bgColor: offerType.bgColor,
+        icon: offerType.icon,
+        product: product,
       });
     });
 
     return createdOffers;
-  }, [convertStoreProductToProduct]);
+  }, [convertApiProductToProduct, storeId, storeName]);
 
-  // دالة للحصول على عروض افتراضية في حالة الخطأ
-  const getDefaultOffers = useCallback((): Offer[] => {
-    const defaultProduct: Product = {
-      id: 999,
-      name: "منتج تجريبي",
-      nameAr: "منتج تجريبي",
-      category: "general",
-      categoryAr: "عام",
-      price: 200,
-      salePrice: 150,
-      originalPrice: 200,
-      rating: 4.5,
-      reviewCount: 50,
-      image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop",
-      isNew: false,
-      stock: 10,
-      status: "active",
-      description: "منتج تجريبي للعرض",
-      descriptionAr: "منتج تجريبي للعرض",
-      brand: "متجر تجريبي",
-      brandAr: "متجر تجريبي",
-      sales: 25,
-      inStock: true,
-      createdAt: new Date().toISOString(),
-    };
-
-    return [
-      {
-        id: 1,
-        title: "عرض تجريبي",
-        description: "منتج تجريبي للاختبار",
-        image: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop",
-        discount: "25%",
-        bgColor: "bg-teal-50",
-        icon: <Tag className="w-5 h-5 text-teal-600" />,
-        product: defaultProduct,
-      },
-    ];
-  }, []);
-
-  // دالة جلب بيانات المتاجر - مع useCallback لحل مشكلة dependency
-  const fetchStoresData = useCallback(async () => {
+  // دالة جلب المنتجات المخفضة من API
+  const fetchDiscountedProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // جلب بيانات عدة متاجر (يمكنك تعديل هذا حسب API الخاص بك)
-      const storeIds = [1, 2, 3]; // معرفات المتاجر التي تريد جلبها
-      const storePromises = storeIds.map(id => 
-        api.get<StoreData>(`/stores/${id}`).catch(err => {
-          console.warn(`فشل في جلب بيانات المتجر ${id}:`, err);
-          return null;
-        })
-      );
-
-      const storeResponses = await Promise.all(storePromises);
-      const validStores = storeResponses
-        .filter(response => response !== null)
-        .map(response => response!.data);
-
-      if (validStores.length === 0) {
-        throw new Error("لم يتم العثور على أي متاجر");
+      let endpoint = '/products';
+      let logMessage = "جلب جميع المنتجات";
+      
+      if (storeId) {
+        endpoint = `/stores/${storeId}`;
+        logMessage = `جلب منتجات المتجر ${storeId}`;
       }
 
-      const generatedOffers = createOffersFromStores(validStores);
+      console.log(`🔄 ${logMessage} من ${endpoint}...`);
+      const response = await api.get(endpoint);
+      
+      let products: ApiProduct[] = [];
+      
+      if (storeId) {
+        console.log("📦 رد API للمتجر:", response.data);
+        
+        let storeData = response.data;
+        if (storeData.success && storeData.store) {
+          storeData = storeData.store;
+        }
+        
+        if (storeData.products && !storeData.Products) {
+          storeData.Products = storeData.products;
+        }
+        
+        products = storeData.Products || [];
+        console.log(`📊 منتجات المتجر ${storeId}:`, products.length);
+      } else {
+        products = Array.isArray(response.data) ? response.data : [];
+        console.log("📊 إجمالي المنتجات المستلمة:", products.length);
+      }
+      
+      if (products.length > 0) {
+        console.log("📊 أول منتج للتحقق:", products[0]);
+      }
+      
+      // تصفية المنتجات التي لديها خصم فقط
+      const discountedProducts = products.filter(product => {
+        console.log(`🔍 فحص المنتج ${product.product_id}: has_discount = ${product.has_discount}, type = ${typeof product.has_discount}`);
+        return product.has_discount === true;
+      });
+      
+      console.log(`📊 المنتجات المخفضة الموجودة:`, discountedProducts);
+      console.log(`📊 عدد المنتجات المخفضة: ${discountedProducts.length} من أصل ${products.length}`);
+      
+      if (discountedProducts.length === 0) {
+        const noOffersMessage = storeId 
+          ? `لا توجد منتجات مخفضة في ${storeName}`
+          : "لا توجد منتجات مخفضة حالياً";
+        console.warn(`⚠️ ${noOffersMessage}`);
+        setOffers([]);
+        return;
+      }
+
+      const generatedOffers = createOffersFromProducts(discountedProducts);
+      console.log("🎁 العروض المُنشأة:", generatedOffers);
+      
       setOffers(generatedOffers);
 
     } catch (err: any) {
-      console.error("خطأ في جلب بيانات المتاجر:", err);
-      setError(err.message || "حدث خطأ أثناء جلب البيانات");
-      
-      // استخدام بيانات تجريبية في حالة الخطأ
-      setOffers(getDefaultOffers());
+      console.error("❌ خطأ في جلب المنتجات المخفضة:", err);
+      setError(err.message || "حدث خطأ أثناء جلب العروض");
+      setOffers([]);
     } finally {
       setLoading(false);
     }
-  }, [createOffersFromStores, getDefaultOffers]);
+  }, [createOffersFromProducts, storeId, storeName]);
 
-  // جلب البيانات عند تحميل المكون - مع إضافة fetchStoresData للـ dependencies
+  // جلب البيانات عند تحميل المكون أو تغيير storeId
   useEffect(() => {
-    fetchStoresData();
-  }, [fetchStoresData]);
+    fetchDiscountedProducts();
+  }, [fetchDiscountedProducts]);
 
   // تحديد عدد الشرائح المعروضة حسب حجم الشاشة
   useEffect(() => {
@@ -301,30 +335,55 @@ const OffersSlider: React.FC = () => {
     setCurrentIndex(Math.min(index, maxIndex));
   };
 
-  // دالة إضافة المنتج للسلة
+  // ✅ دالة إضافة المنتج للسلة — محدثة لتستخدم addToCartAPI من useCart
   const handleOfferClick = async (offer: Offer) => {
+    if (!sessionId) {
+      console.warn("❌ لا يمكن الإضافة بدون معرف جلسة.");
+      return;
+    }
+
+    if (!offer.product.inStock) {
+      console.warn(`❌ المنتج "${offer.product.name}" غير متوفر.`);
+      return;
+    }
+
+    if (addingStates[offer.id]) return;
+
     try {
-      // تعيين حالة التحميل
       setAddingStates((prev) => ({ ...prev, [offer.id]: true }));
 
-      // إضافة المنتج للسلة
-      addToCart(offer.product, 1);
+      // ✅ الإضافة للخادم
+      await addToCartAPI(offer.product.id, 1);
 
-      // إظهار رسالة النجاح
-      showAddToCartSuccess(offer.product.nameAr || offer.product.name, 1);
+      // ✅ إعادة تحميل السلة لتحديث الواجهة
+      await fetchCart();
 
-      console.log(`تم إضافة ${offer.title} للسلة`);
+      // ✅ رسالة نجاح (يمكنك استبدالها بـ toast إذا أردت)
+      console.log(`✅ تم إضافة ${offer.product.name} إلى السلة`);
 
-      // إزالة حالة التحميل بعد ثانية واحدة
       setTimeout(() => {
         setAddingStates((prev) => ({ ...prev, [offer.id]: false }));
       }, 1000);
     } catch (error) {
-      console.error("خطأ في إضافة العرض للسلة:", error);
-
-      // إزالة حالة التحميل في حالة الخطأ
+      console.error("❌ خطأ في إضافة العرض للسلة:", error);
       setAddingStates((prev) => ({ ...prev, [offer.id]: false }));
     }
+  };
+
+  // تحديد العنوان حسب نوع العروض
+  const getTitle = () => {
+    if (storeId && storeName) {
+      return `عروض ${storeName}`;
+    }
+    return "العروض المميزة";
+  };
+
+  // تحديد رسالة عدم وجود عروض
+  const getNoOffersMessage = () => {
+    if (storeId && storeName) {
+      return `لا توجد عروض مخفضة متاحة في ${storeName} حالياً`;
+    }
+    return "لا توجد عروض مخفضة متاحة حالياً";
   };
 
   // عرض حالة التحميل
@@ -333,7 +392,7 @@ const OffersSlider: React.FC = () => {
       <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
-            العروض المميزة
+            {getTitle()}
             <span className="text-orange-500">🔥</span>
           </h2>
         </div>
@@ -351,15 +410,15 @@ const OffersSlider: React.FC = () => {
       <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
-            العروض المميزة
+            {getTitle()}
             <span className="text-orange-500">🔥</span>
           </h2>
         </div>
         <div className="text-center py-20">
           <div className="text-red-500 mb-4">❌</div>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <p className="text-gray-600 mb-4">المخزون غير كافي للكمية</p>
           <button
-            onClick={fetchStoresData}
+            onClick={fetchDiscountedProducts}
             className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg transition-colors"
           >
             إعادة المحاولة
@@ -369,9 +428,16 @@ const OffersSlider: React.FC = () => {
     );
   }
 
-  // عدم عرض المكون إذا لم توجد عروض
+  // عدم عرض المكون إذا لم توجد عروض حقيقية
   if (offers.length === 0) {
-    return null;
+    return (
+      <div className="relative max-w-7xl mx-auto mb-4 px-4" dir="rtl">
+        <div className="text-center py-8">
+          <div className="text-4xl mb-2">🎁</div>
+          <p className="text-gray-500 text-sm">{getNoOffersMessage()}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -379,11 +445,11 @@ const OffersSlider: React.FC = () => {
       {/* العنوان */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
-          العروض المميزة
+          {getTitle()}
           <span className="text-orange-500">🔥</span>
         </h2>
         <button
-          onClick={fetchStoresData}
+          onClick={fetchDiscountedProducts}
           className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors"
         >
           تحديث العروض
@@ -393,7 +459,7 @@ const OffersSlider: React.FC = () => {
 
       {/* الحاوية الرئيسية */}
       <div className="relative">
-        {/* زر السابق (يمين في RTL) */}
+        {/* أزرار التنقل */}
         <button
           onClick={prevSlide}
           disabled={!canGoPrev}
@@ -407,7 +473,6 @@ const OffersSlider: React.FC = () => {
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* زر التالي (يسار في RTL) */}
         <button
           onClick={nextSlide}
           disabled={!canGoNext}
@@ -468,19 +533,28 @@ const OffersSlider: React.FC = () => {
                   {/* المحتوى */}
                   <div className="mb-4">
                     <h3 className="text-lg font-bold text-gray-800 mb-2 text-right">
-                      {offer.title}
+                      {offer.product.nameAr || offer.product.name}
                     </h3>
                     <p className="text-sm text-gray-600 text-right">
                       {offer.description}
                     </p>
-                    {/* معلومات المنتج */}
-                    <div className="mt-2 text-xs text-gray-500 text-right">
-                      <div>السعر: {offer.product.price} ريال</div>
-                      <div>المخزون: {offer.product.stock} قطعة</div>
+                    {/* معلومات السعر */}
+                    <div className="mt-2 text-xs text-gray-600 text-right">
+                      <div className="flex items-center justify-between">
+                        <span className="line-through text-gray-400">
+                          {offer.product.originalPrice} ريال
+                        </span>
+                        <span className="text-lg font-bold text-green-600">
+                          {offer.product.salePrice} ريال
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        المخزون: {offer.product.stock} قطعة
+                      </div>
                     </div>
                   </div>
 
-                  {/* زر العمل المحدث */}
+                  {/* زر العمل */}
                   <button
                     onClick={() => handleOfferClick(offer)}
                     disabled={addingStates[offer.id] || !offer.product.inStock}

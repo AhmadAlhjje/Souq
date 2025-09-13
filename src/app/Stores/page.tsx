@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import StoresSection from "../../components/templates/StoresSection";
-import { Store as APIStore, getStores } from "../../api/stores";
+import { Store as APIStore, getStores, testConnection } from "../../api/stores";
 
 // تحويل Store من API إلى Store المحلي للحفاظ على التنسيق
 interface LocalStore {
@@ -19,108 +19,149 @@ const StoresPage: React.FC = () => {
   const [stores, setStores] = useState<LocalStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
 
- const convertAPIStoreToLocal = (apiStore: APIStore): LocalStore => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.8:4000";
-
-  let storeImages: string[] = [];
-  try {
-    storeImages = JSON.parse(apiStore.images);
-    if (!Array.isArray(storeImages)) storeImages = [String(storeImages)];
-  } catch (error) {
-    console.error('خطأ في تحليل الصور:', error);
-    storeImages = [];
-  }
-
-const imageUrl = storeImages.length > 0
-  ? `${baseUrl}${storeImages[0]}`
-  : "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
-  return {
-    id: apiStore.store_id,
-    name: apiStore.store_name,
-    image: imageUrl,
-    location: apiStore.store_address,
-    rating: 4.5,
-    reviewsCount: 120,
+  const addDebugInfo = (info: string) => {
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${info}`]);
   };
-};
+
+  const convertAPIStoreToLocal = (apiStore: APIStore): LocalStore => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+
+    // تحليل الصور من JSON string
+    const parseImages = (imagesString: string): string[] => {
+      try {
+        const parsed = JSON.parse(imagesString);
+        return Array.isArray(parsed) ? parsed : [String(parsed)];
+      } catch (error) {
+        console.error('خطأ في تحليل الصور:', error);
+        return [];
+      }
+    };
+
+    // الحصول على رابط الصورة المناسب
+    const getImageUrl = (): string => {
+      const storeImages = parseImages(apiStore.images);
+      if (storeImages.length > 0 && storeImages[0]) {
+        const imagePath = storeImages[0];
+        if (imagePath.startsWith('/uploads')) {
+          return `${baseUrl}${imagePath}`;
+        }
+        if (imagePath.startsWith('http')) {
+          return imagePath;
+        }
+        return `${baseUrl}/${imagePath}`;
+      }
+
+      if (apiStore.logo_image) {
+        if (apiStore.logo_image.startsWith('/uploads')) {
+          return `${baseUrl}${apiStore.logo_image}`;
+        }
+        if (apiStore.logo_image.startsWith('http')) {
+          return apiStore.logo_image;
+        }
+        return `${baseUrl}/${apiStore.logo_image}`;
+      }
+
+      return "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
+    };
+
+    return {
+      id: apiStore.store_id,
+      name: apiStore.store_name,
+      image: getImageUrl(),
+      location: apiStore.store_address,
+      rating: apiStore.averageRating ,
+      reviewsCount: apiStore.reviewsCount ,
+    };
+  };
+
   const handleViewDetails = (store: LocalStore) => {
     console.log(`زيارة متجر ${store.name}`);
     router.push(`/products?store=${store.id}&storeName=${encodeURIComponent(store.name)}`);
   };
 
-  useEffect(() => {
-    const fetchStores = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        console.log("🚀 بدء جلب المتاجر من API...");
-        console.log("🔧 متغيرات البيئة:", {
-          BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
-          IMAGES_URL: process.env.NEXT_PUBLIC_IMAGES_URL,
-        });
+  const runDiagnostics = async () => {
+    addDebugInfo("🔧 بدء التشخيص...");
+    
+    // اختبار متغيرات البيئة
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    addDebugInfo(`📍 Base URL: ${baseUrl || 'غير محدد!'}`);
+    
+    if (!baseUrl) {
+      addDebugInfo("❌ متغير NEXT_PUBLIC_BASE_URL غير محدد!");
+      return;
+    }
+    
+    // اختبار الاتصال
+    addDebugInfo("🧪 اختبار الاتصال...");
+    const connectionOk = await testConnection();
+    addDebugInfo(connectionOk ? "✅ الاتصال يعمل" : "❌ فشل الاتصال");
+    
+    // اختبار endpoint محدد
+    try {
+      addDebugInfo("📡 اختبار /stores endpoint...");
+      const response = await fetch(`${baseUrl}/stores/`);
+      addDebugInfo(`📊 حالة الرد: ${response.status}`);
+      const data = await response.json();
+      addDebugInfo(`📦 نوع البيانات: ${typeof data}`);
+      addDebugInfo(`📊 طول البيانات: ${Array.isArray(data) ? data.length : 'ليس مصفوفة'}`);
+    } catch (err: any) {
+      addDebugInfo(`❌ خطأ في endpoint: ${err.message}`);
+    }
+  };
 
-        // التحقق من وجود متغير البيئة
-        if (!process.env.NEXT_PUBLIC_BASE_URL) {
-          throw new Error("NEXT_PUBLIC_BASE_URL غير محدد في متغيرات البيئة");
-        }
+  const fetchStores = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      addDebugInfo("🚀 بدء جلب المتاجر...");
 
-        // اختبار الاتصال بالخادم
-        console.log("🧪 اختبار الاتصال مع الخادم...");
-        const connectionTest = await fetch(process.env.NEXT_PUBLIC_BASE_URL)
-          .then(() => true)
-          .catch(() => false);
-
-        if (!connectionTest) {
-          console.warn("⚠️ لا يمكن الوصول للخادم مباشرة");
-        }
-
-        // جلب المتاجر من API
-        const apiStores = await getStores();
-        console.log("📦 البيانات من API:", apiStores);
-
-        if (!apiStores || apiStores.length === 0) {
-          console.warn("⚠️ لا توجد متاجر في البيانات المستلمة");
-          setStores([]);
-          return;
-        }
-
-        // تحويل البيانات
-        const convertedStores = apiStores.map(convertAPIStoreToLocal);
-        console.log("🔄 البيانات المحولة:", convertedStores);
-
-        setStores(convertedStores);
-      } catch (error: any) {
-        console.error("💥 فشل في جلب المتاجر من API:", error);
-
-        let errorMessage = "فشل في جلب البيانات من الخادم";
-
-        if (error.code === "ERR_NETWORK") {
-          errorMessage = `لا يمكن الاتصال بالخادم على ${process.env.NEXT_PUBLIC_BASE_URL}`;
-        } else if (error.response?.status === 404) {
-          errorMessage = "مسار API غير موجود - تحقق من المسار الصحيح";
-        } else if (error.response?.status === 500) {
-          errorMessage = "خطأ في الخادم - تحقق من logs الخادم";
-        } else if (error.response?.status === 401) {
-          errorMessage = "غير مخول للوصول - تحقق من التوكن";
-        }
-
-        setError(errorMessage);
-        setStores([]); // لا نستخدم بيانات تجريبية، نعرض قائمة فارغة
-      } finally {
-        setLoading(false);
+      // التحقق من متغير البيئة
+      if (!process.env.NEXT_PUBLIC_BASE_URL) {
+        throw new Error("NEXT_PUBLIC_BASE_URL غير محدد في متغيرات البيئة");
       }
-    };
 
+      addDebugInfo(`🔧 استخدام URL: ${process.env.NEXT_PUBLIC_BASE_URL}`);
+
+      // جلب المتاجر من API
+      const apiStores = await getStores();
+      addDebugInfo(`📦 تم استلام ${apiStores.length} متجر`);
+
+      if (!apiStores || apiStores.length === 0) {
+        addDebugInfo("⚠️ لا توجد متاجر في البيانات");
+        setStores([]);
+        return;
+      }
+
+      // تحويل البيانات
+      const convertedStores = apiStores.map(convertAPIStoreToLocal);
+      addDebugInfo(`🔄 تم تحويل ${convertedStores.length} متجر`);
+
+      setStores(convertedStores);
+    } catch (error: any) {
+      addDebugInfo(`💥 خطأ: ${error.message}`);
+      setError(error.message);
+      setStores([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchStores();
   }, []);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#96EDD9]/20 via-[#96EDD9]/10 to-white pt-20">
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-          <span className="mr-3 text-gray-600">جاري تحميل المتاجر...</span>
+        <div className="max-w-7xl mx-auto px-4">
+        
+          
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+            <span className="mr-3 text-gray-600">جاري تحميل المتاجر...</span>
+          </div>
         </div>
       </div>
     );
@@ -128,6 +169,8 @@ const imageUrl = storeImages.length > 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#96EDD9]/20 via-[#96EDD9]/10 to-white pt-20">
+      
+
       {/* عرض رسالة خطأ إذا كان هناك مشكلة */}
       {error && (
         <div className="max-w-7xl mx-auto px-4 mb-4">

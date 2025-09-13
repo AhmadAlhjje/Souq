@@ -1,23 +1,70 @@
-// app/products/[id]/page.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import ProductDetailsPage from '@/components/templates/ProductDetailsPage';
+import ProductDetailsPageTemplate from '@/components/templates/ProductDetailsPageTemplate';
 import { Product } from '@/types/product';
 import { getProduct } from '@/api/stores';
-import ProductDetailsPageTemplate from '@/components/templates/ProductDetailsPageTemplate';
+import { useCart } from '@/hooks/useCart';
 
-// نوع للمنتج من الـ API مع التفاصيل
+// دالة محسّنة لتحليل الصور
+const parseImagesSafe = (images: string | string[] | null): string[] => {
+  console.log('🖼️ تحليل الصور - البيانات الأولية:', images);
+  
+  if (!images) {
+    console.log('🚫 لا توجد صور');
+    return [];
+  }
+
+  if (Array.isArray(images)) {
+    console.log('✅ الصور عبارة عن مصفوفة:', images);
+    return images.filter(img => img && img.trim() !== '');
+  }
+
+  if (typeof images === 'string') {
+    try {
+      const parsed = JSON.parse(images);
+      console.log('🔄 تم تحليل JSON:', parsed);
+      
+      if (Array.isArray(parsed)) {
+        return parsed.filter(img => img && img.trim() !== '');
+      } else {
+        return [parsed].filter(img => img && img.trim() !== '');
+      }
+    } catch (error) {
+      console.log('📝 النص ليس JSON، معاملة كاسم ملف:', images);
+      return images.trim() ? [images.trim()] : [];
+    }
+  }
+
+  console.log('⚠️ نوع غير متوقع للصور:', typeof images);
+  return [];
+};
+
+// دالة لبناء رابط الصورة
+const buildImageUrl = (imageName: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.127:4000';
+  const cleanImageName = imageName.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
+  const fullUrl = `${baseUrl}/uploads/${cleanImageName}`;
+  console.log('🔗 رابط الصورة المبني:', fullUrl);
+  return fullUrl;
+};
+
+// نوع بيانات المنتج من API
 interface ApiProductDetails {
   product_id: number;
   store_id: number;
   name: string;
   description: string;
   price: string;
+  discount_percentage?: string | null;
   stock_quantity: number;
-  images: string;
+  images: string | string[] | null;
   created_at: string;
+  discounted_price?: number;
+  discount_amount?: number;
+  has_discount?: boolean;
+  original_price?: number;
   Store: {
     store_name: string;
     logo_image: string;
@@ -36,96 +83,122 @@ interface ApiProductDetails {
   }>;
 }
 
-// دالة لتحويل بيانات الـ API إلى Product
+// تحويل من بيانات API إلى Product
 const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
-  // تحليل الصور باستخدام نفس الطريقة المستخدمة في المتاجر
-  let images: string[] = [];
-  try {
-    const parsed = JSON.parse(apiProduct.images);
-    images = Array.isArray(parsed) ? parsed : [apiProduct.images];
-  } catch (error) {
-    console.error('خطأ في تحليل الصور:', error);
-    images = [];
-  }
+  console.log('🔄 بدء تحويل المنتج:', apiProduct);
 
-  // بناء رابط الصورة
-  const baseImageUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.152:4000';
-  const imageUrl = images.length > 0 
-    ? `${baseImageUrl}/uploads/${images[0]}` 
-    : '/images/default-product.jpg';
+  const imageNames = parseImagesSafe(apiProduct.images);
+  const imageUrls = imageNames.map(name => buildImageUrl(name));
+  const primaryImageUrl = imageUrls.length > 0 ? imageUrls[0] : '/images/default-product.jpg';
 
-  // حساب متوسط التقييم
-  const avgRating = apiProduct.Reviews.length > 0 
-    ? apiProduct.Reviews.reduce((sum, review) => sum + review.rating, 0) / apiProduct.Reviews.length
+  const avgRating = apiProduct.Reviews && apiProduct.Reviews.length > 0
+    ? apiProduct.Reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / apiProduct.Reviews.length
     : 0;
 
-  // تحديد إذا كان المنتج جديد (أقل من شهر)
   const createdDate = new Date(apiProduct.created_at);
   const oneMonthAgo = new Date();
   oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
   const isNew = createdDate > oneMonthAgo;
 
-  return {
+  let status: 'active' | 'out_of_stock' | 'low_stock' = 'active';
+  if (apiProduct.stock_quantity === 0) {
+    status = 'out_of_stock';
+  } else if (apiProduct.stock_quantity > 0 && apiProduct.stock_quantity <= 5) {
+    status = 'low_stock';
+  }
+
+  const originalPrice = parseFloat(apiProduct.price) || 0;
+  let salePrice: number | undefined;
+  let hasDiscount = false;
+  let discountAmount = 0;
+  let discountPercentage = 0;
+
+  if (apiProduct.has_discount && apiProduct.discounted_price) {
+    salePrice = apiProduct.discounted_price;
+    hasDiscount = true;
+    discountAmount = originalPrice - salePrice;
+    discountPercentage = Math.round((discountAmount / originalPrice) * 100);
+  } else if (apiProduct.discount_percentage && parseFloat(apiProduct.discount_percentage) > 0) {
+    discountPercentage = parseFloat(apiProduct.discount_percentage);
+    discountAmount = (originalPrice * discountPercentage) / 100;
+    salePrice = originalPrice - discountAmount;
+    hasDiscount = true;
+  }
+
+  const convertedProduct: Product = {
     id: apiProduct.product_id,
-    name: apiProduct.name,
-    nameAr: apiProduct.name,
+    name: apiProduct.name || '',
+    nameAr: apiProduct.name || '',
     category: 'general',
     categoryAr: 'عام',
-    price: parseFloat(apiProduct.price),
-    salePrice: undefined,
-    originalPrice: parseFloat(apiProduct.price),
+    price: hasDiscount && salePrice ? salePrice : originalPrice,
+    salePrice: hasDiscount ? salePrice : undefined,
+    originalPrice,
     rating: Math.round(avgRating * 10) / 10,
-    reviewCount: apiProduct.Reviews.length,
-    image: imageUrl,
-    isNew: isNew,
-    stock: apiProduct.stock_quantity,
-    status: apiProduct.stock_quantity > 0 ? 'active' as const : 'out_of_stock' as const,
-    description: apiProduct.description,
-    descriptionAr: apiProduct.description,
-    brand: apiProduct.Store.store_name,
-    brandAr: apiProduct.Store.store_name,
-    sales: Math.floor(Math.random() * 100) + 5,
+    reviewCount: apiProduct.Reviews ? apiProduct.Reviews.length : 0,
+    image: primaryImageUrl,
+    images: imageUrls,
+    isNew,
+    stock: apiProduct.stock_quantity || 0,
     inStock: apiProduct.stock_quantity > 0,
+    status,
+    description: apiProduct.description || '',
+    descriptionAr: apiProduct.description || '',
+    brand: apiProduct.Store?.store_name || 'غير محدد',
+    brandAr: apiProduct.Store?.store_name || 'غير محدد',
+    sales: Math.floor(Math.random() * 100) + 5,
     createdAt: apiProduct.created_at,
-    storeInfo: {
-      store_name: apiProduct.Store.store_name,
-      store_description: apiProduct.Store.description,
-      logo_image: apiProduct.Store.logo_image
-    },
-    reviews: apiProduct.Reviews,
-    // إضافة الصور كحقل منفصل
-    ...({ images: apiProduct.images })
-  } as Product;
+    discountPercentage,
+    discountAmount,
+    hasDiscount,
+  };
+
+  console.log('✅ المنتج بعد التحويل:', convertedProduct);
+  return convertedProduct;
 };
 
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
-  const productId = parseInt(params?.id as string);
-  
+
+  // ✅ الحل الأمثل: استخراج params?.id إلى متغيرين منفصلين
+  const rawId = params?.id; // ← هذا المتغير يُعاد تعيينه عند تغيير المسار
+  const productId = rawId && !isNaN(Number(rawId)) ? parseInt(rawId as string, 10) : null;
+
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const { addToCart, fetchCart } = useCart();
+
   useEffect(() => {
     const fetchProduct = async () => {
-      if (!productId || isNaN(productId)) {
+      if (!productId) {
+        console.error('❌ معرف المنتج غير صحيح:', rawId); // ✅ آمن الآن
         setError('معرف المنتج غير صحيح');
         setLoading(false);
         return;
       }
 
       try {
+        console.log('🔄 بدء جلب المنتج برقم:', productId);
         setLoading(true);
         setError(null);
-        
-        console.log(`🔄 جلب المنتج برقم ${productId}...`);
+
         const productData = await getProduct(productId);
-        
-        console.log('✅ تم جلب المنتج:', productData);
-        const convertedProduct = convertApiProductToProduct(productData);
-        setProduct(convertedProduct);
-        
+
+        console.log('📦 بيانات المنتج الخام من API:', productData);
+
+        if (!productData) {
+          throw new Error('لم يتم العثور على بيانات المنتج');
+        }
+
+        const converted = convertApiProductToProduct(productData);
+        console.log('🎯 المنتج النهائي بعد التحويل:', converted);
+
+        setProduct(converted);
+        console.log('✅ تم تعيين المنتج في الحالة');
+
       } catch (err: any) {
         console.error('❌ خطأ في جلب المنتج:', err);
         
@@ -138,7 +211,7 @@ export default function ProductPage() {
         } else if (!err.response) {
           setError('خطأ في الاتصال، تحقق من الإنترنت');
         } else {
-          setError(err.response?.data?.message || 'حدث خطأ في جلب المنتج');
+          setError(err.response?.data?.message || err.message || 'حدث خطأ في جلب المنتج');
         }
       } finally {
         setLoading(false);
@@ -146,11 +219,50 @@ export default function ProductPage() {
     };
 
     fetchProduct();
-  }, [productId]);
+  }, [productId, rawId]); // ✅ هنا نضيف المتغيرات الصحيحة — وليس التعبير!
+
+  const handleBuyNow = async (pid: string | number, qty: number) => {
+    try {
+      console.log('🛒 شراء المنتج:', { pid, qty });
+      
+      if (product) {
+        const productIdNum = Number(pid);
+        await addToCart(productIdNum, qty);
+        await fetchCart();
+        console.log('✅ تمت إضافة المنتج للسلة، الانتقال للدفع...');
+      }
+      
+      router.push('/checkout');
+    } catch (error) {
+      console.error('❌ خطأ في الشراء:', error);
+      
+      let errorMessage = 'حدث خطأ أثناء معالجة طلبك.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('الكمية المطلوبة غير متوفرة')) {
+          errorMessage = 'الكمية المطلوبة غير متوفرة في المخزون.';
+        } else if (error.message.includes('المخزون غير كافٍ')) {
+          errorMessage = 'المخزون غير كافي لهذه الكمية.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      alert(errorMessage);
+    }
+  };
+
+  // Debug: طباعة حالة المكون
+  console.log('🖥️ حالة المكون:', { 
+    loading, 
+    error, 
+    hasProduct: !!product,
+    productId 
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo" style={{ backgroundColor: '#F6F8F9' }}>
+      <div className="min-h-screen flex items-center justify-center font-cairo bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
           <p className="text-gray-600 text-lg">جاري تحميل تفاصيل المنتج...</p>
@@ -161,17 +273,15 @@ export default function ProductPage() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo" style={{ backgroundColor: '#F6F8F9' }}>
+      <div className="min-h-screen flex items-center justify-center font-cairo bg-gray-50">
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-red-600 mb-4">
             {error === 'المنتج غير موجود' ? 'المنتج غير موجود' : 'خطأ في التحميل'}
           </h2>
-          <p className="text-gray-600 mb-6">
-            {error || 'حدث خطأ أثناء تحميل المنتج'}
-          </p>
+          <p className="text-gray-600 mb-6">{error || 'حدث خطأ أثناء تحميل المنتج'}</p>
           <div className="space-y-3">
-            <button 
+            <button
               onClick={() => window.location.reload()}
               className="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
             >
@@ -188,26 +298,15 @@ export default function ProductPage() {
       </div>
     );
   }
-const handleAddToCart = (productId: string | number, quantity: number) => {
-  console.log(`إضافة ${quantity} من ${product.nameAr} للسلة`);
-  // هنا يمكنك إضافة منطق إضافة المنتج للسلة الفعلي
-};
 
-const handleBuyNow = (productId: string | number, quantity: number) => {
-  console.log(`شراء فوري لـ ${quantity} من ${product.nameAr}`);
-  // هنا يمكنك إضافة منطق الشراء المباشر
-};
+  console.log('🎬 عرض ProductDetailsPageTemplate مع المنتج:', product.name);
 
-const handleBackToProducts = () => {
-  router.back();
-};
-
-return (
-  <ProductDetailsPageTemplate
-    product={product}
-    onAddToCart={handleAddToCart}
-    onBuyNow={handleBuyNow}
-    onBackToProducts={handleBackToProducts}
-  />
-);
+  return (
+    <ProductDetailsPageTemplate
+      product={product}
+      onBuyNow={handleBuyNow}
+      onBackToProducts={() => router.back()}
+      loading={loading}
+    />
+  );
 }

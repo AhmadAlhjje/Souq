@@ -1,10 +1,12 @@
-// components/organisms/ShoppingCart.tsx
-import React from 'react';
-import { ShoppingCart } from 'lucide-react';
-import Card from '../atoms/Card';
-import Button from '../atoms/Button';
-import { QuantityCounter } from '../molecules/QuantityCounter';
-import { CartItem } from '@/types/product';
+// src/components/organisms/ShoppingCart.tsx
+"use client";
+
+import React from "react";
+import { ShoppingCart } from "lucide-react";
+import Card from "../atoms/Card";
+import Button from "../atoms/Button";
+import { QuantityCounter } from "../molecules/QuantityCounter";
+import { CartItem } from "@/types/product"; // ✅ تم استيراده من product.ts
 
 interface ShoppingCartComponentProps {
   cartItems: CartItem[];
@@ -17,17 +19,14 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
   onUpdateQuantity, 
   onRemoveItem 
 }) => {
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = cartItems.reduce((sum, item) => sum + item.cartQuantity, 0);
   
-  // إصلاح: التعامل مع إمكانية عدم وجود originalPrice وإضافة فحص للقيم
+  // حساب السعر باستخدام salePrice إن وُجد، وإلا price
   const totalPrice = cartItems.reduce((sum, item) => {
-    // فحص وجود العنصر وخصائصه
-    if (!item) return sum;
-    
-    const itemPrice = item.salePrice || item.price || 0; // استخدام price بدلاً من originalPrice مع قيمة افتراضية
-    return sum + itemPrice * (item.quantity || 0);
+    const itemPrice = item.salePrice !== undefined ? item.salePrice : item.price;
+    return sum + (itemPrice * item.cartQuantity);
   }, 0);
-  
+
   if (cartItems.length === 0) {
     return (
       <Card className="p-6 text-center">
@@ -55,17 +54,16 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
                 text="×"
               />
               <QuantityCounter
-                quantity={item.quantity}
-                onIncrease={() => onUpdateQuantity(item.id, item.quantity + 1)}
-                onDecrease={() => onUpdateQuantity(item.id, item.quantity - 1)}
+                quantity={item.cartQuantity}
+                onIncrease={() => onUpdateQuantity(item.id, item.cartQuantity + 1)}
+                onDecrease={() => onUpdateQuantity(item.id, item.cartQuantity - 1)}
                 min={1}
               />
             </div>
             <div className="flex-1 text-right">
-              <h4 className="font-medium text-gray-900">{item.name}</h4>
-              {/* إصلاح: فحص وجود السعر قبل العرض */}
+              <h4 className="font-medium text-gray-900">{item.nameAr || item.name}</h4>
               <p className="text-sm text-gray-600">
-                {(item.salePrice || item.price || 0)} ر.س
+                {(item.salePrice || item.price).toFixed(2)} ر.س
               </p>
             </div>
           </div>

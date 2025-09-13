@@ -1,24 +1,43 @@
 "use client";
+
 import React from "react";
 import Button from "../atoms/Button";
 import Typography from "../atoms/Typography";
 import Icon from "../atoms/Icon";
 import HeroImageCard from "./HeroImageCard";
 import useTheme from "@/hooks/useTheme";
-import StatsCard from "../molecules/StatsCard";
+import StatsCard from "@/components/molecules/StatsCard";
+import { Users, Clock, Star } from "lucide-react";
 
 interface StatData {
+  title: string;
   value: string;
-  label: string;
+  icon: typeof Users | typeof Clock | typeof Star;
+  color: 'blue' | 'green' | 'red' | 'yellow' | 'purple';
 }
 
 const HeroSection: React.FC = () => {
   const { isDark } = useTheme();
 
   const stats: StatData[] = [
-    { value: "+60K", label: "تاجر نشط" },
-    { value: "24/7", label: "دعم تقني" },
-    { value: "99%", label: "رضا العملاء" },
+    {
+      title: "تاجر نشط",
+      value: "+60K",
+      icon: Users,
+      color: 'green',
+    },
+    {
+      title: "دعم تقني",
+      value: "24/7",
+      icon: Clock,
+      color: 'blue',
+    },
+    {
+      title: "رضا العملاء",
+      value: "99%",
+      icon: Star,
+      color: 'yellow',
+    },
   ];
 
   return (
@@ -129,11 +148,13 @@ const HeroSection: React.FC = () => {
                 }`}
               >
                 <div className="grid grid-cols-3 gap-6 lg:gap-8 text-center">
-                  {stats.map((stat: StatData, index: number) => (
+                  {stats.map((stat, index) => (
                     <StatsCard
                       key={index}
+                      title={stat.title}
                       value={stat.value}
-                      label={stat.label}
+                      icon={stat.icon}
+                      color={stat.color}
                     />
                   ))}
                 </div>
