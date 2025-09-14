@@ -48,77 +48,53 @@ const OrdersPageComponent: React.FC = () => {
   const { storeId, isLoaded } = useStore();
 
   // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
+  // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
   const transformApiDataToOrders = (apiData: any): Order[] => {
-    let sourceData = [];
-
-    if (apiData.Products && Array.isArray(apiData.Products)) {
-      // بيانات البحث - Products array
-      sourceData = apiData.Products;
-      console.log(
-        "🔍 Processing search results from Products array:",
-        sourceData.length
-      );
-
-      return sourceData.map((product: any) => ({
-        id: product.order_id?.toString() || product.product_id?.toString(),
-        customerName: product.customer_name || "غير محدد",
-        productImage: "📦",
-        status: product.order_status === "shipped" ? "active" : "pending",
-        orderNumber: `#${product.order_id || product.product_id}`,
-        price: parseFloat(product.total_price || product.price || "0"),
-        quantity: product.quantity_ordered || 1,
-        category: product.order_status === "shipped" ? "مشحون" : "غير مشحون",
-        orderDate: new Date(product.created_at).toISOString().split("T")[0],
-        customerPhone: "",
-        customerAddress: "",
-        isMonitored: false,
-        products: [
-          {
-            id: product.product_id?.toString(),
-            name: product.name,
-            image: "📦",
-            quantity: product.quantity_ordered || 1,
-            price: parseFloat(product.price || "0"),
-            totalPrice: parseFloat(product.total_price || product.price || "0"),
-          },
-        ],
-        // معلومات الشحن للبحث قد تكون محدودة
-        shipping: undefined,
-      }));
-    } else if (apiData.allOrders?.orders) {
-      // البيانات العادية - allOrders.orders
-      sourceData = apiData.allOrders.orders;
-      console.log("📊 Processing regular orders data:", sourceData.length);
-
-      return sourceData.map((order: any) => ({
+    if (apiData?.allOrders?.orders && Array.isArray(apiData.allOrders.orders)) {
+      return apiData.allOrders.orders.map((order: any) => ({
         id: order.order_id.toString(),
         customerName: order.Shipping?.customer_name || "غير محدد",
-        productImage: "📦",
-        status: order.status === "shipped" ? "active" : "pending",
         orderNumber: `#${order.order_id}`,
         price: parseFloat(order.total_price),
-        quantity: order.OrderItems.reduce(
-          (sum: number, item: any) => sum + item.quantity,
-          0
-        ),
-        category: order.is_programmatic
-          ? "مرصود"
-          : order.status === "shipped"
-          ? "مشحون"
-          : "غير مشحون",
-        orderDate: new Date(order.created_at).toISOString().split("T")[0],
-        customerPhone: order.Shipping?.customer_phone || "",
-        customerAddress: order.Shipping?.shipping_address || "",
-        isMonitored: order.is_programmatic || false,
-        products: order.OrderItems.map((item: any) => ({
-          id: item.order_item_id.toString(),
-          name: item.Product.name,
-          image: "📦",
-          quantity: item.quantity,
-          price: parseFloat(item.price_at_time),
-          totalPrice: parseFloat(item.price_at_time) * item.quantity,
-        })),
-        // إضافة معلومات الشحن
+        quantity:
+          order.OrderItems?.reduce(
+            (sum: number, item: any) => sum + (item.quantity || 0),
+            0
+          ) || 0,
+        category:
+          order.status === "monitored"
+            ? "مرصود"
+            : order.status === "shipped"
+            ? "مشحون"
+            : "غير مشحون",
+        products:
+          order.OrderItems && order.OrderItems.length > 0
+            ? order.OrderItems.map((item: any) => ({
+                id: item.order_item_id?.toString() || "",
+                name: item.Product?.name || "منتج",
+                image: "📦",
+                quantity: item.quantity || 0,
+                price: parseFloat(item.price_at_time || "0"),
+                totalPrice:
+                  parseFloat(item.price_at_time || "0") * (item.quantity || 0),
+              }))
+            : [
+                {
+                  id: "0",
+                  name: "منتج افتراضي",
+                  image: "📦",
+                  quantity: 1,
+                  price: parseFloat(order.total_price || "0"),
+                  totalPrice: parseFloat(order.total_price || "0"),
+                },
+              ],
+        isMonitored:
+          order.status === "monitored" || order.is_programmatic || false,
+
+        // إضافة تاريخ الطلب
+        createdAt: order.created_at,
+
+        // إضافة بيانات الشحن هنا
         shipping: order.Shipping
           ? {
               shipping_id: order.Shipping.shipping_id,
@@ -130,18 +106,16 @@ const OrdersPageComponent: React.FC = () => {
               source_address: order.Shipping.source_address,
               destination: order.Shipping.destination,
               shipping_method: order.Shipping.shipping_method,
-              tracking_number: order.Shipping.tracking_number,
               shipping_status: order.Shipping.shipping_status,
+              identity_images: order.Shipping.identity_images,
+              tracking_number: order.Shipping.tracking_number,
               shipped_at: order.Shipping.shipped_at,
               delivered_at: order.Shipping.delivered_at,
-              identity_images: order.Shipping.identity_images,
               created_at: order.Shipping.created_at,
             }
           : undefined,
       }));
     }
-
-    console.warn("⚠️ Unknown data structure:", apiData);
     return [];
   };
 
@@ -153,6 +127,7 @@ const OrdersPageComponent: React.FC = () => {
       try {
         setLoading(true);
         const data = await getStoreOrdersStats(storeId);
+        console.log("جاتا",data);
         setApiStats(data);
         const transformedOrders = transformApiDataToOrders(data);
         setOrders(transformedOrders);
@@ -218,30 +193,16 @@ const OrdersPageComponent: React.FC = () => {
     }
   });
 
-  // Calculate statistics with updated logic
-  const stats: OrderStats = apiStats
+  // Calculate statistics using API response
+  const stats: OrderStats = apiStats?.statistics
     ? {
-        totalOrders: isSearchMode
-          ? orders.length
-          : apiStats.statistics.totalOrders,
-        shippedOrders: orders.filter(
-          (order) => order.category === "مشحون" && !order.isMonitored
-        ).length,
-        unshippedOrders: orders.filter(
-          (order) => order.category === "غير مشحون" && !order.isMonitored
-        ).length,
-        monitoredOrders: orders.filter((order) => order.isMonitored).length,
-        totalShippedPrice: orders
-          .filter((order) => order.category === "مشحون" && !order.isMonitored)
-          .reduce((sum, order) => sum + order.price, 0),
-        totalUnshippedPrice: orders
-          .filter(
-            (order) => order.category === "غير مشحون" && !order.isMonitored
-          )
-          .reduce((sum, order) => sum + order.price, 0),
-        totalMonitoredPrice: orders
-          .filter((order) => order.isMonitored)
-          .reduce((sum, order) => sum + order.price, 0),
+        totalOrders: apiStats.statistics.totalOrders || 0,
+        shippedOrders: apiStats.statistics.shippedCount || 0,
+        unshippedOrders: apiStats.statistics.unshippedCount || 0,
+        monitoredOrders: apiStats.statistics.monitoredCount || 0,
+        totalShippedPrice: apiStats.statistics.shippedRevenue || 0,
+        totalUnshippedPrice: apiStats.statistics.unshippedRevenue || 0,
+        totalMonitoredPrice: apiStats.statistics.monitoredRevenue || 0,
       }
     : {
         totalOrders: 0,

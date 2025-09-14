@@ -8,6 +8,23 @@ interface CustomerInfoProps {
 }
 
 const CustomerInfo: React.FC<CustomerInfoProps> = ({ order, isDark }) => {
+  // دالة تنسيق التاريخ
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'غير محدد';
+    
+    try {
+      return new Date(dateString).toLocaleDateString("ar-EG", {
+        year: "numeric",
+        month: "long", 
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (error) {
+      return 'تاريخ غير صحيح';
+    }
+  };
+
   return (
     <div className={`p-4 rounded-xl ${
       isDark ? 'bg-gray-700/50' : 'bg-gray-50'
@@ -21,28 +38,36 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ order, isDark }) => {
           <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             الاسم:
           </span>
-          <p className="font-medium">{order.customerName}</p>
+          <p className="font-medium">{order.customerName || 'غير محدد'}</p>
         </div>
         <div>
           <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
             تاريخ الطلب:
           </span>
-          <p className="font-medium">{order.orderDate}</p>
+          <p className="font-medium">{formatDate(order.createdAt)}</p>
         </div>
-        {order.customerPhone && (
+        {order.shipping?.customer_phone && (
           <div>
             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               الهاتف:
             </span>
-            <p className="font-medium">{order.customerPhone}</p>
+            <p className="font-medium">{order.shipping.customer_phone}</p>
           </div>
         )}
-        {order.customerAddress && (
-          <div>
+        {order.shipping?.shipping_address && (
+          <div className="md:col-span-2">
             <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               العنوان:
             </span>
-            <p className="font-medium">{order.customerAddress}</p>
+            <p className="font-medium">{order.shipping.shipping_address}</p>
+          </div>
+        )}
+        {order.shipping?.recipient_name && order.shipping.recipient_name !== order.customerName && (
+          <div>
+            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              اسم المستلم:
+            </span>
+            <p className="font-medium">{order.shipping.recipient_name}</p>
           </div>
         )}
       </div>

@@ -217,7 +217,7 @@ const ShippingForm: React.FC<{ theme?: 'light' | 'dark' }> = ({ theme = 'light' 
       <div className="mt-4 sm:mt-6 mb-4 sm:mb-6">
         <Label>صورة الهوية</Label>
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
-          <FileUpload
+          <FileUpload 
             label="الوجه الخلفي"
             icon={<FileText size={18} />}
             accept="image/*"

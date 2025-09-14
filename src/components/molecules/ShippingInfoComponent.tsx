@@ -105,8 +105,8 @@ const IdentityImagesSection: React.FC<{
   // إنشاء URL للصور من متغيرات البيئة
   const getImageUrl = (path: string) => {
     const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      process.env.REACT_APP_API_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
       "http://192.168.1.127:4000";
 
     if (path.startsWith("uploads/")) {

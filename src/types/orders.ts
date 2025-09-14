@@ -45,6 +45,7 @@ export interface Order {
   isMonitored?: boolean;
   products?: Product[];
   // إضافة معلومات الشحن
+  createdAt: string;
   shipping?: ShippingInfo;
 }
 
