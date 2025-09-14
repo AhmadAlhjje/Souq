@@ -1,13 +1,15 @@
 // components/ui/VerificationPopup.tsx
 "use client";
 import React, { useState, useEffect } from 'react';
-import { X, MessageCircle, Loader2 } from 'lucide-react';
+import { X, MessageCircle, Loader2, RefreshCw } from 'lucide-react';
 
 interface VerificationPopupProps {
   isOpen: boolean;
   onClose: () => void;
   onVerify: (code: string) => void;
+  onResend: () => void;
   isLoading: boolean;
+  resendLoading: boolean;
   phoneNumber: string;
 }
 
@@ -15,14 +17,23 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
   isOpen,
   onClose,
   onVerify,
+  onResend,
   isLoading,
+  resendLoading,
   phoneNumber
 }) => {
   const [verificationCode, setVerificationCode] = useState('');
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes countdown
+  const [canResend, setCanResend] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0); // عداد لمنع الإرسال المتكرر
   
   useEffect(() => {
     if (!isOpen) return;
+    
+    // إعادة تعيين العداد عند فتح النافذة
+    setTimeLeft(300);
+    setCanResend(true); // السماح بإعادة الإرسال من البداية
+    setResendCooldown(0);
     
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -36,6 +47,24 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
 
     return () => clearInterval(timer);
   }, [isOpen]);
+
+  // عداد منفصل لإعادة الإرسال
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCanResend(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -57,9 +86,23 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
     }
   };
 
+  const handleResend = () => {
+    // إعادة تعيين الحقول
+    setVerificationCode('');
+    
+    // تعيين فترة انتظار قبل السماح بإعادة الإرسال مرة أخرى (60 ثانية)
+    setCanResend(false);
+    setResendCooldown(60);
+    
+    // استدعاء دالة إعادة الإرسال
+    onResend();
+  };
+
   const handleClose = () => {
     setVerificationCode('');
     setTimeLeft(300);
+    setCanResend(true);
+    setResendCooldown(0);
     onClose();
   };
 
@@ -73,6 +116,7 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition-colors"
+            disabled={isLoading || resendLoading}
           >
             <X className="w-5 h-5" />
           </button>
@@ -96,9 +140,15 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
             <p className="text-gray-600 mb-2">
               أدخل رمز التحقق المكون من 6 أرقام
             </p>
-            <p className="text-sm text-gray-500">
-              الوقت المتبقي: <span className="font-mono font-bold text-teal-600">{formatTime(timeLeft)}</span>
-            </p>
+            {timeLeft > 0 ? (
+              <p className="text-sm text-gray-500">
+                الوقت المتبقي: <span className="font-mono font-bold text-teal-600">{formatTime(timeLeft)}</span>
+              </p>
+            ) : (
+              <p className="text-sm text-red-500 font-medium">
+                انتهت صلاحية الرمز - يرجى طلب رمز جديد
+              </p>
+            )}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -110,8 +160,8 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
                 onChange={handleInputChange}
                 placeholder="123456"
                 maxLength={6}
-                className="w-full p-4 text-center text-2xl font-mono border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none transition-colors tracking-widest"
-                disabled={isLoading || timeLeft === 0}
+                className="w-full p-4 text-center text-2xl font-mono border-2 border-gray-300 rounded-lg focus:border-teal-500 focus:outline-none transition-colors tracking-widest disabled:bg-gray-100"
+                disabled={isLoading || resendLoading}
                 autoFocus
               />
               <div className="absolute inset-x-0 bottom-0 flex justify-center space-x-2 rtl:space-x-reverse -mb-8">
@@ -132,11 +182,11 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
             <div className="pt-6">
               <button
                 type="submit"
-                disabled={verificationCode.length !== 6 || isLoading || timeLeft === 0}
+                disabled={verificationCode.length !== 6 || isLoading || resendLoading}
                 className={`
                   w-full py-3 px-4 rounded-lg font-medium text-white
                   transition-all duration-200 flex items-center justify-center
-                  ${verificationCode.length === 6 && !isLoading && timeLeft > 0
+                  ${verificationCode.length === 6 && !isLoading && !resendLoading
                     ? 'bg-teal-500 hover:bg-teal-600 active:bg-teal-700'
                     : 'bg-gray-400 cursor-not-allowed'
                   }
@@ -147,8 +197,6 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     جاري التحقق...
                   </>
-                ) : timeLeft === 0 ? (
-                  "انتهت صلاحية الرمز"
                 ) : (
                   "تأكيد الرمز"
                 )}
@@ -156,22 +204,53 @@ const VerificationPopup: React.FC<VerificationPopupProps> = ({
             </div>
           </form>
 
-          {/* Resend option */}
-          {timeLeft === 0 && (
-            <div className="mt-4 text-center">
-              <button
-                onClick={handleClose}
-                className="text-teal-600 hover:text-teal-700 text-sm font-medium"
-              >
-                إعادة إرسال الرمز
-              </button>
-            </div>
-          )}
+          {/* Resend Button */}
+          <div className="mt-4">
+            <button
+              onClick={handleResend}
+              disabled={!canResend || resendLoading || isLoading}
+              className={`
+                w-full py-2.5 px-4 rounded-lg font-medium
+                transition-all duration-200 flex items-center justify-center
+                ${!canResend || resendLoading || isLoading
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-100 text-teal-600 hover:bg-gray-200 active:bg-gray-300'
+                }
+              `}
+            >
+              {resendLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  جاري إعادة الإرسال...
+                </>
+              ) : !canResend && resendCooldown > 0 ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  إعادة الإرسال خلال {resendCooldown} ثانية
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  إعادة إرسال رمز التحقق
+                </>
+              )}
+            </button>
+          </div>
 
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
               <strong>💡 تلميح:</strong> تحقق من رسائل الواتساب الواردة على الرقم المسجل
             </p>
+            {timeLeft === 0 && (
+              <p className="text-sm text-red-700 mt-2">
+                <strong>⏰ انتبه:</strong> انتهت صلاحية الرمز، يرجى طلب رمز جديد
+              </p>
+            )}
+            {resendCooldown > 0 && (
+              <p className="text-sm text-orange-700 mt-2">
+                <strong>⏳ انتظر:</strong> يمكنك طلب رمز جديد خلال {resendCooldown} ثانية
+              </p>
+            )}
           </div>
         </div>
       </div>

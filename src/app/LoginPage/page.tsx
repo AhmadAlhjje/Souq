@@ -6,7 +6,7 @@ import AuthTabs from "../../components/molecules/AuthTabs";
 import LoginForm from "../../components/organisms/LoginForm";
 import SignInForm from "../../components/organisms/SignInForm";
 import VerificationPopup from "../../components/ui/VerificationPopup";
-import { registerUser, loginUser, verifyWhatsapp } from "../../api/auth";
+import { registerUser, loginUser, verifyWhatsapp, resendVerification } from "../../api/auth";
 import { useToast } from "@/hooks/useToast";
 import { useRouter } from "next/navigation";
 import { getStoreIdFromToken, saveTokens } from "@/api/api";
@@ -23,6 +23,7 @@ const LoginPage = () => {
   // حالات التحقق من الواتساب
   const [showVerificationPopup, setShowVerificationPopup] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [pendingUserId, setPendingUserId] = useState<number | null>(null);
   const [verificationPhoneNumber, setVerificationPhoneNumber] = useState("");
 
@@ -183,6 +184,38 @@ const LoginPage = () => {
     }
   };
 
+  /** إعادة إرسال رمز التحقق */
+  const handleResendVerification = async () => {
+    if (!pendingUserId) {
+      showToast("خطأ في البيانات", "error");
+      return;
+    }
+
+    setResendLoading(true);
+
+    try {
+      const result = await resendVerification({
+        user_id: pendingUserId,
+      });
+
+      if (result.message) {
+        showToast(result.message, "success");
+      } else {
+        showToast("تم إعادة إرسال رمز التحقق", "success");
+      }
+    } catch (error: any) {
+      console.error("Resend verification error:", error);
+      
+      if (error.response?.data?.message) {
+        showToast(error.response.data.message, "error");
+      } else {
+        showToast("حدث خطأ أثناء إعادة الإرسال", "error");
+      }
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   /** إغلاق نافذة التحقق */
   const handleCloseVerification = () => {
     setShowVerificationPopup(false);
@@ -278,7 +311,9 @@ const LoginPage = () => {
         isOpen={showVerificationPopup}
         onClose={handleCloseVerification}
         onVerify={handleVerifyWhatsapp}
+        onResend={handleResendVerification}
         isLoading={verificationLoading}
+        resendLoading={resendLoading}
         phoneNumber={verificationPhoneNumber}
       />
     </LoginTemplate>

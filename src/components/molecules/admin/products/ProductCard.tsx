@@ -133,6 +133,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </Badge>
         </div>
 
+        {/* Discount Badge */}
+        {product.has_discount && product.discount_percentage && (
+          <div className="absolute top-2 left-2">
+            <span className="bg-red-500 text-white px-2 py-1 text-xs font-bold rounded-full">
+              -{product.discount_percentage}%
+            </span>
+          </div>
+        )}
+
         {/* Stock warning overlay */}
         {(product.stock_quantity ?? 0) <= 5 &&
           product.status !== "out_of_stock" && (
@@ -164,11 +173,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Price and Rating */}
         <div className="flex items-center justify-between mb-3">
-          <span
-            className={`text-xl font-bold ${priceClasses} transition-colors duration-200`}
-          >
-            ${product.price?.toLocaleString() ?? 0}
-          </span>
+          <div className="flex flex-col gap-1">
+            {/* Current Price */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span
+                className={`text-xl font-bold ${priceClasses} transition-colors duration-200`}
+              >
+                ${product.has_discount && product.discounted_price 
+                  ? product.discounted_price.toFixed(2) 
+                  : product.price?.toFixed(2) || '0.00'}
+              </span>
+              
+              {/* Original Price (crossed out) */}
+              {product.has_discount && product.original_price && (
+                <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                  ${product.original_price.toFixed(2)}
+                </span>
+              )}
+            </div>
+
+            {/* Discount Savings */}
+            {product.has_discount && product.discount_amount && (
+              <span className="text-xs text-green-600 font-medium">
+                توفر ${product.discount_amount.toFixed(2)}
+              </span>
+            )}
+          </div>
+
+          {/* Rating */}
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
             <span

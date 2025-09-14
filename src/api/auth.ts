@@ -18,13 +18,15 @@ export interface VerifyWhatsappData {
   verification_code: string;
 }
 
-
 export interface ChangePasswordData {
   current_password: string;
   new_password: string;
   confirm_password: string;
 }
 
+export interface ResendVerificationData {
+  user_id: number;
+}
 
 // تسجيل مستخدم جديد
 export const registerUser = async (userData: RegisterData) => {
@@ -52,6 +54,14 @@ export const isAuthenticated = () => {
 // التحقق من رقم الواتساب
 export const verifyWhatsapp = async (verificationData: VerifyWhatsappData) => {
   const response = await api.post("/users/verify-whatsapp", verificationData);
+  return response.data;
+};
+
+// إعادة إرسال رمز التحقق
+export const resendVerification = async (
+  resendData: ResendVerificationData
+) => {
+  const response = await api.post("/users/resend-verification", resendData);
   return response.data;
 };
 

@@ -292,11 +292,19 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
               >
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <img
-                      src={product.image}
-                      alt={isRTL ? product.nameAr ?? "" : product.name ?? ""}
-                      className="w-12 h-12 object-cover rounded-lg"
-                    />
+                    <div className="relative">
+                      <img
+                        src={product.image}
+                        alt={isRTL ? product.nameAr ?? "" : product.name ?? ""}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                      {/* Discount Badge */}
+                      {product.has_discount && product.discount_percentage && (
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 py-0.5 rounded-full font-bold">
+                          -{product.discount_percentage}%
+                        </span>
+                      )}
+                    </div>
                     <div>
                       <h3
                         className={`font-medium ${productTitleClasses} transition-colors duration-200`}
@@ -312,11 +320,30 @@ const ProductsTable: React.FC<ProductsTableProps> = ({
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <span
-                    className={`font-semibold ${priceClasses} transition-colors duration-200`}
-                  >
-                    ${product.price}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    {/* Current Price */}
+                    <span
+                      className={`font-semibold ${priceClasses} transition-colors duration-200`}
+                    >
+                      ${product.has_discount && product.discounted_price 
+                        ? product.discounted_price.toFixed(2) 
+                        : product.price?.toFixed(2) || '0.00'}
+                    </span>
+                    
+                    {/* Original Price (crossed out) and savings */}
+                    {product.has_discount && product.original_price && (
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+                          ${product.original_price.toFixed(2)}
+                        </span>
+                        {product.discount_amount && (
+                          <span className="text-xs text-green-600 font-medium">
+                            توفر ${product.discount_amount.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </td>
                 <td className="py-4 px-4">
                   <span

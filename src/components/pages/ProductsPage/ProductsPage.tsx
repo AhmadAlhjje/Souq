@@ -36,6 +36,10 @@ interface ExtendedProduct extends BaseProduct {
   descriptionAr?: string;
   categoryAr?: string;
   brandAr?: string;
+  displayPrice?: number;
+  originalDisplayPrice?: number;
+  showOriginalPrice?: boolean;
+  discountLabel?: string;
 }
 
 // نوع محدث لبيانات التحديث يتضمن discount_percentage
@@ -138,6 +142,11 @@ const transformApiProduct = (apiProduct: any): Product => {
     original_price: hasDiscount ? originalPrice : undefined,
     Store: apiProduct.Store,
     reviews: apiProduct.reviews || [],
+
+    displayPrice: hasDiscount ? finalPrice : originalPrice,
+    originalDisplayPrice: hasDiscount ? originalPrice : undefined,
+    showOriginalPrice: hasDiscount,
+    discountLabel: hasDiscount ? `${discountPercentage}% خصم` : undefined,
 
     // الخصائص الإضافية للتوافق
     id: apiProduct.product_id.toString(),
@@ -890,20 +899,6 @@ const ProductsPage: React.FC = () => {
                     </span>
                   )}
                 </div>
-
-                {/* إحصائيات الخصم السريعة */}
-                {/* {storeStats && storeStats.productsWithDiscount > 0 && (
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-300">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                      {storeStats.productsWithDiscount} منتج بخصم
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                      إجمالي التوفير: {storeStats.totalDiscountValue} $
-                    </span>
-                  </div>
-                )} */}
               </div>
             </section>
           )}
