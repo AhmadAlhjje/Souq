@@ -28,7 +28,7 @@ const ImageSlider: React.FC<ImageSliderProps> = ({ slides }) => {
       {/* الصورة */}
       <div className="relative overflow-hidden rounded-xl sm:rounded-2xl shadow-lg mb-4">
         <img 
-          src={slides[currentSlide]?.image || '/api/placeholder/400/250'} 
+          src={slides[currentSlide]?.image} 
           alt={slides[currentSlide]?.title || 'Slide'}
           className="w-full h-48 sm:h-64 object-cover transition-all duration-500"
         />

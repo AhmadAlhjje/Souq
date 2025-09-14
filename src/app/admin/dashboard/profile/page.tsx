@@ -166,7 +166,20 @@ const ProfilePage = () => {
 
       try {
         setLoading(true);
-        const response: StoreData = await getStoreById(storeId);
+        const apiResponse = await getStoreById(storeId);
+
+        // إصلاح تحليل الاستجابة
+        let response: StoreData;
+        if (typeof apiResponse === "string") {
+          try {
+            response = JSON.parse(apiResponse);
+          } catch (error) {
+            console.error("Failed to parse JSON response:", error);
+            throw new Error("استجابة غير صحيحة من الخادم");
+          }
+        } else {
+          response = apiResponse;
+        }
 
         if (!response.success || !response.store) {
           throw new Error("فشل في جلب بيانات المتجر");
@@ -174,7 +187,21 @@ const ProfilePage = () => {
 
         const storeInfo = response.store;
 
-        const images = storeInfo.images ? JSON.parse(storeInfo.images) : [];
+        // إصلاح معالجة الصور
+        let images = [];
+        try {
+          if (storeInfo.images) {
+            if (typeof storeInfo.images === "string") {
+              images = JSON.parse(storeInfo.images);
+            } else if (Array.isArray(storeInfo.images)) {
+              images = storeInfo.images;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing store images:", error);
+          images = [];
+        }
+
         const coverImage =
           images.length > 0
             ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`

@@ -83,13 +83,13 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
     }
     console.log("images[0]", images[0]);
   } catch (e) {
-    images = ["/api/placeholder/400/400"]; // fallback
+    
   }
 
   // إذا لم يكن هناك أي صورة
-  if (!images || images.length === 0) {
-    images = ["/api/placeholder/400/400"];
-  }
+  // if (!images || images.length === 0) {
+  //   images = ["/api/placeholder/400/400"];
+  // }
 
   // معالجة الخصم
   const hasDiscount =
@@ -142,9 +142,9 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
     return "متوفر";
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = "/api/placeholder/400/400";
-  };
+  // const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  //   e.currentTarget.src = "/api/placeholder/400/400";
+  // };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -195,10 +195,10 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
             <div className="space-y-4">
               <div className="relative">
                 <img
-                  src={`${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`}
+                  src={images[0]}
                   alt={product.name}
                   className="w-full h-80 object-cover rounded-lg border border-gray-200"
-                  onError={handleImageError}
+                  // onError={handleImageError}
                 />
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   <Badge
@@ -225,7 +225,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                       src={image}
                       alt={`${product.name} ${index + 2}`}
                       className="w-full h-20 object-cover rounded border border-gray-200"
-                      onError={handleImageError}
+                      // onError={handleImageError}
                     />
                   ))}
                   {images.length > 4 && (
@@ -311,7 +311,7 @@ const ProductViewModal: React.FC<ProductViewModalProps> = ({
                           src={product.Store.logo_image}
                           alt={product.Store.store_name}
                           className="w-10 h-10 rounded-full object-cover border border-gray-200"
-                          onError={handleImageError}
+                          // onError={handleImageError}
                         />
                       )}
                       <div>

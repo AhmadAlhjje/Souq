@@ -246,9 +246,9 @@ export const getProductById = async (id: number | string) => {
     }
 
     // التأكد من وجود الصور أو استخدام صورة افتراضية
-    if (!productData.images || productData.images.length === 0) {
-      productData.images = ["/api/placeholder/400/400"];
-    }
+    // if (!productData.images || productData.images.length === 0) {
+    //   productData.images = ["/api/placeholder/400/400"];
+    // }
 
     console.log("بيانات المنتج المحدثة:", productData);
 

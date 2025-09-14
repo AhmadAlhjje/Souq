@@ -167,9 +167,9 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
     }
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = "/api/placeholder/300/300";
-  };
+  // const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  //   e.currentTarget.src = "/api/placeholder/300/300";
+  // };
 
   return (
     <div
@@ -221,10 +221,10 @@ const ProductEditModal: React.FC<ProductEditModalProps> = ({
                 {/* Image Preview */}
                 <div className="relative">
                   <img
-                    src={imagePreview || "/api/placeholder/300/300"}
+                    src={imagePreview}
                     alt="Product preview"
                     className="w-full h-64 object-cover rounded-lg border border-gray-200"
-                    onError={handleImageError}
+                    // onError={handleImageError}
                   />
                   {selectedImages.length > 0 && (
                     <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs">

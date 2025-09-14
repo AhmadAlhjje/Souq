@@ -80,24 +80,56 @@ const transformApiProduct = (apiProduct: any): Product => {
     if (apiProduct.images) {
       let cleanedImages = apiProduct.images;
 
-      if (cleanedImages.startsWith('"') && cleanedImages.endsWith('"')) {
-        cleanedImages = cleanedImages.slice(1, -1);
-      }
+      // التحقق من نوع البيانات أولاً
+      if (typeof cleanedImages === "string") {
+        // إزالة علامات الاقتباس الخارجية إن وجدت
+        if (cleanedImages.startsWith('"') && cleanedImages.endsWith('"')) {
+          cleanedImages = cleanedImages.slice(1, -1);
+        }
 
-      cleanedImages = cleanedImages.replace(/\\"/g, '"');
-      images = JSON.parse(cleanedImages);
+        // إزالة escape characters
+        cleanedImages = cleanedImages.replace(/\\"/g, '"');
+
+        // محاولة تحليل JSON
+        images = JSON.parse(cleanedImages);
+      } else if (Array.isArray(cleanedImages)) {
+        // إذا كانت مصفوفة بالفعل
+        images = cleanedImages;
+      } else {
+        // إذا كان كائن أو نوع آخر
+        images = [cleanedImages.toString()];
+      }
     }
   } catch (error) {
     console.error("Error parsing product images:", error, apiProduct.images);
     try {
       if (apiProduct.images && typeof apiProduct.images === "string") {
+        // محاولة مباشرة لتحليل JSON
         images = JSON.parse(apiProduct.images);
+      } else if (Array.isArray(apiProduct.images)) {
+        images = apiProduct.images;
+      } else {
+        // استخدام كمصفوفة بعنصر واحد
+        images = [apiProduct.images.toString()];
       }
     } catch (secondError) {
       console.error("Second attempt to parse images failed:", secondError);
       images = [];
     }
   }
+
+  // معالجة مسارات الصور لإضافة رابط الخادم
+  const processedImages = images.map((image) => {
+    if (typeof image === "string") {
+      // التحقق من وجود رابط كامل
+      if (image.startsWith("http://") || image.startsWith("https://")) {
+        return image;
+      }
+      // إضافة رابط الخادم
+      return `${process.env.NEXT_PUBLIC_BASE_URL}${image}`;
+    }
+    return image;
+  });
 
   // معالجة الخصم الجديدة
   const hasDiscount =
@@ -134,7 +166,7 @@ const transformApiProduct = (apiProduct: any): Product => {
     price: originalPrice,
     discount_percentage: hasDiscount ? discountPercentage : null,
     stock_quantity: apiProduct.stock_quantity || 0,
-    images: images,
+    images: processedImages, // استخدام الصور المعالجة
     created_at: apiProduct.created_at,
     discounted_price: hasDiscount ? finalPrice : undefined,
     discount_amount: hasDiscount ? discountAmount : undefined,
@@ -151,10 +183,7 @@ const transformApiProduct = (apiProduct: any): Product => {
     // الخصائص الإضافية للتوافق
     id: apiProduct.product_id.toString(),
     status: status,
-    image:
-      images.length > 0
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
-        : "",
+    image: processedImages.length > 0 ? processedImages[0] : "",
     rating: apiProduct.averageRating || 0,
     reviewCount:
       apiProduct.reviewsCount ||
@@ -303,26 +332,52 @@ const ProductsPage: React.FC = () => {
         const response = await getStore(storeId);
         console.log("Store API Response:", response);
 
-        if (!response.success || !response.store) {
+        // إصلاح مشكلة تحليل JSON
+        let data;
+        if (typeof response === "string") {
+          try {
+            data = JSON.parse(response);
+          } catch (error) {
+            console.error("Failed to parse JSON response:", error);
+            throw new Error("استجابة غير صحيحة من الخادم");
+          }
+        } else {
+          data = response;
+        }
+
+        if (!data.success || !data.store) {
           throw new Error("فشل في جلب بيانات المتجر");
         }
 
-        const storeInfo = response.store;
+        const storeInfo = data.store;
 
-        // تحويل المنتجات من API مع التأكد من تحويل المخزون والأسعار للأرقام
+        // تحويل المنتجات من API مع إصلاح معالجة الصور
         const transformApiProduct = (apiProduct: any): Product => {
           let images: string[] = [];
           try {
             if (apiProduct.images) {
               let cleanedImages = apiProduct.images;
-              if (
-                cleanedImages.startsWith('"') &&
-                cleanedImages.endsWith('"')
-              ) {
-                cleanedImages = cleanedImages.slice(1, -1);
+
+              // التحقق من نوع البيانات أولاً
+              if (typeof cleanedImages === "string") {
+                // إزالة علامات الاقتباس الخارجية إن وجدت
+                if (
+                  cleanedImages.startsWith('"') &&
+                  cleanedImages.endsWith('"')
+                ) {
+                  cleanedImages = cleanedImages.slice(1, -1);
+                }
+                // إزالة escape characters
+                cleanedImages = cleanedImages.replace(/\\"/g, '"');
+                // محاولة تحليل JSON
+                images = JSON.parse(cleanedImages);
+              } else if (Array.isArray(cleanedImages)) {
+                // إذا كانت مصفوفة بالفعل
+                images = cleanedImages;
+              } else {
+                // إذا كان نوع آخر
+                images = [cleanedImages.toString()];
               }
-              cleanedImages = cleanedImages.replace(/\\"/g, '"');
-              images = JSON.parse(cleanedImages);
             }
           } catch (error) {
             console.error(
@@ -330,8 +385,35 @@ const ProductsPage: React.FC = () => {
               error,
               apiProduct.images
             );
-            images = [];
+            try {
+              if (apiProduct.images && typeof apiProduct.images === "string") {
+                images = JSON.parse(apiProduct.images);
+              } else if (Array.isArray(apiProduct.images)) {
+                images = apiProduct.images;
+              } else {
+                images = [apiProduct.images.toString()];
+              }
+            } catch (secondError) {
+              console.error(
+                "Second attempt to parse images failed:",
+                secondError
+              );
+              images = [];
+            }
           }
+
+          // معالجة مسارات الصور لإضافة رابط الخادم
+          const processedImages = images.map((image) => {
+            if (typeof image === "string") {
+              // التحقق من وجود رابط كامل
+              if (image.startsWith("http://") || image.startsWith("https://")) {
+                return image;
+              }
+              // إضافة رابط الخادم
+              return `${process.env.NEXT_PUBLIC_BASE_URL}${image}`;
+            }
+            return image;
+          });
 
           const stockQuantity = Number(apiProduct.stock_quantity) || 0;
           const originalPrice = Number(apiProduct.price) || 0;
@@ -360,7 +442,7 @@ const ProductsPage: React.FC = () => {
             price: originalPrice,
             discount_percentage: hasDiscount ? discountPercentage : null,
             stock_quantity: stockQuantity,
-            images: images,
+            images: processedImages, // استخدام الصور المعالجة
             created_at: apiProduct.created_at,
             discounted_price: hasDiscount ? finalPrice : undefined,
             discount_amount: hasDiscount ? discountAmount : undefined,
@@ -370,10 +452,7 @@ const ProductsPage: React.FC = () => {
             reviews: apiProduct.reviews || [],
             id: apiProduct.product_id.toString(),
             status: status,
-            image:
-              images.length > 0
-                ? `${process.env.NEXT_PUBLIC_BASE_URL}${images[0]}`
-                : "",
+            image: processedImages.length > 0 ? processedImages[0] : "",
             rating: apiProduct.averageRating || 0,
             reviewCount:
               apiProduct.reviewsCount ||
@@ -395,13 +474,28 @@ const ProductsPage: React.FC = () => {
           storeInfo.products?.map(transformApiProduct) || [];
         setProducts(transformedProducts);
 
+        // معالجة صور المتجر
+        let storeImages = [];
+        try {
+          if (storeInfo.images) {
+            if (typeof storeInfo.images === "string") {
+              storeImages = JSON.parse(storeInfo.images);
+            } else if (Array.isArray(storeInfo.images)) {
+              storeImages = storeInfo.images;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing store images:", error);
+          storeImages = [];
+        }
+
         // حفظ بيانات المتجر
         setStoreData({
           id: storeInfo.store_id,
           name: storeInfo.store_name,
           address: storeInfo.store_address,
           description: storeInfo.description,
-          images: storeInfo.images ? JSON.parse(storeInfo.images) : [],
+          images: storeImages,
           logo: storeInfo.logo_image
             ? `${process.env.NEXT_PUBLIC_BASE_URL}${storeInfo.logo_image}`
             : "",

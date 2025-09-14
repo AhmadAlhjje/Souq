@@ -100,16 +100,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = "/api/placeholder/300/300";
-  };
+  // const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  //   e.currentTarget.src = "/api/placeholder/300/300";
+  // };
 
   // Use fallback string for undefined
   const productName = isRTL ? product.nameAr || "" : product.name || "";
   const productCategory = isRTL
     ? product.categoryAr || ""
     : product.category || "";
-  const productImage = product.image?.trim() || "/api/placeholder/300/300";
+  const productImage = product.image?.trim();
 
   return (
     <div
@@ -121,7 +121,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           src={productImage}
           alt={productName}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-          onError={handleImageError}
+          // onError={handleImageError}
         />
 
         <div className="absolute top-2 right-2">
