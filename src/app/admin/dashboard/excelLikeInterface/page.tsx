@@ -1,11 +1,20 @@
 "use client";
 import React, { useState, useRef, useCallback } from "react";
-import { Plus, Trash2, Save, Upload, X, FileSpreadsheet, Download, FileUp } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Save,
+  Upload,
+  X,
+  FileSpreadsheet,
+  Download,
+  FileUp,
+} from "lucide-react";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { uploadMultipleProducts } from "@/api/products";
 import { useStore } from "@/contexts/StoreContext";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 interface ProductRow {
   id: string;
@@ -77,18 +86,18 @@ const ExcelLikeInterface = () => {
     const templateData = [
       {
         "اسم المنتج": "مثال - قميص قطني",
-        "الوصف": "قميص قطني عالي الجودة مناسب لجميع المناسبات",
-        "السعر": 29.99,
+        الوصف: "قميص قطني عالي الجودة مناسب لجميع المناسبات",
+        السعر: 29.99,
         "نسبة الخصم %": 10,
-        "الكمية المتاحة": 50
+        "الكمية المتاحة": 50,
       },
       {
         "اسم المنتج": "مثال - حذاء رياضي",
-        "الوصف": "حذاء رياضي مريح للجري والأنشطة اليومية",
-        "السعر": 79.99,
+        الوصف: "حذاء رياضي مريح للجري والأنشطة اليومية",
+        السعر: 79.99,
         "نسبة الخصم %": "",
-        "الكمية المتاحة": 25
-      }
+        "الكمية المتاحة": 25,
+      },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(templateData);
@@ -101,9 +110,9 @@ const ExcelLikeInterface = () => {
       { wch: 40 }, // الوصف
       { wch: 10 }, // السعر
       { wch: 15 }, // نسبة الخصم
-      { wch: 15 }  // الكمية
+      { wch: 15 }, // الكمية
     ];
-    worksheet['!cols'] = colWidths;
+    worksheet["!cols"] = colWidths;
 
     XLSX.writeFile(workbook, "نموذج_المنتجات.xlsx");
     showToast("تم تحميل النموذج بنجاح", "success");
@@ -118,7 +127,7 @@ const ExcelLikeInterface = () => {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -129,55 +138,78 @@ const ExcelLikeInterface = () => {
         }
 
         // تحويل البيانات إلى تنسيق المنتجات
-        const importedProducts: ProductRow[] = jsonData.map((row: any, index: number) => {
-          return {
-            id: (Date.now() + index).toString(),
-            name: row["اسم المنتج"] || row["name"] || "",
-            description: row["الوصف"] || row["description"] || "",
-            price: (row["السعر"] || row["price"] || "").toString(),
-            discount_percentage: (row["نسبة الخصم %"] || row["discount_percentage"] || "").toString(),
-            stock_quantity: (row["الكمية المتاحة"] || row["stock_quantity"] || "").toString(),
-            images: []
-          };
-        });
+        const importedProducts: ProductRow[] = jsonData.map(
+          (row: any, index: number) => {
+            return {
+              id: (Date.now() + index).toString(),
+              name: row["اسم المنتج"] || row["name"] || "",
+              description: row["الوصف"] || row["description"] || "",
+              price: (row["السعر"] || row["price"] || "").toString(),
+              discount_percentage: (
+                row["نسبة الخصم %"] ||
+                row["discount_percentage"] ||
+                ""
+              ).toString(),
+              stock_quantity: (
+                row["الكمية المتاحة"] ||
+                row["stock_quantity"] ||
+                ""
+              ).toString(),
+              images: [],
+            };
+          }
+        );
 
         // التحقق من صحة البيانات
-        const validProducts = importedProducts.filter(product => 
-          product.name.trim() && 
-          product.description.trim() && 
-          product.price && 
-          product.stock_quantity
+        const validProducts = importedProducts.filter(
+          (product) =>
+            product.name.trim() &&
+            product.description.trim() &&
+            product.price &&
+            product.stock_quantity
         );
 
         if (validProducts.length === 0) {
-          showToast("لا توجد منتجات صالحة في الملف. تأكد من وجود: اسم المنتج، الوصف، السعر، والكمية", "error");
+          showToast(
+            "لا توجد منتجات صالحة في الملف. تأكد من وجود: اسم المنتج، الوصف، السعر، والكمية",
+            "error"
+          );
           return;
         }
 
         // إضافة المنتجات المستوردة
-        setProducts(prevProducts => {
+        setProducts((prevProducts) => {
           // إزالة الصف الفارغ الأول إذا كان فارغاً
-          const filteredPrev = prevProducts.filter(p => 
-            p.name.trim() || p.description.trim() || p.price || p.stock_quantity
+          const filteredPrev = prevProducts.filter(
+            (p) =>
+              p.name.trim() ||
+              p.description.trim() ||
+              p.price ||
+              p.stock_quantity
           );
           return [...filteredPrev, ...validProducts];
         });
 
         showToast(`تم استيراد ${validProducts.length} منتج بنجاح`, "success");
-        
+
         if (importedProducts.length > validProducts.length) {
           const skipped = importedProducts.length - validProducts.length;
-          showToast(`تم تجاهل ${skipped} منتج لعدم اكتمال البيانات المطلوبة`, "warning");
+          showToast(
+            `تم تجاهل ${skipped} منتج لعدم اكتمال البيانات المطلوبة`,
+            "warning"
+          );
         }
-
       } catch (error) {
         console.error("خطأ في قراءة ملف Excel:", error);
-        showToast("خطأ في قراءة الملف. تأكد من أن الملف من نوع Excel صحيح", "error");
+        showToast(
+          "خطأ في قراءة الملف. تأكد من أن الملف من نوع Excel صحيح",
+          "error"
+        );
       }
     };
 
     reader.readAsArrayBuffer(file);
-    
+
     // إعادة تعيين input
     if (excelInputRef.current) {
       excelInputRef.current.value = "";
@@ -276,7 +308,9 @@ const ExcelLikeInterface = () => {
         if (product.discount_percentage) {
           const discount = parseFloat(product.discount_percentage);
           if (isNaN(discount) || discount < 0 || discount > 100) {
-            errors.push(`المنتج ${index + 1}: نسبة الخصم يجب أن تكون بين 0 و 100`);
+            errors.push(
+              `المنتج ${index + 1}: نسبة الخصم يجب أن تكون بين 0 و 100`
+            );
           }
         }
       });
@@ -532,11 +566,21 @@ const ExcelLikeInterface = () => {
 
           {/* Excel Instructions */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-blue-800 mb-2">تعليمات استخدام Excel:</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">
+              تعليمات استخدام Excel:
+            </h3>
             <div className="text-sm text-blue-700 space-y-1">
-              <p>• اضغط "تحميل نموذج Excel" للحصول على ملف Excel بالتنسيق الصحيح</p>
-              <p>• املأ البيانات في ملف Excel (الاسم والوصف والسعر والكمية مطلوبة، نسبة الخصم اختيارية)</p>
-              <p>• احفظ الملف واضغط "رفع ملف Excel" لاستيراد البيانات</p>
+              <p>
+                • اضغط &quot;تحميل نموذج Excel&quot; للحصول على ملف Excel
+                بالتنسيق الصحيح
+              </p>
+              <p>
+                • املأ البيانات في ملف Excel (الاسم والوصف والسعر والكمية
+                مطلوبة، نسبة الخصم اختيارية)
+              </p>
+              <p>
+                • احفظ الملف واضغط &quot;رفع ملف Excel&quot; لاستيراد البيانات
+              </p>
               <p>• بعد الاستيراد، يمكنك رفع الصور لكل منتج من الواجهة</p>
             </div>
           </div>
@@ -564,7 +608,9 @@ const ExcelLikeInterface = () => {
                           <span className="text-red-500 mr-1">*</span>
                         )}
                         {col.key === "discount_percentage" && (
-                          <span className="text-gray-400 mr-1 text-xs">(اختياري)</span>
+                          <span className="text-gray-400 mr-1 text-xs">
+                            (اختياري)
+                          </span>
                         )}
                       </th>
                     ))}
@@ -672,7 +718,11 @@ const ExcelLikeInterface = () => {
                           type="number"
                           value={product.discount_percentage}
                           onChange={(e) =>
-                            updateCell(product.id, "discount_percentage", e.target.value)
+                            updateCell(
+                              product.id,
+                              "discount_percentage",
+                              e.target.value
+                            )
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 3)}
                           disabled={isLoading}
