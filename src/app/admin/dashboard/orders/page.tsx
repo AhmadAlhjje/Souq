@@ -9,8 +9,10 @@ import {
   updateOrderStatus,
   updateProgrammaticShipped,
   getFilteredOrders,
+  requestSettlement,
 } from "../../../../api/orders";
 import { useStore } from "@/contexts/StoreContext";
+import { useToast } from "@/hooks/useToast";
 
 // نوع البيانات للفلاتر
 interface SearchFilters {
@@ -28,6 +30,7 @@ const OrdersPageComponent: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [apiStats, setApiStats] = useState<any>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const { showToast } = useToast();
   const [currentFilters, setCurrentFilters] = useState<SearchFilters>({
     customerName: "",
     productName: "",
@@ -116,23 +119,25 @@ const OrdersPageComponent: React.FC = () => {
           totalPrice: parseFloat(item.price_at_time) * item.quantity,
         })),
         // إضافة معلومات الشحن
-        shipping: order.Shipping ? {
-          shipping_id: order.Shipping.shipping_id,
-          customer_name: order.Shipping.customer_name,
-          customer_phone: order.Shipping.customer_phone,
-          customer_whatsapp: order.Shipping.customer_whatsapp,
-          recipient_name: order.Shipping.recipient_name,
-          shipping_address: order.Shipping.shipping_address,
-          source_address: order.Shipping.source_address,
-          destination: order.Shipping.destination,
-          shipping_method: order.Shipping.shipping_method,
-          tracking_number: order.Shipping.tracking_number,
-          shipping_status: order.Shipping.shipping_status,
-          shipped_at: order.Shipping.shipped_at,
-          delivered_at: order.Shipping.delivered_at,
-          identity_images: order.Shipping.identity_images,
-          created_at: order.Shipping.created_at,
-        } : undefined,
+        shipping: order.Shipping
+          ? {
+              shipping_id: order.Shipping.shipping_id,
+              customer_name: order.Shipping.customer_name,
+              customer_phone: order.Shipping.customer_phone,
+              customer_whatsapp: order.Shipping.customer_whatsapp,
+              recipient_name: order.Shipping.recipient_name,
+              shipping_address: order.Shipping.shipping_address,
+              source_address: order.Shipping.source_address,
+              destination: order.Shipping.destination,
+              shipping_method: order.Shipping.shipping_method,
+              tracking_number: order.Shipping.tracking_number,
+              shipping_status: order.Shipping.shipping_status,
+              shipped_at: order.Shipping.shipped_at,
+              delivered_at: order.Shipping.delivered_at,
+              identity_images: order.Shipping.identity_images,
+              created_at: order.Shipping.created_at,
+            }
+          : undefined,
       }));
     }
 
@@ -328,7 +333,8 @@ const OrdersPageComponent: React.FC = () => {
     try {
       if (!storeId) throw new Error("⚠️ StoreId is not available");
 
-      await updateProgrammaticShipped(storeId);
+      // استخدام requestSettlement بدلاً من updateProgrammaticShipped
+      const response = await requestSettlement(storeId);
 
       // إعادة تحميل البيانات بناءً على الحالة الحالية
       if (
@@ -342,11 +348,26 @@ const OrdersPageComponent: React.FC = () => {
         setOrders(transformApiDataToOrders(data));
       }
 
-      console.log(
-        "✅ تم تحديث (تصفير) مجموع الطلبات المشحونة عبر updateProgrammaticShipped"
-      );
-    } catch (error) {
-      console.error("❌ فشل في استدعاء updateProgrammaticShipped:", error);
+      // عرض رسالة نجاح من الباك اند
+      if (response?.data?.message) {
+        showToast(response.data.message, "success");
+      } else if (response?.message) {
+        showToast(response.message, "success");
+      } else {
+        showToast("تم إرسال طلب التصفية بنجاح", "success");
+      }
+
+      console.log("✅ تم إرسال طلب التصفية بنجاح عبر requestSettlement");
+    } catch (error: any) {
+      console.error("❌ فشل في استدعاء requestSettlement:", error);
+
+      // عرض رسالة خطأ من الباك اند أو رسالة افتراضية
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        "حدث خطأ أثناء إرسال طلب التصفية";
+      showToast(errorMessage, "error");
     } finally {
       setConfirmationModal({
         isOpen: false,

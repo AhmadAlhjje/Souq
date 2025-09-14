@@ -224,3 +224,13 @@ export const getFilteredOrders = async (
   console.log("Filtered orders response:", response.data);
   return response.data;
 };
+
+// طلبات التصفير
+export const requestSettlement = async (storeId: number) => {
+  console.log(`📡 Requesting settlement for store=${storeId}`);
+  const response = await api.post(
+    `/orders/store/${storeId}/request-settlement`
+  );
+  console.log("✅ Settlement request response:", response.data);
+  return response.data;
+};
