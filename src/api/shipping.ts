@@ -1,5 +1,5 @@
 // ========================================
-// 1. تحديث src/api/shipping.ts لمعالجة 409 بذكاء
+// تحديث src/api/shipping.ts مع إضافة وظيفة إنشاء الطلبات
 // ========================================
 // src/types/shipping.ts
 export interface ShippingItem {
@@ -20,7 +20,28 @@ export interface BulkShippingResponse {
   shippings: ShippingItem[];
   customer_session_id: string;
   identity_info: IdentityInfo;
+  data?: {
+    shipping_id: number;
+    purchase_id: string;
+    customer_session_id: string;
+    ready_for_payment: boolean;
+    identity_info: IdentityInfo;
+    cart_items_count: number;
+    next_step: string;
+  };
 }
+
+export interface OrderResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    order_id: string;
+    purchase_id: string;
+    status: string;
+    created_at: string;
+  };
+}
+
 class ShippingService {
   private baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
 
@@ -55,6 +76,86 @@ class ShippingService {
       reader.onerror = () => reject(new Error('خطأ في قراءة الملف'));
       reader.readAsDataURL(file);
     });
+  }
+
+  // ✅ دالة جديدة لإنشاء الطلب
+  async createOrder(purchaseId: string): Promise<OrderResponse> {
+    const url = `${this.baseUrl}/orders`;
+    
+    console.log('📦 إنشاء طلب جديد...');
+    console.log('  - Purchase ID:', purchaseId);
+    console.log('  - URL:', url);
+    
+    try {
+      const orderData = {
+        purchase_id: purchaseId
+      };
+
+      console.log('📤 بيانات الطلب:', orderData);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      console.log('📡 حالة استجابة الطلب:', response.status);
+
+      if (!response.ok) {
+        let errorMessage = `فشل في إنشاء الطلب: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorMessage;
+          console.error('❌ تفاصيل خطأ الطلب:', errorData);
+        } catch (parseError) {
+          console.error('❌ فشل في تحليل خطأ الطلب:', parseError);
+        }
+        throw new Error(errorMessage);
+      }
+
+      const responseText = await response.text();
+      console.log('✅ نص استجابة الطلب:', responseText);
+
+      let data: any;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ فشل في تحليل JSON للطلب:', parseError);
+        throw new Error('استجابة غير صالحة من الخادم للطلب');
+      }
+
+      console.log('✅ بيانات الطلب المُحللة:', data);
+
+      const normalizedResponse: OrderResponse = {
+        success: data.success || true,
+        message: data.message || 'تم إنشاء الطلب بنجاح',
+        data: data.data
+      };
+
+      console.log('📊 ملخص إنشاء الطلب:', {
+        success: normalizedResponse.success,
+        message: normalizedResponse.message,
+        order_id: data.data?.order_id
+      });
+
+      return normalizedResponse;
+
+    } catch (error) {
+      console.error('❌ خطأ في إنشاء الطلب:', error);
+      
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('فشل في الاتصال بالخادم لإنشاء الطلب - تحقق من الاتصال بالإنترنت');
+      }
+      
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('حدث خطأ غير متوقع أثناء إنشاء الطلب');
+    }
   }
 
   async createShipping(formData: FormData): Promise<BulkShippingResponse> {
@@ -169,12 +270,14 @@ class ShippingService {
             images_uploaded: 2,
             has_front_image: true,
             has_back_image: true
-          }
+          },
+          data: data.data // ✅ إضافة البيانات الكاملة للوصول لـ purchase_id
         };
 
         console.log('📊 ملخص النتيجة:', {
           message: normalizedResponse.message,
           shipping_id: data.data?.shipping_id,
+          purchase_id: data.data?.purchase_id, // ✅ طباعة purchase_id
           session_id: normalizedResponse.customer_session_id,
           attempt: attempts,
           success: data.success

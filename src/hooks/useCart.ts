@@ -61,13 +61,22 @@ export const useCart = () => {
           console.log('Product Name:', item.Product?.name);
           console.log('Raw Images String:', item.Product?.images);
           
-          // تحليل النص الخام
-          const rawImages = item.Product?.images || '';
-          console.log('String Type:', typeof rawImages);
-          console.log('String Length:', rawImages.length);
-          console.log('Starts with [:', rawImages.startsWith('['));
-          console.log('Ends with ]:', rawImages.endsWith(']'));
-          
+        // تحليل البيانات الخام مع فحص النوع
+const rawImages = item.Product?.images;
+console.log('Images Type:', typeof rawImages);
+console.log('Is Array:', Array.isArray(rawImages));
+
+if (Array.isArray(rawImages)) {
+  console.log('Array Length:', rawImages.length);
+  console.log('Array Contents:', rawImages);
+} else if (typeof rawImages === 'string') {
+  console.log('String Length:', rawImages.length);
+  // ✅ فقط هنا نستخدم startsWith لأننا متأكدين أنه string
+  console.log('Starts with [:', rawImages.startsWith('['));
+  console.log('Ends with ]:', rawImages.endsWith(']'));
+} else {
+  console.log('Unexpected type:', typeof rawImages);
+}
           // تجربة التحويل
           const parsedImages = parseImages(rawImages);
           console.log('Parsed Array:', parsedImages);
@@ -142,7 +151,7 @@ export const useCart = () => {
 
     console.log('✅ Item added successfully, refreshing cart...');
     await fetchCart();
-    showToast('تم إضافة المنتج للسلة بنجاح', 'success');
+    showToast('تم إضافة المنتج بنجاح تابع الشحن   ', 'success');
   } catch (err) {
     console.error('❌ Add to cart error:', err);
 

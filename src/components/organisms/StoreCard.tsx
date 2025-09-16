@@ -1,13 +1,16 @@
 "use client";
-import React from "react";
+
+import React, { useState } from "react";
 import { MapPin, Star } from "lucide-react";
+import { createReview, generateSessionId } from "@/api/stores";
+import { useToast } from "@/hooks/useToast"; // ✅ استيراد useToast
 
 interface Store {
   id: number;
   name: string;
   image: string;
   location: string;
-  rating?: number;
+  rating?: number; // المتوسط العام من الخادم
   reviewsCount?: number;
 }
 
@@ -17,8 +20,64 @@ interface StoreCardProps {
 }
 
 const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
+  const { showToast } = useToast(); // ✅ استخدام hook Toast
+
   const handleVisitStore = () => {
     onViewDetails(store);
+  };
+
+  // ✅ جلب التقييم الشخصي من localStorage
+  const getUserRating = (storeId: number): number | null => {
+    if (typeof window === "undefined") return null;
+    const key = `userReview_${storeId}`;
+    const saved = localStorage.getItem(key);
+    return saved ? parseFloat(saved) : null;
+  };
+
+  const [userRating, setUserRating] = useState<number | null>(getUserRating(store.id));
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false); // حالة التحميل
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // ✅ عند النقر على نجمة — إرسال التقييم للخادم مع session_id فقط
+  const handleStarClick = async (rating: number) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // ✅ إرسال التقييم للخادم مع البيانات المطلوبة فقط
+      await createReview({
+        store_id: store.id,
+        rating,
+        session_id: generateSessionId(), // ✅ استخدام session_id بدلاً من البيانات الشخصية
+      });
+
+      // ✅ حفظ التقييم محليًا
+      setUserRating(rating);
+      localStorage.setItem(`userReview_${store.id}`, rating.toString());
+
+      // ✅ إظهار رسالة نجاح مع Toast
+      showToast(`تم تقييم ${store.name} بـ ${rating} نجوم`, 'success');
+      console.log("✅ تم إرسال التقييم بنجاح:", rating);
+    } catch (error: any) {
+      console.error("❌ فشل إرسال التقييم:", error);
+      setSubmitError("فشل إرسال التقييم. حاول مرة أخرى.");
+      showToast("فشل إرسال التقييم. حاول مرة أخرى.", 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ✅ عند التمرير فوق النجمة
+  const handleStarHover = (rating: number) => {
+    setHoverRating(rating);
+  };
+
+  // ✅ عند مغادرة النجوم
+  const handleMouseLeave = () => {
+    setHoverRating(null);
   };
 
   return (
@@ -30,18 +89,19 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             console.warn("فشل تحميل الصورة:", store.image);
-            (e.target as HTMLImageElement).src = 
+            (e.target as HTMLImageElement).src =
               "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
           }}
         />
-        {/* عرض التقييم فقط إذا كان موجود وأكبر من 0 */}
+
+        {/* ✅ المتوسط العام في الزاوية اليمنى العليا */}
         {store.rating && store.rating > 0 && (
-          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
             <div className="flex items-center space-x-1">
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-xs font-medium text-gray-700">
                 {store.rating.toFixed(1)}
               </span>
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
             </div>
           </div>
         )}
@@ -53,9 +113,56 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
           {store.name}
         </h3>
 
+       
         <div className="flex items-center text-gray-500 mb-4">
           <MapPin className="w-4 h-4 ml-1" />
           <span className="text-sm">{store.location}</span>
+        </div>
+ {/* ✅ التقييم الشخصي التفاعلي — 5 نجوم قابلة للنقر */}
+        <div className="mb-3">
+          <div
+            className="flex items-center text-sm text-gray-600 cursor-pointer"
+            onMouseLeave={handleMouseLeave}
+          >
+            {[...Array(5)].map((_, i) => {
+              const starIndex = i + 1;
+              const isFilled =
+                (hoverRating !== null ? hoverRating : userRating || 0) >= starIndex;
+              const isEmpty = !isFilled;
+
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => handleStarClick(starIndex)}
+                  onMouseEnter={() => handleStarHover(starIndex)}
+                  disabled={isSubmitting}
+                  aria-label={`تقييم بـ ${starIndex} نجوم`}
+                  className="focus:outline-none focus:ring-2 focus:ring-teal-400 rounded-full transition-all duration-150 disabled:cursor-not-allowed"
+                >
+                  <Star
+                    className={`w-4 h-4 ${
+                      isFilled
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    } hover:fill-yellow-300 hover:text-yellow-300 ${
+                      isSubmitting ? "opacity-50" : ""
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* ✅ عرض خطأ إذا وقع */}
+          {submitError && (
+            <p className="text-red-500 text-xs mt-1">{submitError}</p>
+          )}
+
+          {/* ✅ عرض تأكيد التقييم أثناء التحميل */}
+          {isSubmitting && (
+            <p className="text-teal-600 text-xs mt-1">جاري إرسال تقييمك...</p>
+          )}
         </div>
 
         {/* المساحة المتمددة لدفع الزر للأسفل */}
@@ -66,7 +173,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
           <div className="flex-grow">
             {store.rating && store.rating > 0 ? (
               <span className="text-sm text-gray-500">
-                ({store.reviewsCount || 0} تقييم)
+                ({store.reviewsCount} تقييم)
               </span>
             ) : (
               <span className="text-sm text-gray-400">

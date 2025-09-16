@@ -61,7 +61,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
   const convertApiProductToProduct = useCallback((
     apiProduct: ApiProduct
   ): Product => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
     
     let images: string[] = [];
     try {
@@ -133,39 +133,43 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
 
   // دالة إنشاء العروض من المنتجات المخفضة
   const createOffersFromProducts = useCallback((products: ApiProduct[]): Offer[] => {
-    const offerTypes = [
-      {
-        title: "خصم مميز",
-        description: "عرض لفترة محدودة",
-        bgColor: "bg-red-50",
-        icon: <Tag className="w-5 h-5 text-red-600" />,
-      },
-      {
-        title: "تخفيضات هائلة",
-        description: "وفر أكثر مع هذا العرض",
-        bgColor: "bg-orange-50",
-        icon: <Gift className="w-5 h-5 text-orange-600" />,
-      },
-      {
-        title: "عرض حصري",
-        description: "احصل عليه قبل انتهاء الكمية",
-        bgColor: "bg-teal-50",
-        icon: <Tag className="w-5 h-5 text-teal-600" />,
-      },
-      {
-        title: "خصم استثنائي",
-        description: "فرصة ذهبية للتوفير",
-        bgColor: "bg-emerald-50",
-        icon: <Gift className="w-5 h-5 text-emerald-600" />,
-      },
-      {
-        title: "تخفيض كبير",
-        description: "عرض محدود الوقت",
-        bgColor: "bg-cyan-50",
-        icon: <Tag className="w-5 h-5 text-cyan-600" />,
-      },
-    ];
-
+ const offerTypes = [
+  {
+    title: "خصم مميز",
+    description: "عرض لفترة محدودة",
+    bgColor: "bg-gray-50", // ← خلفية فاتحة جداً، قريبة من البياض
+    icon: <Tag className="w-5 h-5 text-gray-700" />, // ← لون الأيقونة هادئ
+    borderColor: "border border-gray-100", // ← حافة خفيفة للتمييز
+  },
+  {
+    title: "تخفيضات هائلة",
+    description: "وفر أكثر مع هذا العرض",
+    bgColor: "bg-gray-50",
+    icon: <Gift className="w-5 h-5 text-gray-700" />,
+    borderColor: "border border-gray-100",
+  },
+  {
+    title: "عرض حصري",
+    description: "احصل عليه قبل انتهاء الكمية",
+    bgColor: "bg-gray-50",
+    icon: <Tag className="w-5 h-5 text-gray-700" />,
+    borderColor: "border border-gray-100",
+  },
+  {
+    title: "خصم استثنائي",
+    description: "فرصة ذهبية للتوفير",
+    bgColor: "bg-gray-50",
+    icon: <Gift className="w-5 h-5 text-gray-700" />,
+    borderColor: "border border-gray-100",
+  },
+  {
+    title: "تخفيض كبير",
+    description: "عرض محدود الوقت",
+    bgColor: "bg-gray-50",
+    icon: <Tag className="w-5 h-5 text-gray-700" />,
+    borderColor: "border border-gray-100",
+  },
+];
     const createdOffers: Offer[] = [];
     
     products.forEach((apiProduct, index) => {
@@ -173,7 +177,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
 
       const offerType = offerTypes[index % offerTypes.length];
       const product = convertApiProductToProduct(apiProduct);
-      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
 
       // تحديد صورة العرض (أولوية للمنتج، ثم شعار المتجر)
       let offerImage = product.image;
@@ -448,13 +452,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
           {getTitle()}
           <span className="text-orange-500">🔥</span>
         </h2>
-        <button
-          onClick={fetchDiscountedProducts}
-          className="text-sm text-teal-600 hover:text-teal-700 flex items-center gap-1 transition-colors"
-        >
-          تحديث العروض
-          <span className="text-xs">🔄</span>
-        </button>
+     
       </div>
 
       {/* الحاوية الرئيسية */}

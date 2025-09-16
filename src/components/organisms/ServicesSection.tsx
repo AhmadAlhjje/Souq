@@ -16,17 +16,17 @@ export default function ServicesSection() {
     {
       title: t("services.ecommerce.title"),
       description: t("services.ecommerce.description"),
-      imageSrc: "/images/image 1.png",
+      imageSrc: "/images/إنشاء منصة الكترونية.png",
     },
     {
       title: t("services.payments.title"),
       description: t("services.payments.description"),
-      imageSrc: "/images/image22.png",
+      imageSrc: "/images/image 76.png",
     },
     {
       title: t("services.shipping.title"),
       description: t("services.shipping.description"),
-      imageSrc: "/images/image3.png",
+      imageSrc: "/images/image_2025-09-12_20-03-57.png",
     },
   ];
 

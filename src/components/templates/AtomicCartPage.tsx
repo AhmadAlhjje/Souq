@@ -471,10 +471,7 @@ const AtomicCartSummary: React.FC<{
         <ShoppingCart className="w-5 h-5" />
         {loading ? 'جاري المعالجة...' : 'المتابعة للدفع'}
       </button>
-      
-      <div className="mt-4 text-center text-sm text-gray-500">
-        <p>شحن مجاني للطلبات فوق 200 ر.س</p>
-      </div>
+     
     </div>
   );
 };

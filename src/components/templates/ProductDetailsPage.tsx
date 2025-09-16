@@ -175,7 +175,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         console.log("Raw images data:", (product as any).images);
         const parsed = JSON.parse((product as any).images);
         const images = Array.isArray(parsed) ? parsed : [(product as any).images];
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
         
         const imageUrls = images.map((img: string) => {
           const cleanImg = img.replace(/^\/uploads\//, "");
@@ -261,7 +261,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       console.error('خطأ في إضافة المنتج للسلة:', error);
       
       // معالجة رسائل الخطأ
-      let errorMessage = 'فشل في إضافة المنتج للسلة';
+      let errorMessage = '  فشل في إضافة المنتج للسلة بسبب نفاد الكمية ';
       
       if (error.message) {
         if (error.message.includes('المخزون غير كافٍ')) {

@@ -1,10 +1,11 @@
 // ========================================
-// 1. src/components/organisms/ShippingForm.tsx - بدون سكرول
+// تحديث src/components/organisms/ShippingForm.tsx - مع إضافة إنشاء الطلب
 // ========================================
 
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { FileText, User, Phone, MapPin, MessageSquare } from 'lucide-react';
 import { COLORS } from '@/constants/colors';
 import FormField from '@/components/molecules/FormField';
@@ -44,6 +45,7 @@ interface ShippingFormProps {
 const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
   const colors = COLORS[theme];
   const { showToast } = useToast();
+  const router = useRouter(); // ✅ إضافة useRouter للتنقل
 
   const [formData, setFormData] = useState<ShippingFormData>({
     customer_name: '',
@@ -122,89 +124,127 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
     }
   };
 
- const handleSubmit = async () => {
-if (!validateForm()) {
-  showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
-  return;
-}
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      showToast('يرجى تصحيح الأخطاء في النموذج', 'error');
+      return;
+    }
 
-setIsSubmitting(true);
-try {
-  // الحصول على الـ session الثابت للمستخدم
-  const userSessionId = SessionManager.getOrCreateSessionId();
-  SessionManager.extendSession();
+    setIsSubmitting(true);
+    try {
+      // ✅ الخطوة 1: إنشاء الشحن
+      console.log('🚚 بدء عملية إنشاء الشحن والطلب...');
+      
+      // الحصول على الـ session الثابت للمستخدم
+      const userSessionId = SessionManager.getOrCreateSessionId();
+      SessionManager.extendSession();
 
-  // إنشاء معرف فريد للطلب
-  const timestamp = Date.now();
-  const requestId = `req_${timestamp}_${Math.random().toString(36).substr(2, 6)}`;
-  
-  console.log('📋 معلومات الطلب:');
-  console.log('  - User Session (ثابت):', userSessionId);
-  console.log('  - Request ID (فريد):', requestId);
-  console.log('  - Timestamp:', new Date(timestamp).toLocaleString());
+      // إنشاء معرف فريد للطلب
+      const timestamp = Date.now();
+      const requestId = `req_${timestamp}_${Math.random().toString(36).substr(2, 6)}`;
+      
+      console.log('📋 معلومات الطلب:');
+      console.log('  - User Session (ثابت):', userSessionId);
+      console.log('  - Request ID (فريد):', requestId);
+      console.log('  - Timestamp:', new Date(timestamp).toLocaleString());
 
-  const formDataToSend = new FormData();
+      const formDataToSend = new FormData();
 
-  // استخدام الـ session الثابت (سيتم تعديله تلقائياً في حالة 409)
-  formDataToSend.append('customer_session_id', userSessionId);
-  formDataToSend.append('request_id', requestId);
-  formDataToSend.append('request_timestamp', timestamp.toString());
-  
-  formDataToSend.append('customer_name', formData.customer_name.trim());
-  formDataToSend.append('customer_phone', formData.customer_phone.trim());
-  formDataToSend.append('customer_whatsapp', formData.customer_whatsapp.trim());
-  formDataToSend.append('recipient_name', formData.recipient_name.trim());
-  
-  formDataToSend.append('shipping_address', formData.shipping_address.trim());
-  formDataToSend.append('destination', formData.destination.trim());
-  formDataToSend.append('shipping_method', 'express');
+      // استخدام الـ session الثابت (سيتم تعديله تلقائياً في حالة 409)
+      formDataToSend.append('customer_session_id', userSessionId);
+      formDataToSend.append('request_id', requestId);
+      formDataToSend.append('request_timestamp', timestamp.toString());
+      
+      formDataToSend.append('customer_name', formData.customer_name.trim());
+      formDataToSend.append('customer_phone', formData.customer_phone.trim());
+      formDataToSend.append('customer_whatsapp', formData.customer_whatsapp.trim());
+      formDataToSend.append('recipient_name', formData.recipient_name.trim());
+      
+      formDataToSend.append('shipping_address', formData.shipping_address.trim());
+      formDataToSend.append('destination', formData.destination.trim());
+      formDataToSend.append('shipping_method', 'express');
 
-  // إضافة الملفات
-  if (formData.identity_front_file && formData.identity_back_file) {
-    const frontFileName = `front_${requestId}.jpg`;
-    const backFileName = `back_${requestId}.jpg`;
-    
-    formDataToSend.append('identity_front', formData.identity_front_file, frontFileName);
-    formDataToSend.append('identity_back', formData.identity_back_file, backFileName);
-  }
+      // إضافة الملفات
+      if (formData.identity_front_file && formData.identity_back_file) {
+        const frontFileName = `front_${requestId}.jpg`;
+        const backFileName = `back_${requestId}.jpg`;
+        
+        formDataToSend.append('identity_front', formData.identity_front_file, frontFileName);
+        formDataToSend.append('identity_back', formData.identity_back_file, backFileName);
+      }
 
-  console.log('📤 إرسال طلب شحن جديد...');
-  const result = await shippingService.createShipping(formDataToSend);
+      console.log('📤 إرسال طلب شحن جديد...');
+      const shippingResult = await shippingService.createShipping(formDataToSend);
 
-  console.log('✅ تم إنشاء طلب الشحن بنجاح:', result);
-  showToast(result.message || 'تم إنشاء الشحن بنجاح', 'success');
+      console.log('✅ تم إنشاء طلب الشحن بنجاح:', shippingResult);
 
-  // إعادة تعيين النموذج للطلب التالي
-  setFormData({
-    customer_name: '',
-    customer_phone: '',
-    customer_whatsapp: '',
-    recipient_name: '',
-    shipping_address: '',
-    destination: '',
-    identity_front_file: null,
-    identity_back_file: null,
-  });
+      // ✅ الخطوة 2: استخراج purchase_id وإنشاء الطلب
+      const purchaseId = shippingResult.data?.purchase_id;
+      
+      if (!purchaseId) {
+        console.error('❌ لم يتم العثور على purchase_id في رد الشحن');
+        showToast('حدث خطأ: لم يتم العثور على معرف الشراء', 'error');
+        return;
+      }
 
-  console.log('🔄 النموذج جاهز لطلب شحن جديد');
+      console.log('📦 إنشاء طلب جديد باستخدام purchase_id:', purchaseId);
+      
+      const orderResult = await shippingService.createOrder(purchaseId);
+      
+      console.log('✅ تم إنشاء الطلب بنجاح:', orderResult);
 
-} catch (error: any) {
-  console.error('❌ خطأ في إرسال معلومات الشحن:', error);
-  showToast(error.message || 'حدث خطأ غير متوقع', 'error');
-} finally {
-  setIsSubmitting(false);
-}
-};
+      // ✅ إظهار رسائل النجاح
+      showToast(shippingResult.message || 'تم إنشاء الشحن بنجاح', 'success');
+      
+      // رسالة إضافية للطلب إذا كان لديها رسالة مختلفة
+      if (orderResult.message && orderResult.message !== shippingResult.message) {
+        setTimeout(() => {
+          showToast(orderResult.message || 'تم إنشاء الطلب بنجاح', 'success');
+        }, 1500);
+      }
+
+      // إعادة تعيين النموذج للطلب التالي
+      setFormData({
+        customer_name: '',
+        customer_phone: '',
+        customer_whatsapp: '',
+        recipient_name: '',
+        shipping_address: '',
+        destination: '',
+        identity_front_file: null,
+        identity_back_file: null,
+      });
+
+      console.log('🎉 تمت العملية بنجاح - النموذج جاهز لطلب جديد');
+      console.log('📊 ملخص العملية:');
+      console.log('  - Shipping ID:', shippingResult.data?.shipping_id);
+      console.log('  - Purchase ID:', purchaseId);
+      console.log('  - Order ID:', orderResult.data?.order_id);
+
+      // ✅ التوجه للصفحة الرئيسية بعد النجاح
+      setTimeout(() => {
+        console.log('🏠 توجيه المستخدم للصفحة الرئيسية...');
+        router.push('/'); // التوجه للصفحة الرئيسية
+      }, 2000); // انتظار ثانيتين لإظهار رسائل النجاح
+
+    } catch (error: any) {
+      console.error('❌ خطأ في عملية إنشاء الشحن أو الطلب:', error);
+      showToast(error.message || 'حدث خطأ غير متوقع', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="w-full  flex items-center justify-center p-4">
+    <div className="w-full flex items-center justify-center p-4">
+      {/* ✅ التعديل: إضافة overflow-y-auto وحذف height: fit-content */}
       <div
-        className="w-full max-w-7xl p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20"
+        className="w-full max-w-7xl p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 overflow-y-auto"
         style={{
           background: 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
           direction: 'rtl',
-          height: 'fit-content',
-          maxHeight: '95vh',
+          maxHeight: '95vh', // ✅ الحد الأقصى للارتفاع
+          // ✅ تم حذف: height: 'fit-content',
         }}
       >
         {/* العنوان - مدمج */}
@@ -216,11 +256,10 @@ try {
             معلومات الشحن
           </h2>
           <p className="text-xs text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
- 
         </div>
 
         {/* الحقول الأساسية - صف واحد */}
-<div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
           <FormField
             label="اسم العميل"
             type="text"
@@ -324,21 +363,20 @@ try {
               />
             </div>
           </div>
-
-      
         </div>
-            {/* زر التأكيد */}
-          <div className="mt-6 mb-4 flex justify-center ">
-  <Button
-    text={isSubmitting ? 'جاري الإرسال...' : 'تأكيد الطلب'}
-    onClick={handleSubmit}
-    className="w-full max-w-md h-16"
-    size="lg"
-    loading={isSubmitting}
-    disabled={isSubmitting}
-    variant="primary"
-  />
-</div>
+
+        {/* زر التأكيد */}
+        <div className="mt-6 mb-16 flex justify-center">
+          <Button
+            text={isSubmitting ? 'جاري المعالجة...' : 'تأكيد الطلب'}
+            onClick={handleSubmit}
+            className="w-full max-w-md h-16"
+            size="lg"
+            loading={isSubmitting}
+            disabled={isSubmitting}
+            variant="primary"
+          />
+        </div>
       </div>
     </div>
   );

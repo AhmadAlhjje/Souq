@@ -82,7 +82,7 @@ export default function FeaturesSection() {
       id: 1,
       title: t("featuresSection.solutions.solution1.title"),
       description: t("featuresSection.solutions.solution1.description"),
-      image: "/images/image 1.png",
+      image: "/images/Start up.png",
       buttonIcon: <FaStore className="text-sm" />,
       buttonText: t("featuresSection.solutions.solution1.buttonText"),
       features: [
@@ -189,7 +189,7 @@ export default function FeaturesSection() {
       id: 3,
       title: t("featuresSection.solutions.solution3.title"),
       description: t("featuresSection.solutions.solution3.description"),
-      image: "/images/image3.png",
+      image: "/images/image_2025-09-12_21-08-39.png",
       buttonIcon: <FaTruck className="text-sm" />,
       buttonText: t("featuresSection.solutions.solution3.buttonText"),
       features: [
@@ -248,7 +248,7 @@ export default function FeaturesSection() {
       id: 4,
       title: t("featuresSection.solutions.solution4.title"),
       description: t("featuresSection.solutions.solution4.description"),
-      image: "/images/image4.png",
+      image: "/images/image_2025-09-12_21-08-45.png",
       buttonIcon: <FaBullhorn className="text-sm" />,
       buttonText: t("featuresSection.solutions.solution4.buttonText"),
       features: [

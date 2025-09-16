@@ -1,57 +1,85 @@
-// utils/cartUtils.ts - محسن
+// utils/cartUtils.ts - إصلاح شامل لمعالجة أنواع البيانات المختلفة
 import { APICartResponse, APICartItem, CartItem } from '../types/cart';
 
 /**
- * Parse images string from API with enhanced debugging
+ * Parse images from API - now handles both string and array inputs
  */
-export const parseImages = (imagesString: string): string[] => {
-  console.log('🔍 parseImages input:', imagesString);
+export const parseImages = (imagesInput: any): string[] => {
+  console.log('🔍 [CART] parseImages input:', {
+    data: imagesInput,
+    type: typeof imagesInput,
+    isArray: Array.isArray(imagesInput)
+  });
   
-  if (!imagesString || imagesString.trim() === '') {
-    console.log('⚠️ Empty images string');
+  // التحقق من القيم الفارغة
+  if (!imagesInput) {
+    console.log('⚠️ [CART] Empty or null input');
     return [];
   }
 
-  try {
-    // تنظيف النص من المسافات الزائدة
-    const cleanedString = imagesString.trim();
+  // ✅ إذا كانت array بالفعل - هذا يحل المشكلة الأساسية
+  if (Array.isArray(imagesInput)) {
+    console.log('✅ [CART] Input is already an array:', imagesInput);
+    return imagesInput
+      .map(img => typeof img === 'string' ? img.trim() : String(img).trim())
+      .filter(img => img && img !== '' && img !== 'null' && img !== 'undefined');
+  }
+
+  // إذا كانت string
+  if (typeof imagesInput === 'string') {
+    const trimmed = imagesInput.trim();
     
-    // التحقق من كون النص JSON array
-    if (cleanedString.startsWith('[') && cleanedString.endsWith(']')) {
-      const parsed = JSON.parse(cleanedString);
-      
-      if (Array.isArray(parsed)) {
-        // تنظيف كل عنصر في المصفوفة من المسافات الزائدة
-        const cleanedArray = parsed
-          .map(img => typeof img === 'string' ? img.trim() : img)
-          .filter(img => img && img !== ''); // إزالة العناصر الفارغة
+    if (trimmed === '' || trimmed.toLowerCase() === 'null' || trimmed.toLowerCase() === 'undefined') {
+      console.log('⚠️ [CART] Empty or special value string');
+      return [];
+    }
+
+    // ✅ الآن فقط نستخدم startsWith لأننا متأكدين أنه string
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(trimmed);
         
-        console.log('✅ Parsed JSON array:', cleanedArray);
-        return cleanedArray;
+        if (Array.isArray(parsed)) {
+          const cleanedArray = parsed
+            .map(img => typeof img === 'string' ? img.trim() : String(img).trim())
+            .filter(img => img && img !== '');
+          
+          console.log('✅ [CART] Parsed JSON array:', cleanedArray);
+          return cleanedArray;
+        }
+      } catch (error) {
+        console.error('❌ [CART] Error parsing JSON:', error);
+        
+        // محاولة أخيرة: إذا كان النص يحتوي على فواصل
+        if (trimmed.includes(',')) {
+          const splitImages = trimmed
+            .replace(/[\[\]"]/g, '') // إزالة الأقواس والقوتان
+            .split(',')
+            .map(img => img.trim())
+            .filter(img => img && img !== '');
+          
+          if (splitImages.length > 0) {
+            console.log('✅ [CART] Fallback split result:', splitImages);
+            return splitImages;
+          }
+        }
       }
     }
     
     // إذا لم يكن JSON، اعتبره رابط صورة واحد
-    const result = [cleanedString];
-    console.log('✅ Single image string:', result);
-    return result;
-    
+    console.log('✅ [CART] Single image string:', trimmed);
+    return [trimmed];
+  }
+
+  // نوع غير متوقع - محاولة تحويل
+  console.log('⚠️ [CART] Unexpected type, attempting conversion');
+  try {
+    const stringValue = String(imagesInput);
+    return stringValue && stringValue !== 'undefined' && stringValue !== 'null' 
+      ? [stringValue] 
+      : [];
   } catch (error) {
-    console.error('❌ Error parsing images:', error, 'Input:', imagesString);
-    
-    // محاولة أخيرة: إذا كان النص يحتوي على فواصل
-    if (imagesString.includes(',')) {
-      const splitImages = imagesString
-        .split(',')
-        .map(img => img.trim().replace(/["\[\]]/g, ''))
-        .filter(img => img && img !== '');
-      
-      if (splitImages.length > 0) {
-        console.log('✅ Fallback split result:', splitImages);
-        return splitImages;
-      }
-    }
-    
+    console.error('❌ [CART] Failed to convert to string:', error);
     return [];
   }
 };
@@ -62,7 +90,7 @@ export const parseImages = (imagesString: string): string[] => {
 const generateFallbackImage = (productId?: number, productName?: string): string => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.127';
   const fallback = `${baseUrl}/uploads/placeholder.jpg`;
-  console.log('🔄 Using fallback image:', fallback);
+  console.log('🔄 [CART] Using fallback image:', fallback);
   return fallback;
 };
 
@@ -72,64 +100,60 @@ const generateFallbackImage = (productId?: number, productName?: string): string
 export const getProductImageUrl = (apiItem: APICartItem): string => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.127';
   
-  console.log('🖼️ Processing image for product:', {
+  console.log('🖼️ [CART] Processing image for product:', {
     productName: apiItem.Product?.name,
     productId: apiItem.product_id,
     rawImages: apiItem.Product?.images,
+    rawImagesType: typeof apiItem.Product?.images,
     baseUrl: baseUrl
   });
   
   try {
     if (!apiItem?.Product) {
-      console.warn('⚠️ No Product data in cart item');
+      console.warn('⚠️ [CART] No Product data in cart item');
       return generateFallbackImage(apiItem?.product_id);
     }
 
     const product = apiItem.Product;
     
-    if (!product.images || product.images.trim() === '') {
-      console.warn('⚠️ No images field for product:', product.name);
+    if (!product.images) {
+      console.warn('⚠️ [CART] No images field for product:', product.name);
       return generateFallbackImage(product.id, product.name);
     }
 
-    // تحويل النص إلى مصفوفة
+    // تحويل النص أو المصفوفة إلى مصفوفة نظيفة
     const images = parseImages(product.images);
-    console.log('📸 Parsed images array:', images);
+    console.log('📸 [CART] Parsed images array:', images);
     
     if (images.length > 0) {
-      // اختيار الصورة الأولى
       const firstImage = images[0];
-      console.log('🎯 Processing first image:', firstImage);
+      console.log('🎯 [CART] Processing first image:', firstImage);
       
       if (firstImage && firstImage.trim() !== '') {
         let finalUrl: string;
         
-        // التحقق من نوع المسار
         if (firstImage.startsWith('http://') || firstImage.startsWith('https://')) {
-          // رابط كامل
           finalUrl = firstImage;
-          console.log('🌐 Using full URL:', finalUrl);
+          console.log('🌐 [CART] Using full URL:', finalUrl);
         } else if (firstImage.startsWith('/uploads/')) {
-          // مسار يبدأ بـ /uploads/
           finalUrl = `${baseUrl}${firstImage}`;
-          console.log('📁 Using server path:', finalUrl);
+          console.log('📁 [CART] Using server path:', finalUrl);
         } else {
-          // اسم ملف فقط
-          const cleanImageName = firstImage.replace(/^\/+/, ''); // إزالة / من البداية
+          const cleanImageName = firstImage.replace(/^\/+/, '');
           finalUrl = `${baseUrl}/uploads/${cleanImageName}`;
-          console.log('🧹 Using cleaned path:', finalUrl);
+          console.log('🧹 [CART] Using cleaned path:', finalUrl);
         }
         
-        console.log('✅ Final image URL:', finalUrl);
+        console.log('✅ [CART] Final image URL:', finalUrl);
         return finalUrl;
       }
     }
 
-    console.warn('⚠️ No valid images found for product:', product.name);
+    console.warn('⚠️ [CART] No valid images found for product:', product.name);
     return generateFallbackImage(product.id, product.name);
     
   } catch (error) {
-    console.error('❌ Error processing product images:', error);
+    console.error('❌ [CART] Error processing product images:', error);
     return generateFallbackImage(apiItem?.product_id, apiItem?.Product?.name);
   }
 };
@@ -137,8 +161,8 @@ export const getProductImageUrl = (apiItem: APICartItem): string => {
 /**
  * استخراج الصورة الأولى فقط (utility function)
  */
-export const getFirstProductImage = (imagesString: string): string | null => {
-  const images = parseImages(imagesString);
+export const getFirstProductImage = (imagesInput: any): string | null => {
+  const images = parseImages(imagesInput);
   return images.length > 0 ? images[0] : null;
 };
 
@@ -167,7 +191,7 @@ export const buildImageUrl = (imagePath: string, baseUrl?: string): string => {
  * Transform API cart item to UI cart item with validation
  */
 export const transformCartItem = (apiItem: APICartItem): CartItem => {
-  console.log('🔄 Transforming cart item:', apiItem.cart_item_id);
+  console.log('🔄 [CART] Transforming cart item:', apiItem.cart_item_id);
   
   try {
     if (!apiItem) {
@@ -201,7 +225,7 @@ export const transformCartItem = (apiItem: APICartItem): CartItem => {
       store_name: product.Store?.store_name || 'متجر غير محدد'
     };
 
-    console.log('✅ Transformed cart item:', {
+    console.log('✅ [CART] Transformed cart item:', {
       id: result.id,
       name: result.name,
       image: result.image,
@@ -212,7 +236,7 @@ export const transformCartItem = (apiItem: APICartItem): CartItem => {
     return result;
 
   } catch (error) {
-    console.error('❌ Error transforming cart item:', error);
+    console.error('❌ [CART] Error transforming cart item:', error);
     
     return {
       id: apiItem?.cart_item_id || 0,
@@ -234,7 +258,7 @@ export const transformCartItem = (apiItem: APICartItem): CartItem => {
  * Transform API cart response with comprehensive logging
  */
 export const transformCartResponse = (apiResponse: APICartResponse) => {
-  console.log('🔄 Transforming cart response...');
+  console.log('🔄 [CART] Transforming cart response...');
   
   try {
     if (!apiResponse) {
@@ -244,26 +268,26 @@ export const transformCartResponse = (apiResponse: APICartResponse) => {
     let items: CartItem[] = [];
     
     if (apiResponse.CartItems && Array.isArray(apiResponse.CartItems)) {
-      console.log('📦 Processing', apiResponse.CartItems.length, 'cart items');
+      console.log('📦 [CART] Processing', apiResponse.CartItems.length, 'cart items');
       
       items = apiResponse.CartItems
         .map((item, index) => {
           try {
             if (!item || !item.Product) {
-              console.warn(`⚠️ Skipping invalid cart item at index ${index}`);
+              console.warn(`⚠️ [CART] Skipping invalid cart item at index ${index}`);
               return null;
             }
             return transformCartItem(item);
           } catch (error) {
-            console.error(`❌ Error transforming cart item at index ${index}:`, error);
+            console.error(`❌ [CART] Error transforming cart item at index ${index}:`, error);
             return null;
           }
         })
         .filter((item): item is CartItem => item !== null);
       
-      console.log('✅ Successfully transformed', items.length, 'cart items');
+      console.log('✅ [CART] Successfully transformed', items.length, 'cart items');
     } else {
-      console.log('📦 No CartItems found in API response');
+      console.log('📦 [CART] No CartItems found in API response');
     }
 
     const subtotal = items.reduce((sum: number, item: CartItem) => sum + item.total, 0);
@@ -282,7 +306,7 @@ export const transformCartResponse = (apiResponse: APICartResponse) => {
       total
     };
 
-    console.log('✅ Cart transformation completed:', {
+    console.log('✅ [CART] Cart transformation completed:', {
       cartId: result.cart_id,
       itemCount: result.items.length,
       subtotal: result.subtotal,
@@ -292,7 +316,7 @@ export const transformCartResponse = (apiResponse: APICartResponse) => {
     return result;
 
   } catch (error) {
-    console.error('❌ Error transforming cart response:', error);
+    console.error('❌ [CART] Error transforming cart response:', error);
     
     return {
       cart_id: apiResponse?.cart_id || 0,
@@ -311,7 +335,7 @@ export const transformCartResponse = (apiResponse: APICartResponse) => {
  * Debug function to log all cart item details
  */
 export const debugCartItem = (apiItem: APICartItem): void => {
-  console.log('🔍 === CART ITEM DEBUG ===');
+  console.log('🔍 [CART] === CART ITEM DEBUG ===');
   console.log('Cart Item ID:', apiItem.cart_item_id);
   console.log('Product ID:', apiItem.product_id);
   console.log('Quantity:', apiItem.quantity);
@@ -320,6 +344,7 @@ export const debugCartItem = (apiItem: APICartItem): void => {
     console.log('Product Name:', apiItem.Product.name);
     console.log('Product Price:', apiItem.Product.price);
     console.log('Product Images (raw):', apiItem.Product.images);
+    console.log('Product Images (type):', typeof apiItem.Product.images);
     
     const parsedImages = parseImages(apiItem.Product.images || '');
     console.log('Product Images (parsed):', parsedImages);
@@ -332,8 +357,8 @@ export const debugCartItem = (apiItem: APICartItem): void => {
       console.log('Store Name:', apiItem.Product.Store.store_name);
     }
   } else {
-    console.log('❌ No Product data found!');
+    console.log('❌ [CART] No Product data found!');
   }
   
-  console.log('🔍 === END DEBUG ===');
+  console.log('🔍 [CART] === END DEBUG ===');
 };

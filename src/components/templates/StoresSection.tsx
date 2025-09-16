@@ -1,4 +1,4 @@
-// StoresSection.tsx - محدث لعرض العروض العامة
+// StoresSection.tsx - محدث لعرض العروض العامة مع دعم Toast
 import React, { useState, useCallback } from 'react';
 import Button from '../atoms/Button';
 import Typography from '../atoms/Typography';
@@ -8,6 +8,7 @@ import OffersSlider from '../organisms/OffersSlider';
 import SearchWithApi from '../molecules/SearchWithApi';
 import SearchResults from '../molecules/SearchResults';
 import { SearchStoreResponse } from '../../api/stores';
+import { ToastProvider } from '@/hooks/useToast'; // ✅ إضافة ToastProvider
 
 // نفس interface المحلي بدون تغيير
 interface Store {
@@ -52,7 +53,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
 
   // تحويل متجر API إلى متجر محلي
   const convertApiStoreToLocal = useCallback((apiStore: any): Store => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127:4000";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
     
     let imageUrl = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
     
@@ -119,67 +120,69 @@ const StoresSection: React.FC<StoresSectionProps> = ({
     : stores;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
-      {/* العروض العامة من جميع المتاجر - بدون تمرير storeId */}
-      <OffersSlider />
+    <ToastProvider> {/* ✅ تغليف StoresSection بـ ToastProvider */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* العروض العامة من جميع المتاجر - بدون تمرير storeId */}
+        <OffersSlider />
 
-      {/* Search Section */}
-      <div className="my-8">
-        <div className="max-w-2xl mx-auto">
-          <SearchWithApi
-            onSearchResults={handleSearchResults}
-            onSearchError={handleSearchError}
-            onSearchLoading={handleSearchLoading}
-            onSearchTermChange={handleSearchTermChange}
-            placeholder="ابحث عن المتاجر..."
-            className="w-full"
-          />
-          
-          <SearchResults
-            searchResults={searchResults}
-            searchError={searchError}
-            isSearching={isSearching}
-            searchTerm={currentSearchTerm}
-          />
+        {/* Search Section */}
+        <div className="my-8">
+          <div className="max-w-2xl mx-auto">
+            <SearchWithApi
+              onSearchResults={handleSearchResults}
+              onSearchError={handleSearchError}
+              onSearchLoading={handleSearchLoading}
+              onSearchTermChange={handleSearchTermChange}
+              placeholder="ابحث عن المتاجر..."
+              className="w-full"
+            />
+            
+            <SearchResults
+              searchResults={searchResults}
+              searchError={searchError}
+              isSearching={isSearching}
+              searchTerm={currentSearchTerm}
+            />
+          </div>
         </div>
+
+        {/* Stores Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {displayedStores.map((store) => (
+            <StoreCard
+              key={store.id}
+              store={store}
+              onViewDetails={onViewDetails}
+            />
+          ))}
+        </div>
+
+        {/* No Results Message */}
+        {displayedStores.length === 0 && currentSearchTerm && !isSearching && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🔍</div>
+            <Typography variant="h3" className="text-gray-500 mb-4">
+              لا توجد نتائج
+            </Typography>
+            <Typography variant="body" className="text-gray-400 mb-6">
+              لم نجد أي متاجر تطابق بحثك عن &quot;{currentSearchTerm}&quot;
+            </Typography>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {displayedStores.length > 0 && !currentSearchTerm && (
+          <div className="text-center">
+            <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+              <span>استكشف جميع المتاجر</span>
+              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
-
-      {/* Stores Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {displayedStores.map((store) => (
-          <StoreCard
-            key={store.id}
-            store={store}
-            onViewDetails={onViewDetails}
-          />
-        ))}
-      </div>
-
-      {/* No Results Message */}
-      {displayedStores.length === 0 && currentSearchTerm && !isSearching && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔍</div>
-          <Typography variant="h3" className="text-gray-500 mb-4">
-            لا توجد نتائج
-          </Typography>
-          <Typography variant="body" className="text-gray-400 mb-6">
-            لم نجد أي متاجر تطابق بحثك عن &quot;{currentSearchTerm}&quot;
-          </Typography>
-        </div>
-      )}
-
-      {/* Load More Button */}
-      {displayedStores.length > 0 && !currentSearchTerm && (
-        <div className="text-center">
-          <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
-            <span>استكشف جميع المتاجر</span>
-            <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-      )}
-    </div>
+    </ToastProvider>
   );
 };
 

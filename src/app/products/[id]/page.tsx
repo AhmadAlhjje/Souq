@@ -6,6 +6,8 @@ import ProductDetailsPageTemplate from '@/components/templates/ProductDetailsPag
 import { Product } from '@/types/product';
 import { getProduct } from '@/api/stores';
 import { useCart } from '@/hooks/useCart';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useToast } from '@/hooks/useToast';
 
 // دالة محسّنة لتحليل الصور
 const parseImagesSafe = (images: string | string[] | null): string[] => {
@@ -43,7 +45,7 @@ const parseImagesSafe = (images: string | string[] | null): string[] => {
 
 // دالة لبناء رابط الصورة
 const buildImageUrl = (imageName: string): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.127:4000';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ;
   const cleanImageName = imageName.replace(/^\/uploads\//, '').replace(/^uploads\//, '');
   const fullUrl = `${baseUrl}/uploads/${cleanImageName}`;
   console.log('🔗 رابط الصورة المبني:', fullUrl);
@@ -82,7 +84,6 @@ interface ApiProductDetails {
     updated_at: string;
   }>;
 }
-
 // تحويل من بيانات API إلى Product
 const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
   console.log('🔄 بدء تحويل المنتج:', apiProduct);
@@ -90,7 +91,6 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
   const imageNames = parseImagesSafe(apiProduct.images);
   const imageUrls = imageNames.map(name => buildImageUrl(name));
   const primaryImageUrl = imageUrls.length > 0 ? imageUrls[0] : '/images/default-product.jpg';
-
   const avgRating = apiProduct.Reviews && apiProduct.Reviews.length > 0
     ? apiProduct.Reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / apiProduct.Reviews.length
     : 0;
@@ -161,20 +161,43 @@ export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
 
-  // ✅ الحل الأمثل: استخراج params?.id إلى متغيرين منفصلين
-  const rawId = params?.id; // ← هذا المتغير يُعاد تعيينه عند تغيير المسار
+  const rawId = params?.id;
   const productId = rawId && !isNaN(Number(rawId)) ? parseInt(rawId as string, 10) : null;
 
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState('جاري تحميل بيانات المنتج...');
 
   const { addToCart, fetchCart } = useCart();
+  const { showToast } = useToast();
+
+  // رسائل التحميل المتغيرة
+  const loadingMessages = [
+    'جاري تحميل بيانات المنتج...',
+    'البحث عن تفاصيل المنتج...',
+    'تحميل الصور والمعلومات...',
+    'إعداد صفحة المنتج...',
+    'جاري تحضير العرض...'
+  ];
+
+  useEffect(() => {
+    // تغيير رسالة التحميل كل 1.5 ثانية
+    const messageInterval = setInterval(() => {
+      setLoadingMessage(prev => {
+        const currentIndex = loadingMessages.indexOf(prev);
+        const nextIndex = (currentIndex + 1) % loadingMessages.length;
+        return loadingMessages[nextIndex];
+      });
+    }, 1500);
+
+    return () => clearInterval(messageInterval);
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
       if (!productId) {
-        console.error('❌ معرف المنتج غير صحيح:', rawId); // ✅ آمن الآن
+        console.error('❌ معرف المنتج غير صحيح:', rawId);
         setError('معرف المنتج غير صحيح');
         setLoading(false);
         return;
@@ -184,6 +207,7 @@ export default function ProductPage() {
         console.log('🔄 بدء جلب المنتج برقم:', productId);
         setLoading(true);
         setError(null);
+        setLoadingMessage('جاري الاتصال بالخادم...');
 
         const productData = await getProduct(productId);
 
@@ -192,6 +216,11 @@ export default function ProductPage() {
         if (!productData) {
           throw new Error('لم يتم العثور على بيانات المنتج');
         }
+
+        setLoadingMessage('جاري معالجة البيانات...');
+        
+        // إضافة تأخير قصير لإظهار رسالة المعالجة
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         const converted = convertApiProductToProduct(productData);
         console.log('🎯 المنتج النهائي بعد التحويل:', converted);
@@ -219,7 +248,7 @@ export default function ProductPage() {
     };
 
     fetchProduct();
-  }, [productId, rawId]); // ✅ هنا نضيف المتغيرات الصحيحة — وليس التعبير!
+  }, [productId, rawId]);
 
   const handleBuyNow = async (pid: string | number, qty: number) => {
     try {
@@ -229,10 +258,11 @@ export default function ProductPage() {
         const productIdNum = Number(pid);
         await addToCart(productIdNum, qty);
         await fetchCart();
-        console.log('✅ تمت إضافة المنتج للسلة، الانتقال للدفع...');
+        
+        showToast(`تمت إضافة "${product.name}" إلى السلة بنجاح!`, "success");
       }
       
-      router.push('/checkout');
+      router.push('/Shipping');
     } catch (error) {
       console.error('❌ خطأ في الشراء:', error);
       
@@ -248,33 +278,31 @@ export default function ProductPage() {
         }
       }
       
-      alert(errorMessage);
+      showToast(errorMessage, "error");
     }
   };
 
-  // Debug: طباعة حالة المكون
-  console.log('🖥️ حالة المكون:', { 
-    loading, 
-    error, 
-    hasProduct: !!product,
-    productId 
-  });
-
+  // شاشة التحميل المخصصة بنص متغير
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">جاري تحميل تفاصيل المنتج...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center font-cairo bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <LoadingSpinner
+          size="lg"
+          color="green"
+          message={loadingMessage}
+          overlay={false}
+          pulse={true}
+          dots={true}
+        />
       </div>
     );
   }
 
+  // شاشة الخطأ المحسنة
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo bg-gray-50">
-        <div className="text-center max-w-md mx-auto p-8">
+      <div className="min-h-screen flex items-center justify-center font-cairo bg-gradient-to-br from-gray-50 to-red-50/30">
+        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-red-600 mb-4">
             {error === 'المنتج غير موجود' ? 'المنتج غير موجود' : 'خطأ في التحميل'}
@@ -282,7 +310,11 @@ export default function ProductPage() {
           <p className="text-gray-600 mb-6">{error || 'حدث خطأ أثناء تحميل المنتج'}</p>
           <div className="space-y-3">
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                window.location.reload();
+              }}
               className="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
             >
               إعادة المحاولة
@@ -308,5 +340,4 @@ export default function ProductPage() {
       onBackToProducts={() => router.back()}
       loading={loading}
     />
-  );
-}
+  );}

@@ -46,26 +46,23 @@ export default function EnhancedCallToAction() {
           </div>
 
           {/* CTA Button */}
-            <Link
-        href="/LoginPage"
-           className="flex justify-center group relative bg-[#004D5A] hover:bg-[#003940] text-white font-bold py-4 px-8 sm:px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg" 
-
-      
-        prefetch={true}
-      >
-        {t("create_store_free")}
-      </Link>
+          <Link
+            href="/LoginPage"
+            className="flex justify-center group relative bg-[#004D5A] hover:bg-[#003940] text-white font-bold py-4 px-8 sm:px-10 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 text-base sm:text-lg" 
+            prefetch={true}
+          >
+            {t("create_store_free")}
+          </Link>
         </div>
 
-        {/* Visual Side */}
-        <div className="relative p-8 lg:p-12 min-h-[300px]">
-          <div className="relative h-full">
-                             
-            {/* Main Dashboard Image */}
-            <div className={`absolute top-0 ${isRTL ? 'right-0' : 'left-0'} w-4/5 h-3/4 group`}>
-              <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl transform group-hover:scale-105 transition-transform duration-500">
+        {/* Visual Side - Single Full Image */}
+        <div className="relative min-h-[400px]">
+          <div className="relative h-full w-full">
+            {/* Main Dashboard Image - Now fills the entire space */}
+            <div className="absolute inset-0 group">
+              <div className="relative w-full h-full overflow-hidden transform group-hover:scale-105 transition-transform duration-500">
                 <img
-                  src="/images/image 1.png"
+                  src="/images/image_2025-09-12_21-28-30.png"
                   alt={t('enhancedCallToAction.images.dashboard.alt')}
                   className="w-full h-full object-cover"
                 />
@@ -73,19 +70,8 @@ export default function EnhancedCallToAction() {
               </div>
             </div>
 
-            {/* Secondary Mobile Image */}
-            <div className={`absolute bottom-0 ${isRTL ? 'left-0' : 'right-0'} w-1/2 h-1/2 group`}>
-              <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-xl transform group-hover:scale-105 transition-transform duration-500 delay-100">
-                <img
-                  src="/images/image2.png"
-                  alt={t('enhancedCallToAction.images.mobile.alt')}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            {/* Success Stats */}
-            <div className={`absolute top-1/3 ${isRTL ? 'left-0' : 'right-0'} bg-white/95 backdrop-blur-sm rounded-2xl p-3 shadow-xl`}>
+            {/* Success Stats - Positioned over the image */}
+            <div className={`absolute top-6 ${isRTL ? 'left-6' : 'right-6'} bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-xl z-10`}>
               <div className="text-center">
                 <div className="text-lg font-bold text-[#004D5A]">{t('enhancedCallToAction.stats.number')}</div>
                 <div className="text-xs text-[#004D5A]/70">{t('enhancedCallToAction.stats.label')}</div>
