@@ -1,84 +1,110 @@
-// types/product.ts
+// src/types/product.ts
+
+// ✅ المنتج الأساسي — موحد من الفرعين ومتوافق مع الصفحة والتيمبلت
 export interface Product {
-  product_id: number;
-  store_id: number;
+  // الحقول القادمة من الـ API
+  product_id?: number;
+  store_id?: number;
   name: string;
   description?: string;
   price: number;
-  discount_percentage?: number | null; // نسبة الخصم أو null إذا لم يكن هناك خصم
-  stock_quantity: number ;
-  images?: string | string[]; // يمكن أن تكون string (JSON) أو array
+  discount_percentage?: number | null;
+  stock_quantity?: number;
+  images?: string | string[];
   created_at?: string;
 
-  // خصائص محسوبة (تأتي من الخادم أو يتم تحويلها في الواجهة)
-  discounted_price?: number; // السعر بعد الخصم
-  discount_amount?: number; // مقدار الخصم
-  has_discount?: boolean; // هل يوجد خصم
-  original_price?: number; // السعر الأصلي
+  // خصائص محسوبة أو مضافة في الواجهة
+  id?: number; // alias لـ product_id
+  salePrice?: number;
+  originalPrice?: number;
+  discounted_price?: number;
+  discount_amount?: number;
+  has_discount?: boolean;
+  discountPercentage?: number;
+  discountAmount?: number;
+  hasDiscount?: boolean;
 
-  // معلومات المتجر (في حالة جلب بيانات المنتج مع بيانات المتجر)
+  // الحالة والمخزون
+  stock?: number;
+  status?: "active" | "out_of_stock" | "low_stock";
+  inStock?: boolean;
+  isNew?: boolean;
+  sales?: number;
+
+  // الصور والعرض
+  image?: string;
+  imagesList?: string[];
+  createdAt?: string;
+
+  // التقييمات
+  reviews?: any[];
+  averageRating?: number;
+  reviewsCount?: number;
+  rating?: number;
+  reviewCount?: number;
+
+  // معلومات المتجر
   Store?: {
     store_name: string;
     logo_image: string;
     description: string;
   };
 
-  // التقييمات (في حالة جلب بيانات المنتج مع التقييمات)
-  reviews?: any[];
-  averageRating?: number;
-  reviewsCount?: number;
-
-  // ✅ إضافات مطلوبة لملف ProductsPage.tsx
-  id?: number ; // alias لـ product_id
-  status?: "active" | "out_of_stock" | "low_stock"; // الحالة
-  image?: string; // أول صورة مع baseUrl
-  rating?: number;
-  reviewCount?: number;
-  inStock?: boolean;
-  isNew?: boolean;
-  sales?: number;
+  // العلامة التجارية
   brand?: string;
-  createdAt?: string; // تاريخ معروض بشكل منسق
+  brandAr?: string;
 
-  // ✅ إضافات عربية
-  nameAr?: string;
-  descriptionAr?: string;
+  // التصنيفات
   category?: string;
   categoryAr?: string;
-  brandAr?: string;
-}
 
-// نوع للمنتج عند الإنشاء أو التحديث
-export interface CreateProductData {
-  name: string;
-  description?: string;
-  price: number;
-  discount_percentage?: number | null;
-  stock_quantity: number;
-  images?: File[]; // للصور الجديدة
-}
-
-// نوع للمنتج عند التحديث مع الصور الجديدة
-export interface UpdateProductData extends Partial<Product> {
-  newImages?: File[]; // للصور الجديدة
-}
-
-// نوع عنصر السلة - ✅ إضافة المفقود
-export interface CartItem {
-  id: number;
+  // نسخ بالعربية
   nameAr?: string;
-  productId: number;
-  name: string;
-  price: number;
-  salePrice?: number;
-  image: string;
-  quantity: number;
-  selectedSize?: string;
-  selectedColor?: string;
-  originalPrice?: number;
+  descriptionAr?: string;
 }
 
-// أنواع متغيرات النجوم - ✅ إضافة المفقود
+// ✅ عنصر في سلة التسوق
+export interface CartItem extends Product {
+  cartQuantity: number;
+  addedAt: Date;
+}
+
+// ⭐️ تفاصيل المنتج
+export interface ProductDetails extends Product {
+  longDescription?: string;
+  features?: string[];
+  warranty?: string;
+  shippingInfo?: string;
+  returnPolicy?: string;
+}
+
+// ⭐️ مراجعة منتج
+export interface ProductReview {
+  id: number;
+  productId: number;
+  userId: number;
+  userName: string;
+  rating: number;
+  comment: string;
+  verified: boolean;
+  helpful: number;
+  createdAt: Date;
+}
+
+// ⭐️ ملخص المراجعات
+export interface ReviewSummary {
+  averageRating: number;
+  totalReviews: number;
+  ratingDistribution: {
+    1: number;
+    2: number;
+    3: number;
+    4: number;
+    5: number;
+  };
+}
+
+// ✅ أنواع مساعدة
 export type StarVariant =
   | "filled"
   | "outlined"
@@ -110,10 +136,9 @@ export type ProductStatus =
   | "low_stock"
   | "discontinued";
 
-// ViewMode types - مع دعم أفضل للأنواع المختلفة
 export type ViewMode = "grid" | "table" | "list";
-export type SupportedViewMode = "grid" | "table"; // الأنواع المدعومة حالياً
-export type FutureViewMode = "list"; // الأنواع المخططة للمستقبل
+export type SupportedViewMode = "grid" | "table";
+export type FutureViewMode = "list";
 
 export type SortBy =
   | "name"
@@ -130,7 +155,6 @@ export interface ProductSorting {
   sortOrder: SortOrder;
 }
 
-// Props interfaces for components
 export interface ProductCardProps {
   product: Product;
   onView?: (product: Product) => void;
@@ -156,7 +180,6 @@ export interface ProductsTableProps {
   onSort?: (sortBy: SortBy) => void;
 }
 
-// محدث ليدعم showListView
 export interface ProductsFilterProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
@@ -169,7 +192,7 @@ export interface ProductsFilterProps {
   onAddProduct?: () => void;
   loading?: boolean;
   className?: string;
-  showListView?: boolean; // خيار لإظهار List View
+  showListView?: boolean;
 }
 
 export interface ProductsStatsProps {
@@ -177,7 +200,6 @@ export interface ProductsStatsProps {
   loading?: boolean;
 }
 
-// Search Box Props
 export interface SearchBoxProps {
   value: string;
   onChange: (value: string) => void;
@@ -186,7 +208,6 @@ export interface SearchBoxProps {
   disabled?: boolean;
 }
 
-// Badge Props
 export interface BadgeProps {
   variant: "success" | "warning" | "danger" | "info" | "neutral";
   children: React.ReactNode;
@@ -194,7 +215,6 @@ export interface BadgeProps {
   size?: "sm" | "md" | "lg";
 }
 
-// Button Props (Updated to match current Button component)
 export interface ButtonProps {
   text: string;
   onClick?: () => void;
@@ -215,7 +235,6 @@ export interface ButtonProps {
   children?: React.ReactNode;
 }
 
-// Input Props
 export interface InputProps {
   type?: "text" | "email" | "password" | "number" | "search" | "tel" | "url";
   placeholder?: string;
@@ -232,13 +251,11 @@ export interface InputProps {
   name?: string;
 }
 
-// Common component props
 export interface BaseComponentProps {
   className?: string;
   children?: React.ReactNode;
 }
 
-// API Response interfaces
 export interface ProductsResponse {
   data: Product[];
   total: number;
@@ -254,9 +271,10 @@ export interface ProductCreateRequest {
   category: string;
   categoryAr: string;
   price: number;
-  salePrice?: number; // ✅ إضافة للطلبات
+  salePrice?: number;
   stock: number;
   image: string;
+  images?: string;
   description?: string;
   descriptionAr?: string;
   sku?: string;
@@ -268,23 +286,23 @@ export interface ProductCreateRequest {
   };
   tags?: string[];
   tagsAr?: string[];
-  isNew?: boolean; // ✅ إضافة للطلبات
+  isNew?: boolean;
 }
 
 export interface ProductUpdateRequest extends Partial<ProductCreateRequest> {
   id: number;
 }
 
-// Form validation interfaces
 export interface ProductFormErrors {
   name?: string;
   nameAr?: string;
   category?: string;
   categoryAr?: string;
   price?: string;
-  salePrice?: string; // ✅ إضافة للتحقق
+  salePrice?: string;
   stock?: string;
   image?: string;
+  images?: string;
   description?: string;
   descriptionAr?: string;
   sku?: string;
@@ -296,7 +314,6 @@ export interface ProductFormErrors {
   };
 }
 
-// Filter options
 export interface FilterOption {
   value: string;
   label: string;
@@ -310,7 +327,6 @@ export interface StatusOption extends FilterOption {
   color?: string;
 }
 
-// Pagination
 export interface PaginationProps {
   currentPage: number;
   totalPages: number;
@@ -318,10 +334,8 @@ export interface PaginationProps {
   loading?: boolean;
 }
 
-// Loading states
 export type LoadingState = "idle" | "loading" | "success" | "error";
 
-// Error handling
 export interface ApiError {
   message: string;
   code?: string;
@@ -334,40 +348,6 @@ export interface ErrorState {
   errors?: ApiError[];
 }
 
-// ✅ إضافة واجهات جديدة للمكونات المحدثة
-export interface ProductDetails extends Product {
-  longDescription?: string;
-  features?: string[];
-  warranty?: string;
-  shippingInfo?: string;
-  returnPolicy?: string;
-}
-
-export interface ProductReview {
-  id: number;
-  productId: number;
-  userId: number;
-  userName: string;
-  rating: number;
-  comment: string;
-  verified: boolean;
-  helpful: number;
-  createdAt: Date;
-}
-
-export interface ReviewSummary {
-  averageRating: number;
-  totalReviews: number;
-  ratingDistribution: {
-    1: number;
-    2: number;
-    3: number;
-    4: number;
-    5: number;
-  };
-}
-
-// ViewMode utilities
 export const SUPPORTED_VIEW_MODES: SupportedViewMode[] = ["grid", "table"];
 export const ALL_VIEW_MODES: ViewMode[] = ["grid", "table", "list"];
 
@@ -377,4 +357,29 @@ export const isViewModeSupported = (
   return SUPPORTED_VIEW_MODES.includes(mode as SupportedViewMode);
 };
 
+// ✅ أدوات معالجة الصور
+export const parseProductImages = (images?: string): string[] => {
+  if (!images) return [];
+
+  try {
+    const parsed = JSON.parse(images);
+    return Array.isArray(parsed) ? parsed : [images];
+  } catch (error) {
+    console.warn("⚠️ تعذر تحليل images كـ JSON، سيتم اعتبارها كصورة واحدة:", images);
+    return [images];
+  }
+};
+
+export const formatImageUrls = (images: string[], baseUrl?: string): string[] => {
+  const defaultBaseUrl =
+    process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.1.127";
+  const imageBaseUrl = baseUrl || defaultBaseUrl;
+
+  return images.map((img) => {
+    const cleanImg = img.replace(/^\/uploads\//, "");
+    return `${imageBaseUrl}/uploads/${cleanImg}`;
+  });
+};
+
+// ✅ تصدير افتراضي
 export default Product;

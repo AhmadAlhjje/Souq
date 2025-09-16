@@ -40,6 +40,7 @@ interface ExtendedProduct extends BaseProduct {
   originalDisplayPrice?: number;
   showOriginalPrice?: boolean;
   discountLabel?: string;
+  original_price?: number;
 }
 
 // نوع محدث لبيانات التحديث يتضمن discount_percentage

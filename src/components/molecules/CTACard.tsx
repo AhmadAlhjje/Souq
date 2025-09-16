@@ -24,7 +24,7 @@ const CTACard: React.FC<CTACardProps> = ({
     <div className="relative z-10 flex flex-col items-center justify-center text-center">
       <IconWrapper         
         icon={<FaRocket className="w-6 h-6 text-white" />}         
-        size="large"        
+        size="lg"        
         gradient="from-[#004D5A] to-[#005965]"
       />
       <Heading 

@@ -10,3 +10,11 @@ export { default as ImageUpload } from "./ImageUpload";
 export { default as StatsCard } from "./StatsCard";
 export { default as ActionCard } from "./ActionCard";
 export { default as NavigationBar } from "./NavigationBar";
+
+// المكونات الموجودة
+export { default as SearchWithApi } from './SearchWithApi';
+export { default as SearchResults } from './SearchResults';
+
+// المكونات الجديدة للبحث في المنتجات
+export { default as SearchProductsWithApi } from './SearchProductsWithApi';
+export { default as ProductSearchResults } from './ProductSearchResults';

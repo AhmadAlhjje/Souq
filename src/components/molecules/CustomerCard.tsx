@@ -52,7 +52,7 @@ export default function CustomerCard({
         {/* Stats Badge */}
         <div className={`absolute top-6 ${isRTL ? "right-6" : "left-6"}`}>
           <div
-            className={`bg-gradient-to-r ${color} rounded-2xl px-4 py-2 shadow-lg backdrop-blur-sm`}
+            className={`bg-[#004D5A]  rounded-2xl px-4 py-2 shadow-lg backdrop-blur-sm`}
           >
             <div className="text-white font-bold text-lg">{percentage}</div>
             <div className="text-white/80 text-xs">{subtitle}</div>
@@ -83,20 +83,14 @@ export default function CustomerCard({
               }`}
               dir={isRTL ? "rtl" : "ltr"}
             >
-              <div
-                className={`w-2 h-2 rounded-full bg-gradient-to-r ${color} flex-shrink-0`}
-              ></div>
+                             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#004D5A] to-[#96EDD9] flex-shrink-0"></div>
+
               <span className="text-[#004D5A]/70 text-sm">{feature}</span>
             </div>
           ))}
         </div>
 
-        {/* Action Button */}
-        <button
-          className={`w-full bg-gradient-to-r ${color} hover:shadow-lg text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300 transform group-hover:scale-105`}
-        >
-          {t("customerCard.learnMore")}
-        </button>
+     
       </div>
     </div>
   );

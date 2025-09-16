@@ -179,15 +179,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               <span
                 className={`text-xl font-bold ${priceClasses} transition-colors duration-200`}
               >
-                ${product.has_discount && product.discounted_price 
-                  ? product.discounted_price.toFixed(2) 
-                  : product.price?.toFixed(2) || '0.00'}
+                $
+                {product.has_discount && product.discounted_price
+                  ? product.discounted_price.toFixed(2)
+                  : product.price?.toFixed(2) || "0.00"}
               </span>
-              
+
               {/* Original Price (crossed out) */}
-              {product.has_discount && product.original_price && (
-                <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                  ${product.original_price.toFixed(2)}
+              {product.has_discount && product.originalPrice && (
+                <span
+                  className={`text-sm line-through ${
+                    isDark ? "text-gray-500" : "text-gray-500"
+                  }`}
+                >
+                  ${product.originalPrice.toFixed(2)}
                 </span>
               )}
             </div>

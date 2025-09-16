@@ -1,148 +1,265 @@
-// app/cart/page.tsx
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useCart } from "@/contexts/CartContext";
-import { useRouter } from "next/navigation";
-import { ShoppingCart, ArrowRight } from "lucide-react";
-import CompactCartPage from "@/components/templates/AtomicCartPage"; // تصحيح المسار
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useCart } from '@/hooks/useCart';
+import { useSessionContext } from '@/components/SessionProvider';
+import { useToast } from '@/hooks/useToast';
+import { Trash2, RefreshCw, ShoppingBag, ArrowLeft } from 'lucide-react';
+import AtomicCartPage from '@/components/templates/AtomicCartPage';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
-// تحويل عناصر السلة من CartContext إلى تنسيق CompactCartPage
-const transformCartItems = (cartItems: any[]) => {
-  return cartItems.map((item) => ({
-    id: item.id,
-    name: item.name,
-    description: item.description || "منتج عالي الجودة",
-    price: item.salePrice || item.originalPrice || item.price || 0,
-    originalPrice: item.originalPrice,
-    quantity: item.cartQuantity,
-    image: item.image,
-    total:
-      (item.salePrice || item.originalPrice || item.price || 0) *
-      item.cartQuantity,
-    inStock: item.inStock !== false,
-    discount:
-      item.salePrice && item.originalPrice
-        ? Math.round(
-            ((item.originalPrice - item.salePrice) / item.originalPrice) * 100
-          )
-        : undefined,
-  }));
-};
-
-const CartPage: React.FC = () => {
+const CartPage = () => {
   const router = useRouter();
-  const { items, totalPrice, updateQuantity, removeFromCart } = useCart();
+  const { showToast } = useToast();
+  const { sessionId, isLoading: sessionLoading } = useSessionContext();
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
 
-  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {
+    cartData,
+    selectedItems,
+    isLoading: cartLoading,
+    error,
+    fetchCart,
+    updateQuantity,
+    removeItem,
+    removeSelectedItems,
+    clearCart,
+    refreshCartTotal,
+    handleSelectItem,
+    handleSelectAll,
+    handleCheckout
+  } = useCart();
 
-  // تحويل عناصر السلة
-  const cartItems = transformCartItems(items);
-
-  // حساب المجاميع
-  const subtotal = totalPrice;
-  const deliveryFee = subtotal > 200 ? 0 : 15; // شحن مجاني للطلبات أكثر من 200 $
-  const tax = subtotal * 0.15; // ضريبة القيمة المضافة 15%
-  const total = subtotal + deliveryFee + tax;
-
-  // طباعة للتشخيص
-  console.log("Cart items from context:", items);
-  console.log("Transformed cart items:", cartItems);
-  console.log("Total price:", totalPrice);
-
-  // معالجات الأحداث
-  const handleSelectItem = (itemId: number, selected: boolean) => {
-    const newSelected = new Set(selectedItems);
-    if (selected) {
-      newSelected.add(itemId);
-    } else {
-      newSelected.delete(itemId);
+  // تحديث وقت آخر تحديث مع toast
+  useEffect(() => {
+    if (cartData) {
+      setLastRefreshTime(new Date());
+      if (cartData.items.length > 0) {
+        showToast(`تم تحديث السلة - ${cartData.items.length} منتج`, 'success');
+      }
     }
-    setSelectedItems(newSelected);
+  }, [cartData, showToast]);
+
+  // معالجة خطأ السلة مع toast
+  useEffect(() => {
+    if (error) {
+      showToast(`خطأ في السلة: ${error}`, 'error');
+    }
+  }, [error, showToast]);
+
+  // معالجة خطأ الجلسة مع toast
+  useEffect(() => {
+    if (!sessionLoading && !sessionId) {
+      showToast('خطأ: لم يتم العثور على معرف الجلسة', 'error');
+    }
+  }, [sessionLoading, sessionId, showToast]);
+
+  // Toast للسلة الفارغة (مرة واحدة فقط)
+  useEffect(() => {
+    if (cartData && cartData.items.length === 0) {
+      showToast('السلة فارغة - ابدأ التسوق الآن!', 'info');
+    }
+  }, [cartData, showToast]);
+
+  // Handle clear cart with confirmation and toast
+  const handleClearCart = async () => {
+    if (showClearConfirm) {
+      try {
+        const itemCount = cartData?.items.length || 0;
+        await clearCart();
+        setShowClearConfirm(false);
+        showToast(`تم تفريغ السلة بنجاح - حُذف ${itemCount} منتج`, 'success');
+      } catch (error: any) {
+        console.error('Error clearing cart:', error);
+        showToast(`فشل في تفريغ السلة: ${error.message}`, 'error');
+      }
+    } else {
+      setShowClearConfirm(true);
+      showToast('انقر مرة أخرى للتأكيد', 'warning');
+    }
   };
 
-  const handleSelectAll = () => {
-    if (selectedItems.size === cartItems.length) {
-      setSelectedItems(new Set());
-    } else {
-      setSelectedItems(new Set(cartItems.map((item) => item.id)));
+  // Handle refresh cart total with toast
+  const handleRefreshTotal = async () => {
+    try {
+      showToast('جاري تحديث المجموع...', 'info');
+      await refreshCartTotal();
+      await fetchCart();
+      showToast('تم تحديhandleCheckoutClick ث المجموع بنجاح ✓', 'success');
+    } catch (error: any) {
+      console.error('Error refreshing cart total:', error);
+      showToast(`خطأ في تحديث المجموع: ${error.message}`, 'error');
     }
   };
 
-  const handleDeleteSelected = () => {
-    if (selectedItems.size > 0) {
-      const confirmed = window.confirm(
-        `هل أنت متأكد من حذف ${selectedItems.size} منتج؟`
-      );
-      if (confirmed) {
-        selectedItems.forEach((itemId) => {
-          removeFromCart(itemId);
-        });
-        setSelectedItems(new Set());
+  // Handle quantity change with toast
+  const handleQuantityChange = async (itemId: number, newQuantity: number) => {
+    const item = cartData?.items.find(i => i.id === itemId);
+    if (item) {
+      try {
+        showToast('جاري تحديث الكمية...', 'info');
+        await updateQuantity(item.cart_item_id, newQuantity);
+        showToast(`تم تحديث كمية ${item.name}`, 'success');
+      } catch (error: any) {
+        showToast(`فشل في تحديث الكمية: ${error.message}`, 'error');
       }
     }
   };
 
-  const handleQuantityChange = (itemId: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      const confirmed = window.confirm("هل تريد حذف هذا المنتج من السلة؟");
-      if (confirmed) {
-        removeFromCart(itemId);
+  // Handle remove item with toast
+  const handleRemoveItem = async (itemId: number) => {
+    const item = cartData?.items.find(i => i.id === itemId);
+    if (item) {
+      try {
+        await removeItem(item.cart_item_id);
+        showToast(`تم حذف ${item.name} من السلة`, 'success');
+      } catch (error: any) {
+        showToast(`فشل في حذف المنتج: ${error.message}`, 'error');
       }
-    } else {
-      updateQuantity(itemId, newQuantity);
     }
   };
 
-  const handleRemoveItem = (itemId: number) => {
-    const confirmed = window.confirm("هل أنت متأكد من حذف هذا المنتج؟");
-    if (confirmed) {
-      removeFromCart(itemId);
-      // إزالة العنصر من المحددات إذا كان محدداً
-      const newSelected = new Set(selectedItems);
-      newSelected.delete(itemId);
-      setSelectedItems(newSelected);
+  // Handle remove selected items with toast
+  const handleRemoveSelectedItems = async () => {
+    if (selectedItems.size === 0) {
+      showToast('يرجى اختيار منتجات لحذفها', 'warning');
+      return;
+    }
+
+    try {
+      const selectedCount = selectedItems.size;
+      await removeSelectedItems();
+      showToast(`تم حذف ${selectedCount} منتج محدد`, 'success');
+    } catch (error: any) {
+      showToast(`فشل في حذف المنتجات: ${error.message}`, 'error');
     }
   };
 
-  const handleCheckout = () => {
-    setIsLoading(true);
-    // محاكاة معالجة
-    setTimeout(() => {
-      setIsLoading(false);
-      router.push("/checkout");
-    }, 1500);
+  // Handle checkout with validation and toast
+  const handleCheckoutClick = async () => {
+    if (selectedItems.size === 0) {
+      showToast('يرجى اختيار منتج واحد على الأقل للمتابعة', 'warning');
+      return;
+    }
+
+    try {
+      showToast('جاري تحضير الطلب...', 'info');
+      await handleCheckout();
+      showToast(`تم تحضير ${selectedItems.size} منتج للطلب ✓`, 'success');
+      router.push('/Shipping');
+
+    } catch (error: any) {
+      console.error('Error during checkout:', error);
+      showToast(`خطأ في تحضير الطلب: ${error.message}`, 'error');
+    }
   };
 
-  const handleBackToShopping = () => {
-    router.push("/products");
+  // Handle select all with toast
+  const handleSelectAllItems = () => {
+    const wasAllSelected = selectedItems.size === cartData?.items.length;
+    handleSelectAll();
+    
+    if (cartData) {
+      if (wasAllSelected) {
+        showToast('تم إلغاء تحديد جميع المنتجات', 'info');
+      } else {
+        showToast(`تم تحديد جميع المنتجات (${cartData.items.length})`, 'success');
+      }
+    }
   };
 
-  // إذا كانت السلة فارغة
-  if (cartItems.length === 0) {
+  // Handle retry fetch cart
+  const handleRetryFetchCart = async () => {
+    try {
+      showToast('جاري إعادة تحميل السلة...', 'info');
+      await fetchCart();
+      showToast('تم تحميل السلة بنجاح ✓', 'success');
+    } catch (error: any) {
+      showToast(`فشل في إعادة التحميل: ${error.message}`, 'error');
+    }
+  };
+
+  // حالة تحميل الجلسة
+  if (sessionLoading) {
     return (
-      <div
-        className="min-h-screen items-center flex justify-center bg-gradient-to-br from-gray-50 to-blue-50/30 py-8"
-        dir="rtl"
-      >
-        <div className="max-w-3xl mx-auto px-4">
-          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <ShoppingCart className="w-8 h-8 text-gray-400" />
-            </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              سلة التسوق فارغة
-            </h2>
-            <p className="text-gray-600 mb-6">
-              أضف بعض المنتجات إلى سلتك لتبدأ التسوق
-            </p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <LoadingSpinner
+          size="lg"
+          color="green"
+          message="جاري تحميل جلستك..."
+          overlay={true}
+          pulse={true}
+          dots={true}
+        />
+      </div>
+    );
+  }
+
+  // حالة خطأ في الجلسة
+  if (!sessionId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">خطأ في الجلسة</h2>
+          <p className="text-gray-600 mb-6">لم يتم العثور على معرف الجلسة. يرجى إعادة تحميل الصفحة.</p>
+          <button
+            onClick={() => {
+              showToast('جاري إعادة تحميل الصفحة...', 'info');
+              window.location.reload();
+            }}
+            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            إعادة تحميل الصفحة
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // حالة تحميل السلة
+  if (cartLoading && !cartData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <LoadingSpinner
+          size="lg"
+          color="green"
+          message="جاري تحميل سلة التسوق..."
+          overlay={true}
+          pulse={true}
+          dots={true}
+        />
+      </div>
+    );
+  }
+
+  // حالة الخطأ في جلب السلة
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-red-500 text-6xl mb-4">❌</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">حدث خطأ</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="space-y-3">
             <button
-              onClick={handleBackToShopping}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+              onClick={handleRetryFetchCart}
+              disabled={cartLoading}
+              className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
-              <ArrowRight className="w-4 h-4" />
-              تصفح المنتجات
+              <RefreshCw className={`w-4 h-4 ${cartLoading ? 'animate-spin' : ''}`} />
+              إعادة المحاولة
+            </button>
+            <button
+              onClick={() => {
+                showToast('العودة للصفحة الرئيسية', 'info');
+                router.push('/');
+              }}
+              className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+            >
+              العودة للرئيسية
             </button>
           </div>
         </div>
@@ -150,23 +267,167 @@ const CartPage: React.FC = () => {
     );
   }
 
+  // حالة السلة فارغة
+  if (!cartData || cartData.items.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="mb-8">
+            <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+              <ShoppingBag className="w-12 h-12 text-gray-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">السلة فارغة</h2>
+            <p className="text-gray-600 mb-6">لم تقم بإضافة أي منتجات إلى سلة التسوق بعد</p>
+            <p className="text-sm text-gray-500 mb-6">ابدأ التسوق واختر من بين مئات المنتجات المتاحة</p>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                showToast('انتقال لتصفح المنتجات...', 'info');
+                router.push('/');
+              }}
+              className="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              تصفح المنتجات
+            </button>
+            <button
+              onClick={handleRetryFetchCart}
+              disabled={cartLoading}
+              className="w-full bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm disabled:opacity-50"
+            >
+              تحديث السلة
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // حالة التحميل أثناء المعالجة
+  const isProcessing = cartLoading;
+
   return (
-    <CompactCartPage
-      items={cartItems}
-      selectedItems={selectedItems}
-      subtotal={subtotal}
-      deliveryFee={deliveryFee}
-      tax={tax}
-      total={total}
-      isLoading={isLoading}
-      onSelectItem={handleSelectItem}
-      onSelectAll={handleSelectAll}
-      onDeleteSelected={handleDeleteSelected}
-      onQuantityChange={handleQuantityChange}
-      onRemoveItem={handleRemoveItem}
-      onCheckout={handleCheckout}
-      onBackToShopping={handleBackToShopping}
-    />
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+      {/* Clear Cart Confirmation Modal */}
+      {showClearConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" dir="rtl">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">تأكيد تفريغ السلة</h3>
+              <p className="text-gray-600 mb-6">
+                هل أنت متأكد من رغبتك في حذف جميع المنتجات ({cartData.items.length} منتج) من السلة؟ 
+                لا يمكن التراجع عن هذا الإجراء.
+              </p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={handleClearCart}
+                  disabled={isProcessing}
+                  className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  نعم، تفريغ السلة
+                </button>
+                <button
+                  onClick={() => {
+                    setShowClearConfirm(false);
+                    showToast('تم إلغاء تفريغ السلة', 'info');
+                  }}
+                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Cart Header */}
+      <div className="bg-white shadow-sm border-b sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => {
+                  showToast('العودة للتسوق', 'info');
+                  router.push('/');
+                }}
+                className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">سلة التسوق</h1>
+                <p className="text-sm text-gray-500">
+                  {cartData.items.length} منتج | {selectedItems.size} محدد
+                  {lastRefreshTime && (
+                    <span className="ml-2">
+                      | آخر تحديث: {lastRefreshTime.toLocaleTimeString('ar')}
+                    </span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleRefreshTotal}
+                disabled={isProcessing}
+                className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm inline-flex items-center gap-2 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isProcessing ? 'animate-spin' : ''}`} />
+                تحديث المجموع
+              </button>
+              <button
+                onClick={handleClearCart}
+                disabled={isProcessing || cartData.items.length === 0}
+                className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm inline-flex items-center gap-2 disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" />
+                تفريغ السلة
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* تغطية تحميل أثناء العمليات */}
+      {isProcessing && (
+        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-30">
+          <LoadingSpinner
+            size="md"
+            color="green"
+            message="جاري المعالجة..."
+            overlay={false}
+            pulse={true}
+            dots={true}
+          />
+        </div>
+      )}
+
+      {/* Main Cart Component */}
+      <AtomicCartPage
+        items={cartData.items}
+        selectedItems={selectedItems}
+        subtotal={cartData.subtotal}
+        deliveryFee={cartData.deliveryFee}
+        tax={cartData.tax}
+        total={cartData.total}
+        isLoading={isProcessing}
+        onSelectItem={handleSelectItem}
+        onSelectAll={handleSelectAllItems}
+        onDeleteSelected={handleRemoveSelectedItems}
+        onQuantityChange={handleQuantityChange}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckoutClick}
+      
+      />
+
+     
+    </div>
   );
 };
 

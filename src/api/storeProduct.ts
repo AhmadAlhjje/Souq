@@ -1,44 +1,34 @@
-//storeProduct.ts
+// في ملف /api/storeProduct.ts
+// استبدل تعريف status في interface Product بهذا:
+
 export interface Product {
   id: number;
+  product_id?: number;
+  store_id?: number;          
+  stock_quantity?: number; 
   name: string;
   nameAr: string;
-  description: string;
-  descriptionAr: string;
   category: string;
   categoryAr: string;
   price: number;
   salePrice?: number;
-  originalPrice: number;
-  stock: number;
-  status: 'active' | 'inactive' | 'out_of_stock';
-  image: string;
-  images?: string; // الصور الخام من الـ API كـ JSON string
+  originalPrice?: number;
   rating: number;
   reviewCount: number;
-  sales: number;
+  image: string;
   isNew: boolean;
-  inStock: boolean;
-  createdAt: string;
+  stock: number;
+  status: "active" | "out_of_stock" | "low_stock"; // تغيير من "inactive" إلى "low_stock"
+  description: string;
+  descriptionAr: string;
   brand: string;
   brandAr: string;
-  
-  // الحقول الإضافية من الـ API
-  storeInfo?: {
-    store_name: string;
-    store_description: string;
-    logo_image: string;
-  };
-  
-  reviews?: Array<{
-    review_id: number;
-    product_id: number;
-    reviewer_name: string;
-    reviewer_phone: string;
-    rating: number;
-    comment: string;
-    is_verified: boolean;
-    created_at: string;
-    updated_at: string;
-  }>;
+  sales: number;
+  inStock: boolean;
+  createdAt: string;
+
+  // الحقول الجديدة للخصومات
+  discountPercentage?: number;
+  discountAmount?: number;
+  hasDiscount?: boolean;
 }

@@ -137,7 +137,7 @@ const AdminDashboardPage = () => {
         setOrdersStats(ordersStatsData);
 
         // استخدام Type Assertion للوصول إلى البيانات الجديدة
-        const storeWithStats = storeData as StoreWithStats;
+        const storeWithStats = storeData as unknown  as StoreWithStats;
 
         // التحقق من وجود البيانات والنجاح
         if (!storeWithStats.success || !storeWithStats.store) {

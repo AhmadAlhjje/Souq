@@ -1,7 +1,9 @@
 // src/components/molecules/StatsCard.tsx
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
-import { useThemeContext } from '@/contexts/ThemeContext';
+"use client";
+
+import React from "react";
+import { LucideIcon } from "lucide-react";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 interface StatsCardProps {
   title: string;
@@ -22,8 +24,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const colorClasses = {
     blue: {
-      bg: isDark ? 'bg-[#5CA9B5]/15' : 'bg-[#5CA9B5]/10', // خلفية فاتحة
-      icon: isDark ? 'text-[#004D5A]' : 'text-[#004D5A]', // أيقونة داكنة
+      bg: isDark ? 'bg-[#5CA9B5]/15' : 'bg-[#5CA9B5]/10',
+      icon: isDark ? 'text-[#004D5A]' : 'text-[#004D5A]',
       border: isDark ? 'border-[#5CA9B5]/40' : 'border-[#5CA9B5]/30'
     },
     green: {
@@ -42,8 +44,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
       border: isDark ? 'border-yellow-800' : 'border-yellow-200'
     },
     purple: {
-      bg: isDark ? 'bg-[#004D5A]/15' : 'bg-[#004D5A]/8', // خلفية داكنة
-      icon: isDark ? 'text-[#5CA9B5]' : 'text-[#5CA9B5]', // أيقونة فاتحة
+      bg: isDark ? 'bg-[#004D5A]/15' : 'bg-[#004D5A]/8',
+      icon: isDark ? 'text-[#5CA9B5]' : 'text-[#5CA9B5]',
       border: isDark ? 'border-[#004D5A]/40' : 'border-[#004D5A]/25'
     }
   };

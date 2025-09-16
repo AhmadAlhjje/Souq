@@ -1,94 +1,164 @@
-// components/templates/ProductLayout.tsx
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
-import { Product } from "@/types/product";
-import { getStore } from "@/api/stores"; // تأكد من المسار الصحيح
+import { Product } from "@/api/storeProduct";
+import { ApiStore, getStore, ApiProduct } from "@/api/stores"; // ✅ استيراد ApiProduct من الملف الأصلي
+import { ToastProvider, useToast } from '@/hooks/useToast';
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 const DynamicProductsSection = dynamic(
   () => import("../organisms/ProductsSection"),
   {
-    loading: () => (
-      <div className="animate-pulse bg-gray-200 rounded-2xl h-96"></div>
-    ),
+    loading: () => <LoadingSpinner size="lg" message="جاري تحميل المنتجات..." overlay={true} />,
   }
 );
 
-// استخدام النوع من API مباشرة بدلاً من تعريف نوع محلي متضارب
-// لا نحتاج لتعريف ApiProduct و ApiStore هنا - سنستخدم ما يرجعه getStore مباشرة
+// ✅ إضافة interface للاستجابة الجديدة فقط
+interface StoreApiResponse {
+  success: boolean;
+  store: {
+    store_id: number;
+    user_id: number;
+    store_name: string;
+    store_address: string;
+    description: string;
+    images: string[];
+    logo_image: string;
+    is_blocked: boolean;
+    created_at: string;
+    User: {
+      username: string;
+      whatsapp_number: string;
+      role: string;
+    };
+    storeReviews: any[];
+    storeAverageRating: number;
+    storeReviewsCount: number;
+    overallAverageRating: number;
+    totalReviewsCount: number;
+    reviewStats: {
+      total: number;
+      verified: number;
+      pending: number;
+    };
+    totalRevenue: number;
+    totalOrders: number;
+    thisMonthRevenue: number;
+    discountStats: {
+      totalProductsWithDiscount: number;
+      totalProducts: number;
+      totalDiscountValue: number;
+      discountPercentage: number;
+    };
+    products: any[]; // ✅ استخدام any[] لتجنب التضارب
+  };
+}
 
-// تعريف الـ BASE_URL ودالة getFirstImage
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.4:4000";
+// ✅ دالة محدثة لمعالجة الصور (تدعم المصفوفة والـ string)
+function getFirstImageFromArray(imagesField: string[] | string | undefined): string {
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  const defaultImage = `${BASE_URL}/default-product.jpg`;
 
-function getFirstImage(imagesField: string | undefined): string {
-  if (!imagesField) return `${BASE_URL}/default-product.jpg`;
+  if (!imagesField) {
+    console.log("📷 لا توجد صور، استخدام الافتراضية");
+    return defaultImage;
+  }
 
   try {
-    let parsed = JSON.parse(imagesField);
-
-    // إذا كان النص نفسه عبارة عن JSON string لمصفوفة
-    if (typeof parsed === "string" && parsed.startsWith("[")) {
-      parsed = JSON.parse(parsed);
+    // إذا كانت مصفوفة بالفعل (الحالة الجديدة)
+    if (Array.isArray(imagesField) && imagesField.length > 0) {
+      const firstImage = imagesField[0];
+      if (firstImage && firstImage.trim() !== "" && firstImage !== "null") {
+        const imageUrl = firstImage.startsWith("http") 
+          ? firstImage 
+          : `${BASE_URL}${firstImage.replace(/^\/+/, "/")}`;
+        console.log("📷 صورة من المصفوفة:", imageUrl);
+        return imageUrl;
+      }
+    }
+    
+    // إذا كانت string (الحالة القديمة)
+    if (typeof imagesField === "string") {
+      // محاولة تحليل JSON
+      if (imagesField.startsWith("[") || imagesField.startsWith("{")) {
+        const parsed = JSON.parse(imagesField);
+        
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const firstImage = parsed[0];
+          if (firstImage && firstImage.trim() !== "") {
+            const imageUrl = firstImage.startsWith("http") 
+              ? firstImage 
+              : `${BASE_URL}${firstImage.replace(/^\/+/, "/")}`;
+            console.log("📷 صورة من JSON:", imageUrl);
+            return imageUrl;
+          }
+        }
+      } else {
+        // معاملة كصورة واحدة
+        const imageUrl = imagesField.startsWith("http") 
+          ? imagesField 
+          : `${BASE_URL}${imagesField.replace(/^\/+/, "/")}`;
+        console.log("📷 صورة مباشرة:", imageUrl);
+        return imageUrl;
+      }
     }
 
-    const firstImage: unknown =
-      Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : parsed;
-
-    // تأكد أن firstImage نص
-    if (typeof firstImage === "string" && firstImage.trim() !== "") {
-      return firstImage.startsWith("http")
-        ? firstImage
-        : `${BASE_URL}/${firstImage.replace(/^\/+/, "")}`;
-    }
-
-    // fallback
-    return `${BASE_URL}/default-product.jpg`;
+    console.log("📷 فشل في معالجة الصور، استخدام الافتراضية");
+    return defaultImage;
   } catch (err) {
-    console.error("Error parsing product images:", err, imagesField);
-    return `${BASE_URL}/default-product.jpg`;
+    console.error("❌ خطأ في معالجة الصور:", err, imagesField);
+    return defaultImage;
   }
 }
 
-// تحويل منتج API إلى المنتج المحلي - محدث للعمل مع أي نوع منتج
+// ✅ دالة تحويل محدثة - تقبل any لتجنب تضارب الأنواع
 const convertApiProductToProduct = (
-  apiProduct: any, // استخدام any لتجنب تضارب الأنواع
+  apiProduct: any, // ✅ استخدام any لتجنب التضارب
   storeInfo?: any
 ): Product => {
-  const imageUrl = getFirstImage(apiProduct.images);
+  // استخدام الدالة المحدثة للصور
+  const imageUrl = getFirstImageFromArray(apiProduct.images);
 
-  // حساب السعر المخفض إذا كان يوجد خصم
-  const originalPrice = parseFloat(apiProduct.price);
-  const hasDiscount = Math.random() > 0.7; // 30% احتمالية وجود خصم
-  const discountedPrice = hasDiscount 
-    ? Math.round(originalPrice * 0.8) 
-    : originalPrice;
+  let productStatus: "active" | "out_of_stock" | "low_stock";
+  
+  if (apiProduct.stock_quantity <= 0) {
+    productStatus = "out_of_stock";
+  } else if (apiProduct.stock_quantity <= 5) {
+    productStatus = "low_stock";
+  } else {
+    productStatus = "active";
+  }
 
   return {
-    id: apiProduct.product_id || apiProduct.id,
-    product_id: apiProduct.product_id || apiProduct.id, // إضافة الخاصية المفقودة
-    store_id: storeInfo?.store_id || storeInfo?.id, // إضافة الخاصية المفقودة
-    stock_quantity: apiProduct.stock_quantity || apiProduct.stock || 0, // إضافة الخاصية المفقودة
+    id: apiProduct.product_id,
+    product_id: apiProduct.product_id,
+    store_id: storeInfo?.store_id || apiProduct.store_id,
+    stock_quantity: apiProduct.stock_quantity,
     name: apiProduct.name,
     nameAr: apiProduct.name,
     category: "general",
     categoryAr: "عام",
-    price: discountedPrice, // استخدام السعر المخفض كسعر أساسي
-    original_price: originalPrice, // السعر الأصلي قبل الخصم
-    discounted_price: hasDiscount ? discountedPrice : undefined, // السعر المخفض فقط إذا كان هناك خصم
+    price: parseFloat(apiProduct.price),
+    salePrice: apiProduct.has_discount ? apiProduct.discounted_price : undefined,
+    originalPrice: apiProduct.original_price,
     rating: apiProduct.averageRating || Math.round((Math.random() * 2 + 3) * 10) / 10,
     reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 200) + 10,
     image: imageUrl,
     isNew: Math.random() > 0.8,
-    status: (apiProduct.stock_quantity || apiProduct.stock) > 0 ? "active" : "out_of_stock",
+    stock: apiProduct.stock_quantity,
+    status: productStatus,
     description: apiProduct.description,
     descriptionAr: apiProduct.description,
     brand: storeInfo?.store_name || "متجر محلي",
     brandAr: storeInfo?.store_name || "متجر محلي",
     sales: Math.floor(Math.random() * 100) + 5,
-    inStock: (apiProduct.stock_quantity || apiProduct.stock) > 0,
-    createdAt: apiProduct.created_at || apiProduct.createdAt,
+    inStock: apiProduct.stock_quantity > 0,
+    createdAt: apiProduct.created_at,
+    discountPercentage: apiProduct.discount_percentage ? parseFloat(apiProduct.discount_percentage) : undefined,
+    discountAmount: apiProduct.has_discount ? apiProduct.discount_amount : undefined,
+    hasDiscount: apiProduct.has_discount,
   };
 };
 
@@ -97,17 +167,18 @@ function ProductContent() {
   const storeId = searchParams?.get("store");
   const storeName = searchParams?.get("storeName");
 
-  // حالات البيانات - استخدام أنواع عامة لتجنب التضارب
   const [products, setProducts] = useState<Product[]>([]);
-  const [storeInfo, setStoreInfo] = useState<any>(null); // استخدام any لتجنب تضارب الأنواع
+  const [storeInfo, setStoreInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // جلب البيانات عند تحميل الصفحة
+  const { showToast } = useToast();
+
   useEffect(() => {
     const fetchStoreData = async () => {
       if (!storeId) {
         setError("معرف المتجر مطلوب");
+        showToast("معرف المتجر غير موجود", "error");
         setLoading(false);
         return;
       }
@@ -115,74 +186,116 @@ function ProductContent() {
       try {
         setLoading(true);
         setError(null);
+        showToast("جاري تحميل بيانات المتجر...", "info");
 
         console.log("🔄 جلب بيانات المتجر...", storeId);
-        const storeData = await getStore(parseInt(storeId));
+        const storeData = await getStore(parseInt(storeId)) as any; // ✅ استخدام any للمرونة
+        
+        console.log("✅ تم استلام بيانات المتجر:", storeData);
 
-        console.log("✅ تم جلب البيانات:", storeData);
-        setStoreInfo(storeData);
+        // ✅ فحص تنسيق الاستجابة 
+        let products: any[] = []; // ✅ استخدام any[] لتجنب التضارب
+        let storeInfo: any = null;
 
-        // تحويل المنتجات - التعامل مع كلا الحالتين (Products أو products)
-        const productsArray = (storeData as any).Products || (storeData as any).products || [];
-        const convertedProducts = productsArray.map((product: any) =>
-          convertApiProductToProduct(product, storeData)
-        );
+        // فحص الاستجابة الجديدة
+        if (storeData && typeof storeData === 'object' && 'store' in storeData) {
+          const response = storeData as StoreApiResponse;
+          if (response.store && response.store.products) {
+            products = response.store.products;
+            storeInfo = response.store;
+            console.log("✅ تم العثور على المنتجات في store.products");
+          }
+        } 
+        // فحص الاستجابة القديمة
+        else if (storeData && 'Products' in storeData) {
+          const oldResponse = storeData as ApiStore;
+          if (oldResponse.Products) {
+            products = oldResponse.Products;
+            storeInfo = oldResponse;
+            console.log("✅ تم العثور على المنتجات في Products");
+          }
+        }
+        // فحص حالة أخرى
+        else if (storeData && 'products' in storeData) {
+          products = storeData.products;
+          storeInfo = storeData;
+          console.log("✅ تم العثور على المنتجات في products");
+        }
 
-        setProducts(convertedProducts);
-        console.log(`✅ تم تحويل ${convertedProducts.length} منتج`);
+        console.log(`📦 عدد المنتجات المستخرجة: ${products.length}`);
+        
+        // عرض تفاصيل المنتجات
+        products.forEach((product, index) => {
+          console.log(`منتج ${index + 1}:`, {
+            id: product.product_id,
+            name: product.name,
+            price: product.price,
+            stock: product.stock_quantity,
+            images: product.images
+          });
+        });
+
+        if (!products || products.length === 0) {
+          console.error("❌ لا توجد منتجات في بيانات المتجر!");
+          setStoreInfo(storeInfo);
+          setProducts([]);
+          showToast("لا توجد منتجات متاحة في هذا المتجر حاليًا", "warning");
+        } else {
+          console.log("🔄 بدء تحويل المنتجات...");
+          
+          const convertedProducts = products.map((product, index) => {
+            console.log(`تحويل منتج ${index + 1}:`, {
+              id: product.product_id,
+              name: product.name,
+              price: product.price,
+              stock: product.stock_quantity
+            });
+            return convertApiProductToProduct(product, storeInfo);
+          });
+          
+          console.log(`✅ تم تحويل ${convertedProducts.length} منتج بنجاح`);
+          
+          setStoreInfo(storeInfo);
+          setProducts(convertedProducts);
+          showToast(`${convertedProducts.length} منتج تم تحميله بنجاح!`, "success");
+        }
+        
       } catch (err: any) {
         console.error("❌ خطأ في جلب البيانات:", err);
-        setError(
+        const errorMessage =
           err.response?.data?.message ||
-            err.message ||
-            "حدث خطأ في جلب البيانات"
-        );
+          err.message ||
+          "حدث خطأ في جلب البيانات";
+        setError(errorMessage);
+        showToast(errorMessage, "error");
       } finally {
         setLoading(false);
       }
     };
 
     fetchStoreData();
-  }, [storeId]);
+  }, [storeId, showToast]);
 
-  // المنتجات المخفضة - استخدام discounted_price بدلاً من salePrice
-  const saleProducts = products.filter(
-    (product) => product.discounted_price && product.original_price && 
-    product.discounted_price < product.original_price
-  );
-
-  const handleNavigateLeft = () => {
-    console.log("التنقل لليسار");
-  };
-
-  const handleNavigateRight = () => {
-    console.log("التنقل لليمين");
-  };
-
-  const handleViewDetails = (product: Product) => {
-    alert(
-      `عرض تفاصيل: ${
-        product.nameAr || product.name
-      }\n\nسيتم توجيهك لصفحة تفاصيل المنتج...`
-    );
-  };
-
-  // عرض شاشة التحميل
+  // شاشة التحميل
   if (loading) {
     return (
       <div
         className="min-h-screen flex items-center justify-center font-cairo"
         style={{ backgroundColor: "#F6F8F9" }}
       >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg">جاري تحميل منتجات المتجر...</p>
-        </div>
+        <LoadingSpinner
+          size="lg"
+          color="green"
+          message="جاري تحميل منتجات المتجر..."
+          overlay={true}
+          pulse={true}
+          dots={true}
+        />
       </div>
     );
   }
 
-  // عرض رسالة الخطأ
+  // شاشة الخطأ
   if (error) {
     return (
       <div
@@ -194,7 +307,10 @@ function ProductContent() {
           <h2 className="text-2xl font-bold text-red-600 mb-4">حدث خطأ</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              window.location.reload();
+              showToast("تم إعادة تحميل الصفحة", "info");
+            }}
             className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
           >
             إعادة المحاولة
@@ -204,7 +320,7 @@ function ProductContent() {
     );
   }
 
-  // عدم وجود منتجات
+  // شاشة لا توجد منتجات
   if (products.length === 0) {
     return (
       <div
@@ -224,113 +340,48 @@ function ProductContent() {
     );
   }
 
-  return (
+  return (  
     <div
       className="min-h-screen mt-20 font-cairo"
       style={{ backgroundColor: "#F6F8F9" }}
     >
       <div className="mx-auto">
-        {/* رسالة ترحيب مع معلومات المتجر الحقيقية */}
-        {storeInfo && (
-          <div className="p-6 mb-6 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 text-center shadow-sm">
-            <div className="flex items-center justify-center gap-3 mb-2">
-              <span className="text-2xl">🏪</span>
-              <h2 className="text-xl font-bold text-teal-800">
-                مرحباً بك في {storeInfo.store_name}!
-              </h2>
-            </div>
-            <p className="text-teal-600 mb-2">{storeInfo.description}</p>
-            <p className="text-sm text-teal-500">
-              📍 {storeInfo.store_address} | 📞 {storeInfo.User?.whatsapp_number}{" "}
-              | 📦 {products.length} منتج متوفر
-            </p>
-            {saleProducts.length > 0 && (
-              <p className="text-sm text-red-600 mt-2">
-                🔥 {saleProducts.length} منتج مخفض متاح الآن!
-              </p>
-            )}
-          </div>
-        )}
-
         <div className="grid grid-cols-1 gap-8">
           <DynamicProductsSection
             products={products}
-            onViewDetails={handleViewDetails}
+            storeId={storeInfo?.store_id}
+            storeName={storeInfo?.store_name}
           />
-        </div>
-
-        {/* قسم الشكر مع إحصائيات المتجر */}
-        <div
-          className="mt-12 p-8 rounded-2xl text-center shadow-lg"
-          style={{ backgroundColor: "#f9fafb" }}
-        >
-          <div className="max-w-2xl mx-auto">
-            <h3
-              className="text-2xl font-bold mb-4"
-              style={{ color: "#111827" }}
-            >
-              شكراً لزيارة {storeInfo?.store_name || "متجرنا"}! 🙏
-            </h3>
-            <p className="text-lg mb-2" style={{ color: "#1f2937" }}>
-              نقدر ثقتكم بنا ونسعى دائماً لتقديم أفضل المنتجات والخدمات
-            </p>
-            <p className="text-base mb-4" style={{ color: "#374151" }}>
-              تجربة تسوق ممتعة ومريحة هي هدفنا الأول
-            </p>
-
-            {/* إضافة إحصائيات المتجر إذا كانت متوفرة */}
-            {storeInfo && (storeInfo.totalOrders || storeInfo.averageRating) && (
-              <div className="grid md:grid-cols-3 gap-4 mt-6">
-                {storeInfo.totalOrders && (
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-2xl font-bold text-green-600">
-                      {storeInfo.totalOrders}
-                    </div>
-                    <div className="text-sm text-gray-600">طلب مكتمل</div>
-                  </div>
-                )}
-                
-                {storeInfo.averageRating && (
-                  <div className="bg-white p-4 rounded-lg shadow-sm">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {storeInfo.averageRating.toFixed(1)}
-                    </div>
-                    <div className="text-sm text-gray-600">تقييم المتجر</div>
-                  </div>
-                )}
-                
-                <div className="bg-white p-4 rounded-lg shadow-sm">
-                  <div className="text-2xl font-bold text-purple-600">
-                    {products.length}
-                  </div>
-                  <div className="text-sm text-gray-600">منتج متوفر</div>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
   );
 }
 
+// المكون الرئيسي مع ToastProvider
 const ProductLayout: React.FC = () => {
   return (
-    <Suspense
-      fallback={
-        <div
-          className="min-h-screen flex items-center justify-center font-cairo"
-          style={{ backgroundColor: "#F6F8F9" }}
-        >
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">جاري تحميل المنتجات...</p>
+    <ToastProvider>
+      <Suspense
+        fallback={
+          <div
+            className="min-h-screen flex items-center justify-center font-cairo"
+            style={{ backgroundColor: "#F6F8F9" }}
+          >
+            <LoadingSpinner
+              size="lg"
+              color="green"
+              message="جاري تحميل المنتجات..."
+              overlay={true}
+              pulse={true}
+              dots={true}
+            />
           </div>
-        </div>
-      }
-    >
-      <ProductContent />
-    </Suspense>
+        }
+      >
+        <ProductContent />
+      </Suspense>
+    </ToastProvider>
   );
 };
 

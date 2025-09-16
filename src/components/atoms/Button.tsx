@@ -223,7 +223,6 @@ const Button: React.FC<ButtonProps> = ({
         <span className="flex-shrink-0 ml-1.5">{endIcon}</span>
       )}
     </button>
-  );
+);      
 };
-
 export default Button;

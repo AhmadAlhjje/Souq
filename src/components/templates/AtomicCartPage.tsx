@@ -1,7 +1,6 @@
-// components/templates/CompactCartPage.tsx
+// components/templates/AtomicCartPage.tsx
 "use client"
 import React from 'react';
-import Image from 'next/image';
 import { ShoppingCart, Trash2, ArrowRight, Minus, Plus } from 'lucide-react';
 
 // Types
@@ -18,7 +17,7 @@ interface CartItem {
   discount?: number;
 }
 
-interface CompactCartPageProps {
+interface AtomicCartPageProps {
   items: CartItem[];
   selectedItems: Set<number>;
   subtotal: number;
@@ -35,7 +34,13 @@ interface CompactCartPageProps {
   onBackToShopping?: () => void;
 }
 
-// Atoms - مصغرة
+// Helper function to get fallback image if the main image fails
+const getFallbackImage = (): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ;
+  return `${baseUrl}/uploads/placeholder.jpg`;
+};
+
+// Atoms - مكونات أساسية صغيرة
 const Checkbox: React.FC<{
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -48,7 +53,7 @@ const Checkbox: React.FC<{
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
       disabled={disabled}
-      className={`w-3 h-3 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-1 ${className}`}
+      className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${className}`}
     />
   );
 };
@@ -60,24 +65,50 @@ const ProductImage: React.FC<{
   inStock?: boolean;
   className?: string;
 }> = ({ src, alt, discount, inStock = true, className = '' }) => {
+  const [imageSrc, setImageSrc] = React.useState(src);
+  const [imageError, setImageError] = React.useState(false);
+
+  const handleImageError = () => {
+    console.log('❌ Image failed to load:', src);
+    setImageError(true);
+    setImageSrc(getFallbackImage());
+  };
+
+  const handleImageLoad = () => {
+    console.log('✅ Image loaded successfully:', src);
+    setImageError(false);
+  };
+
+  React.useEffect(() => {
+    setImageSrc(src);
+    setImageError(false);
+  }, [src]);
+
   return (
-    <div className={`relative w-12 h-12 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-shadow ${className}`}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        className="object-cover group-hover:scale-105 transition-transform duration-200"
-        sizes="48px"
-      />
+    <div className={`relative w-16 h-16 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-shadow ${className}`}>
+      <img
+  src={imageSrc}
+  alt={alt}
+  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+  onError={handleImageError}
+  onLoad={handleImageLoad}
+  style={{ objectFit: 'cover' }}
+/>
+      
+      {imageError && (
+        <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
+          <span className="text-gray-500 text-xs">صورة</span>
+        </div>
+      )}
       
       {!inStock && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-          <span className="text-white text-[8px] font-medium">نفد</span>
+          <span className="text-white text-xs font-medium">نفد</span>
         </div>
       )}
       
       {discount && (
-        <div className="absolute top-0 right-0 bg-red-500 text-white text-[8px] px-1 py-0.5 rounded-bl font-medium">
+        <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 py-0.5 rounded-bl font-medium">
           -{discount}%
         </div>
       )}
@@ -89,23 +120,23 @@ const PriceDisplay: React.FC<{
   price: number;
   originalPrice?: number;
   currency?: string;
-  size?: 'xs' | 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   className?: string;
-}> = ({ price, originalPrice, currency = 'ر.س', size = 'sm', className = '' }) => {
+}> = ({ price, originalPrice, currency = 'ر.س', size = 'md', className = '' }) => {
   const sizeClasses = {
-    xs: 'text-xs',
     sm: 'text-sm',
-    md: 'text-base'
+    md: 'text-base',
+    lg: 'text-lg'
   };
 
   return (
-    <div className={`space-y-0.5 ${className}`}>
+    <div className={`space-y-1 ${className}`}>
       <span className={`text-teal-600 font-bold ${sizeClasses[size]}`}>
-        {price} {currency}
+        {price.toFixed(2)} {currency}
       </span>
       {originalPrice && originalPrice > price && (
-        <div className="text-[10px] text-gray-400 line-through">
-          {originalPrice} {currency}
+        <div className="text-sm text-gray-400 line-through">
+          {originalPrice.toFixed(2)} {currency}
         </div>
       )}
     </div>
@@ -117,7 +148,7 @@ const TableHeader: React.FC<{
   className?: string;
 }> = ({ children, className = '' }) => {
   return (
-    <th className={`text-right py-2 px-4 text-gray-700 font-bold text-xs ${className}`}>
+    <th className={`text-right py-3 px-4 text-gray-700 font-bold text-sm ${className}`}>
       {children}
     </th>
   );
@@ -128,25 +159,25 @@ const TableCell: React.FC<{
   className?: string;
 }> = ({ children, className = '' }) => {
   return (
-    <td className={`py-2 px-2 ${className}`}>
+    <td className={`py-3 px-4 ${className}`}>
       {children}
     </td>
   );
 };
 
-// Molecules - مصغرة
+// Molecules - مكونات متوسطة
 const ProductInfo: React.FC<{
   name: string;
   description?: string;
   className?: string;
 }> = ({ name, description, className = '' }) => {
   return (
-    <div className={`space-y-0.5 ${className}`}>
-      <h3 className="font-semibold text-gray-900 text-xs group-hover:text-blue-600 transition-colors line-clamp-1">
+    <div className={`space-y-1 ${className}`}>
+      <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors line-clamp-2">
         {name}
       </h3>
       {description && (
-        <p className="text-[10px] text-gray-500 line-clamp-1">{description}</p>
+        <p className="text-xs text-gray-500 line-clamp-1">{description}</p>
       )}
     </div>
   );
@@ -165,23 +196,23 @@ const QuantityControl: React.FC<{
   const canIncrease = quantity < max && !disabled;
 
   return (
-    <div className={`flex items-center border ml-2 border-gray-300 rounded-md overflow-hidden bg-white shadow-sm ${className}`}>
+    <div className={`flex items-center border border-gray-300 rounded-md overflow-hidden bg-white shadow-sm ${className}`}>
       <button 
         onClick={onDecrease}
         disabled={!canDecrease}
-        className=" py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-2 py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Minus className="w-3 h-3" />
+        <Minus className="w-4 h-4" />
       </button>
-      <span className="px-2 py-1 bg-gray-50 min-w-[2rem] text-center font-medium text-xs">
+      <span className="px-3 py-1 bg-gray-50 min-w-[3rem] text-center font-medium text-sm">
         {quantity}
       </span>
       <button 
         onClick={onIncrease}
         disabled={!canIncrease}
-        className="px-1.5 py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-2 py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        <Plus className="w-3 h-3" />
+        <Plus className="w-4 h-4" />
       </button>
     </div>
   );
@@ -205,6 +236,7 @@ const CartItemRow: React.FC<{
         <Checkbox
           checked={isSelected}
           onChange={onSelect}
+          disabled={!item.inStock}
         />
       </TableCell>
 
@@ -219,13 +251,14 @@ const CartItemRow: React.FC<{
       </TableCell>
 
       {/* Product Info */}
-      <TableCell className="max-w-[120px]">
+      <TableCell className="max-w-[200px]">
         <ProductInfo
           name={item.name}
           description={item.description}
         />
       </TableCell>
-   {/* Quantity */}
+
+      {/* Quantity */}
       <TableCell>
         <QuantityControl
           quantity={item.quantity}
@@ -234,29 +267,29 @@ const CartItemRow: React.FC<{
           disabled={!item.inStock}
         />
       </TableCell>
+
       {/* Price */}
       <TableCell>
         <PriceDisplay
           price={item.price}
           originalPrice={item.originalPrice}
-          size="xs"
+          size="sm"
         />
       </TableCell>
 
-   
-
       {/* Total */}
       <TableCell>
-        <span className="font-bold text-teal-600 text-sm">{item.total} ر.س</span>
+        <span className="font-bold text-teal-600 text-base">{item.total.toFixed(2)} ر.س</span>
       </TableCell>
 
       {/* Actions */}
       <TableCell>
         <button 
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-red-50 transition-all duration-200 transform group-hover:scale-110"
+          className="text-gray-400 hover:text-red-500 p-2 rounded hover:bg-red-50 transition-all duration-200 transform group-hover:scale-110"
         >
-<Trash2 className="w-4 h-4" />        </button>
+          <Trash2 className="w-5 h-5" />
+        </button>
       </TableCell>
     </tr>
   );
@@ -268,18 +301,18 @@ const SummaryRow: React.FC<{
   isTotal?: boolean;
   className?: string;
 }> = ({ label, value, isTotal = false, className = '' }) => {
-  const baseClasses = "flex justify-between items-center py-2";
+  const baseClasses = "flex justify-between items-center py-3";
   const borderClasses = isTotal 
-    ? "bg-white rounded-lg px-3 shadow-sm" 
-    : "border-b border-teal-200";
+    ? "bg-white rounded-lg px-4 shadow-md border-2 border-teal-200" 
+    : "border-b border-gray-200";
   
   const textClasses = isTotal
-    ? "text-lg font-bold text-gray-900"
-    : "text-gray-700 font-medium text-sm";
+    ? "text-xl font-bold text-gray-900"
+    : "text-gray-700 font-medium";
     
   const valueClasses = isTotal
-    ? "text-xl font-bold text-teal-600"
-    : "font-bold text-gray-900 text-sm";
+    ? "text-2xl font-bold text-teal-600"
+    : "font-bold text-gray-900";
 
   return (
     <div className={`${baseClasses} ${borderClasses} ${className}`}>
@@ -289,42 +322,42 @@ const SummaryRow: React.FC<{
   );
 };
 
-// Organisms
+// Organisms - مكونات كبيرة
 const CartHeader: React.FC<{
   selectedCount: number;
   onDeleteSelected: () => void;
   onBack?: () => void;
 }> = ({ selectedCount, onDeleteSelected, onBack }) => {
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 px-6 py-4 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 px-6 py-5 relative overflow-hidden">
       <div className="absolute inset-0 bg-black/10"></div>
       <div className="relative flex justify-between items-center">
         <button 
           onClick={onDeleteSelected}
           disabled={selectedCount === 0}
-          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-xs font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-1"
+          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
         >
-          <Trash2 className="w-3 h-3" />
-          حذف ({selectedCount})
+          <Trash2 className="w-4 h-4" />
+          حذف المحدد ({selectedCount})
         </button>
         
-        <h1 className="text-xl font-bold text-white drop-shadow-sm">سلة التسوق</h1>
+        <h1 className="text-2xl font-bold text-white drop-shadow-md">سلة التسوق</h1>
         
         {onBack && (
           <button 
             onClick={onBack}
-            className="text-white/80 hover:text-white transition-colors p-1 rounded hover:bg-white/10"
+            className="text-white/80 hover:text-white transition-colors p-2 rounded hover:bg-white/10"
           >
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-6 h-6" />
           </button>
         )}
-        {!onBack && <div className="w-12"></div>}
+        {!onBack && <div className="w-16"></div>}
       </div>
     </div>
   );
 };
 
-const CompactCartTable: React.FC<{
+const AtomicCartTable: React.FC<{
   items: CartItem[];
   selectedItems: Set<number>;
   onSelectItem: (itemId: number, selected: boolean) => void;
@@ -335,43 +368,42 @@ const CompactCartTable: React.FC<{
   const allSelected = items.length > 0 && selectedItems.size === items.length;
 
   return (
-    <div>
-      {/* Compact Table */}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm bg-white">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
         <table className="w-full">
-        <thead>
-  <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-    <TableHeader className="w-12"> {/* Checkbox */}
-      <div className="flex items-center justify-center">
-        <Checkbox checked={allSelected} onChange={onSelectAll} />
-      </div>
-    </TableHeader>
-    
-    <TableHeader className="w-20"> {/* Image */}
-      صورة
-    </TableHeader>
-    
-    <TableHeader className="min-w-[160px]"> {/* Product */}
-      المنتج
-    </TableHeader>
-    
-  <TableHeader className="w-20 pl-1"> {/* Quantity */}
-  الكمية
-</TableHeader>
+          <thead>
+            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+              <TableHeader className="w-16">
+                <div className="flex items-center justify-center">
+                  <Checkbox checked={allSelected} onChange={onSelectAll} />
+                </div>
+              </TableHeader>
+              
+              <TableHeader className="w-20">
+                صورة
+              </TableHeader>
+              
+              <TableHeader className="min-w-[200px]">
+                المنتج
+              </TableHeader>
+              
+              <TableHeader className="w-32">
+                الكمية
+              </TableHeader>
 
-<TableHeader className="w-24"> {/* Price */}
-  السعر
-</TableHeader>
-    
-    <TableHeader className="w-24"> {/* Total */}
-      المجموع
-    </TableHeader>
-    
-    <TableHeader className="w-12"> {/* Delete */}
-      حذف
-    </TableHeader>
-  </tr>
-</thead>
+              <TableHeader className="w-24">
+                السعر
+              </TableHeader>
+              
+              <TableHeader className="w-28">
+                المجموع
+              </TableHeader>
+              
+              <TableHeader className="w-16">
+                حذف
+              </TableHeader>
+            </tr>
+          </thead>
           <tbody>
             {items.map((item, index) => (
               <CartItemRow
@@ -391,7 +423,7 @@ const CompactCartTable: React.FC<{
   );
 };
 
-const CompactCartSummary: React.FC<{
+const AtomicCartSummary: React.FC<{
   subtotal: number;
   deliveryFee: number;
   tax?: number;
@@ -400,13 +432,13 @@ const CompactCartSummary: React.FC<{
   loading?: boolean;
 }> = ({ subtotal, deliveryFee, tax = 0, total, onCheckout, loading = false }) => {
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-6 shadow-lg border border-teal-100 h-fit">
-      <div className="text-center mb-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">إجمالي السلة</h2>
-        <div className="w-12 h-0.5 bg-gradient-to-r from-teal-400 to-emerald-500 rounded mx-auto"></div>
+    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-6 shadow-lg border border-teal-100 h-fit sticky top-4">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">ملخص الطلب</h2>
+        <div className="w-16 h-1 bg-gradient-to-r from-teal-400 to-emerald-500 rounded mx-auto"></div>
       </div>
       
-      <div className="space-y-3">
+      <div className="space-y-4">
         <SummaryRow
           label="المجموع الفرعي"
           value={`${subtotal.toFixed(2)} ر.س`}
@@ -434,17 +466,18 @@ const CompactCartSummary: React.FC<{
       <button 
         onClick={onCheckout}
         disabled={loading}
-        className="w-full mt-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-3 rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-2 disabled:transform-none disabled:cursor-not-allowed"
+        className="w-full mt-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-3 disabled:transform-none disabled:cursor-not-allowed"
       >
-        <ShoppingCart className="w-4 h-4" />
+        <ShoppingCart className="w-5 h-5" />
         {loading ? 'جاري المعالجة...' : 'المتابعة للدفع'}
       </button>
+     
     </div>
   );
 };
 
 // Main Template
-const CompactCartPage: React.FC<CompactCartPageProps> = ({
+const AtomicCartPage: React.FC<AtomicCartPageProps> = ({
   items,
   selectedItems,
   subtotal,
@@ -461,25 +494,25 @@ const CompactCartPage: React.FC<CompactCartPageProps> = ({
   onBackToShopping
 }) => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 mt-24" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30" dir="rtl">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white shadow-xl overflow-hidden border border-gray-100">
+        <div className="bg-white shadow-2xl overflow-hidden">
           
-          {/* Compact Header */}
+          {/* Header */}
           <CartHeader
             selectedCount={selectedItems.size}
             onDeleteSelected={onDeleteSelected}
             onBack={onBackToShopping}
           />
 
-          {/* Compact Content */}
-          <div className="p-6">
-            {/* Side by Side Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Content */}
+          <div className="p-8">
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
               
-              {/* Cart Table - 2/3 of width */}
-              <div className="lg:col-span-2">
-                <CompactCartTable
+              {/* Cart Table - 3/4 of width */}
+              <div className="xl:col-span-3">
+                <AtomicCartTable
                   items={items}
                   selectedItems={selectedItems}
                   onSelectItem={onSelectItem}
@@ -489,9 +522,9 @@ const CompactCartPage: React.FC<CompactCartPageProps> = ({
                 />
               </div>
 
-              {/* Cart Summary - 1/3 of width */}
-              <div className="lg:col-span-1">
-                <CompactCartSummary
+              {/* Cart Summary - 1/4 of width */}
+              <div className="xl:col-span-1">
+                <AtomicCartSummary
                   subtotal={subtotal}
                   deliveryFee={deliveryFee}
                   tax={tax}
@@ -509,4 +542,4 @@ const CompactCartPage: React.FC<CompactCartPageProps> = ({
   );
 };
 
-export default CompactCartPage;
+export default AtomicCartPage;

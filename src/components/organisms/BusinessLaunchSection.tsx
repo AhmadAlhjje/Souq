@@ -9,6 +9,7 @@ import FeatureCard from "../molecules/FeatureCard";
 import ImageShowcase from "../molecules/ImageShowcase";
 import { PiFactory, PiShoppingBag, PiCubeTransparent } from "react-icons/pi";
 import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 export default function BusinessLaunchSection() {
   const { t, i18n } = useTranslation();
@@ -87,12 +88,16 @@ export default function BusinessLaunchSection() {
                   <FeatureCard key={index} {...feature} index={index} />
                 ))}
               </div>
-
               {/* Action Button */}
               <div className="mt-8">
-                <button className="bg-gradient-to-r from-[#004D5A] to-[#005965] hover:from-[#005965] hover:to-[#006670] text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                  {t("businessLaunchSection.ctaButton")}
-                </button>
+             <Link
+        href="/LoginPage"
+        className={`bg-gradient-to-r from-[#004D5A] to-[#005965] hover:from-[#005965] hover:to-[#006670] text-white font-bold py-2 px-4 rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl
+ `}
+        prefetch={true}
+      >
+        {t("create_store_free")}
+      </Link>
               </div>
             </div>
           </div>

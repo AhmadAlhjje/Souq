@@ -4,8 +4,11 @@ import FormField from '../molecules/FormField';
 import Button from '../atoms/Button';
 import Icon from '../atoms/Icon';
 import { User, Mail, Briefcase, Phone } from 'lucide-react';
+import useTheme from "@/hooks/useTheme";
 
 const ContactForm: React.FC = () => {
+  const { isDark } = useTheme();
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,7 +38,6 @@ const ContactForm: React.FC = () => {
     if (!formData.phone.trim()) {
       newErrors.phone = 'رقم الجوال مطلوب';
     }
-    // ❌ لا نتحقق من التنسيق، لا نستخدم regex صارم
 
     // التحقق من الموضوع
     if (!formData.subject.trim()) {
@@ -121,7 +123,7 @@ const ContactForm: React.FC = () => {
         <FormField
           label="رقم الجوال"
           id="phone"
-          type="tel" // ✅ مهم: يفتح لوحة الأرقام على الموبايل
+          type="tel"
           placeholder="+966 5X XXX XXXX"
           value={formData.phone}
           onChange={handlePhoneChange}
@@ -143,37 +145,44 @@ const ContactForm: React.FC = () => {
         required
         error={errors.subject}
       />
-      {/* القسم الأزرق: الرسالة + زر الإرسال */}
-      <div
-        className="rounded-lg p-6  space-y-6"
-      >
+
+      {/* القسم للرسالة + زر الإرسال مع الثيم */}
+      <div className={`rounded-lg p-6 space-y-6 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-slate-700/30 border border-slate-600' 
+          : 'bg-teal-50/50'
+      }`}>
         <div>
-          <label htmlFor="message" className="block text-sm font-medium mb-2 text-right  ">
+          <label htmlFor="message" className={`block text-sm font-medium mb-2 text-right transition-colors duration-300 ${
+            isDark ? 'text-slate-300' : 'text-teal-800'
+          }`}>
             الرسالة
           </label>
           <textarea 
-  id="message"
-  value={formData.message}
-  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-  placeholder="اكتب رسالتك هنا..."
-  className="
-    w-full 
-    px-4 py-3 
-    pr-10 
-    border-2
-    border-teal-800 
-    rounded-lg 
-    focus:outline-none 
-    focus:ring-2 
-    text-right 
-    text-sm 
-    bg-white 
-    placeholder-teal-800
-    resize-y 
-    min-h-28
-  "
-  style={{ direction: 'rtl' }}
-/>
+            id="message"
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            placeholder="اكتب رسالتك هنا..."
+            className={`
+              w-full 
+              px-4 py-3 
+              pr-10 
+              border-2
+              rounded-lg 
+              focus:outline-none 
+              focus:ring-2 
+              text-right 
+              text-sm 
+              resize-y 
+              min-h-28
+              transition-all duration-300
+              ${isDark 
+                ? 'bg-slate-800 border-slate-600 text-slate-200 placeholder-slate-400 focus:ring-emerald-500 focus:border-emerald-500' 
+                : 'bg-white border-teal-800 text-gray-900 placeholder-teal-800 focus:ring-teal-500 focus:border-teal-500'
+              }
+            `}
+            style={{ direction: 'rtl' }}
+          />
         </div>
 
         <div className="flex justify-center">
@@ -183,7 +192,11 @@ const ContactForm: React.FC = () => {
             variant="primary"
             size="lg"
             startIcon={<Icon name="chevron-right" />}
-            className="bg-white text-teal-900 hover:bg-gray-100 px-8 py-3 text-base font-semibold rounded-lg transition"
+            className={`px-8 py-3 text-base font-semibold rounded-lg transition-all duration-300 ${
+              isDark 
+                ? 'bg-emerald-600 text-white hover:bg-emerald-500' 
+                : 'bg-white text-teal-900 hover:bg-gray-100'
+            }`}
           />
         </div>
       </div>

@@ -15,7 +15,7 @@ export default function CustomerSatisfactionSection() {
 
   const customerData = [
     {
-      src: "/images/image 1.png",
+      src: "/images/image_2025-09-12_21-24-53.png",
       alt: t('customerSatisfactionSection.customerData.customer1.alt'),
       title: t('customerSatisfactionSection.customerData.customer1.title'),
       subtitle: t('customerSatisfactionSection.customerData.customer1.subtitle'),
@@ -28,7 +28,7 @@ export default function CustomerSatisfactionSection() {
       ],
     },
     {
-      src: "/images/image2.png",
+      src: "/images/image_2025-09-12_21-31-41.png",
       alt: t('customerSatisfactionSection.customerData.customer2.alt'),
       title: t('customerSatisfactionSection.customerData.customer2.title'),
       subtitle: t('customerSatisfactionSection.customerData.customer2.subtitle'),
@@ -41,7 +41,7 @@ export default function CustomerSatisfactionSection() {
       ],
     },
     {
-      src: "/images/image3.png",
+      src: "/images/image_2025-09-12_21-24-54.png",
       alt: t('customerSatisfactionSection.customerData.customer3.alt'),
       title: t('customerSatisfactionSection.customerData.customer3.title'),
       subtitle: t('customerSatisfactionSection.customerData.customer3.subtitle'),
