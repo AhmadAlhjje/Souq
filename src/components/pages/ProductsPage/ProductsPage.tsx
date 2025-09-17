@@ -1033,67 +1033,6 @@ const ProductsPage: React.FC = () => {
             {renderProductsContent()}
           </section>
 
-          {/* Empty State */}
-          {filteredProducts.length === 0 && !loading && (
-            <div className={emptyStateClasses.container}>
-              <div
-                className={`w-20 h-20 ${emptyStateClasses.icon} rounded-full flex items-center justify-center mx-auto mb-6`}
-              >
-                <Package
-                  className={`w-10 h-10 ${emptyStateClasses.iconColor}`}
-                />
-              </div>
-
-              <h3
-                className={`text-xl font-semibold ${emptyStateClasses.title} mb-3`}
-              >
-                {products.length === 0
-                  ? "لا توجد منتجات في متجرك بعد"
-                  : "لا توجد منتجات تطابق الفلاتر المحددة"}
-              </h3>
-
-              <p
-                className={`${emptyStateClasses.description} mb-6 max-w-md mx-auto leading-relaxed`}
-              >
-                {products.length === 0
-                  ? "ابدأ ببناء متجرك عبر إضافة منتجك الأول"
-                  : "جرب تعديل الفلاتر أو البحث عن منتجات أخرى"}
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-                <button
-                  onClick={handleAddProduct}
-                  className={`
-                    ${emptyStateClasses.button} 
-                    px-6 py-3 rounded-lg font-medium transition-all duration-200 
-                    focus:outline-none focus:ring-2 focus:ring-offset-2
-                    transform hover:scale-105 active:scale-95
-                  `}
-                  aria-label={t("buttons.addProduct")}
-                >
-                  {products.length === 0 ? "إضافة أول منتج" : "إضافة منتج جديد"}
-                </button>
-
-                {hasActiveFilters && products.length > 0 && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm("");
-                      setSelectedCategory("all");
-                      setSelectedStatus("all");
-                      handleSearchClick();
-                    }}
-                    className={`
-                      ${emptyStateClasses.clearFilters}
-                      px-4 py-2 rounded-lg font-medium transition-colors duration-200
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-                    `}
-                  >
-                    مسح الفلاتر
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Modals */}
 

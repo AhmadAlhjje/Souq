@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AdminSidebar from '../../../admin/AdminSidebar';
-import { Menu, X } from 'lucide-react';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -28,13 +27,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200 lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-md hover:bg-gray-100"
-          >
-            {sidebarOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          
           {title && (
             <div>
               <h1 className="text-xl font-semibold text-[#004D5A]">{title}</h1>

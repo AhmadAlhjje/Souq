@@ -13,16 +13,30 @@ const AVAILABLE_LANGUAGES = [
 
 interface MobileMenuProps {
   isOpen: boolean;
+  onClose: () => void; // إضافة دالة الإغلاق
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose }) => {
   const { t, i18n } = useTranslation();
   const { theme, setTheme, isDark } = useTheme();
 
-  // تغيير اللغة مع التخزين
+  // تغيير اللغة مع التخزين والإغلاق
   const handleLanguageChange = (langCode: string) => {
     i18n.changeLanguage(langCode);
     localStorage.setItem("lang", langCode);
+    // إغلاق القائمة بعد تأخير قصير للسماح بتطبيق التغيير
+    setTimeout(() => {
+      onClose();
+    }, 100);
+  };
+
+  // تغيير الثيم مع الإغلاق
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme as any);
+    // إغلاق القائمة بعد تأخير قصير للسماح بتطبيق التغيير
+    setTimeout(() => {
+      onClose();
+    }, 100);
   };
 
   // الحصول على اللغة الحالية
@@ -49,10 +63,18 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen }) => {
       <div className="px-4 py-6 space-y-6">
         {/* Navigation Links */}
         <div className="flex flex-col space-y-1">
-          <NavLink href="/" className="block py-3 px-4">{t("home")}</NavLink>
-          <NavLink href="/about" className="block py-3 px-4">{t("about")}</NavLink>
-          <NavLink href="/Stores" className="block py-3 px-4">{t("stores")}</NavLink>
-          <NavLink href="/contact" className="block py-3 px-4">{t("contact")}</NavLink>
+          <div onClick={onClose}>
+            <NavLink href="/" className="block py-3 px-4">{t("home")}</NavLink>
+          </div>
+          <div onClick={onClose}>
+            <NavLink href="/about" className="block py-3 px-4">{t("about")}</NavLink>
+          </div>
+          <div onClick={onClose}>
+            <NavLink href="/Stores" className="block py-3 px-4">{t("stores")}</NavLink>
+          </div>
+          <div onClick={onClose}>
+            <NavLink href="/contact" className="block py-3 px-4">{t("contact")}</NavLink>
+          </div>
         </div>
         
         {/* Theme & Language Selectors */}
@@ -74,7 +96,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen }) => {
                 return (
                   <button
                     key={option.key}
-                    onClick={() => setTheme(option.key as any)}
+                    onClick={() => handleThemeChange(option.key)}
                     className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all duration-200 ${
                       isSelected
                         ? isDark 
@@ -128,7 +150,9 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen }) => {
           </div>
 
           {/* Action Buttons */}
-          <ActionButtons />
+          <div onClick={onClose}>
+            <ActionButtons />
+          </div>
         </div>
       </div>
     </div>

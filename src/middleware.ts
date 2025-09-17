@@ -34,24 +34,24 @@ export function middleware(request: NextRequest) {
   }
 
   // إعادة التوجيه من الصفحة الرئيسية إذا كان المستخدم admin
-  // if (pathname === "/" && token) {
-  //   try {
-  //     const payload = JSON.parse(atob(token.split(".")[1]));
+  if (pathname === "/" && token) {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
 
-  //     if (
-  //       payload.exp &&
-  //       payload.exp >= Date.now() / 1000 &&
-  //       payload.role === "merchant"
-  //     ) {
-  //       return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-  //     }
-  //   } catch {
-  //     const response = NextResponse.next();
-  //     response.cookies.delete("access_token");
-  //     response.cookies.delete("refresh_token");
-  //     return response;
-  //   }
-  // }
+      if (
+        payload.exp &&
+        payload.exp >= Date.now() / 1000 &&
+        payload.role === "merchant"
+      ) {
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
+      }
+    } catch {
+      const response = NextResponse.next();
+      response.cookies.delete("access_token");
+      response.cookies.delete("refresh_token");
+      return response;
+    }
+  }
 
   return NextResponse.next();
 }

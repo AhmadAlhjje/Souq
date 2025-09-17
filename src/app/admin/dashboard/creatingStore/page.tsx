@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { MapPin, AlertCircle, ArrowRight } from "lucide-react";
+import { MapPin, AlertCircle, ArrowLeft } from "lucide-react";
 import Button from "../../../../components/atoms/Button";
 import InputField from "../../../../components/molecules/InputField";
 import TextareaField from "../../../../components/molecules/TextareaField";
@@ -32,7 +32,7 @@ interface FormErrors {
 }
 
 const CreateStorePage: React.FC = () => {
-  // State Managementx
+  // State Management
   const [formData, setFormData] = useState<StoreFormData>({
     name: "",
     location: "",
@@ -202,11 +202,11 @@ const CreateStorePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Background Decorative Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900" dir="rtl">
+      {/* Background Decorative Elements - مواضع معكوسة للـ RTL */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-20 w-72 h-72 bg-teal-200/30 dark:bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-200/30 dark:bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-20 right-20 w-72 h-72 bg-teal-200/30 dark:bg-teal-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-200/30 dark:bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
 
       {/* Main Content Container */}
@@ -296,13 +296,13 @@ const CreateStorePage: React.FC = () => {
                 )}
               </div>
 
-              {/* Next Step Button */}
-              <div className="flex justify-end pt-4">
+              {/* Next Step Button - محاذاة يسار للـ RTL */}
+              <div className="flex justify-start pt-4">
                 <Button
                   onClick={handleNextStep}
                   disabled={!canProceedToStep2()}
                   size="lg"
-                  endIcon={<ArrowRight className="w-4 h-4" />}
+                  startIcon={<ArrowLeft className="w-4 h-4" />}
                   variant="success"
                 >
                   التالي: إضافة الصور
@@ -342,24 +342,25 @@ const CreateStorePage: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-between pt-6">
-              {/* Back Button */}
-              <Button
-                onClick={handlePreviousStep}
-                variant="secondary"
-                startIcon={<ArrowRight className="w-4 h-4 rotate-180" />}
-              >
-                رجوع
-              </Button>
-
-              {/* Submit Button */}
+              {/* Submit Button - يأتي أولاً في RTL */}
               <Button
                 onClick={handleSubmit}
                 disabled={loading || success}
                 size="lg"
                 variant="success"
-                className="min-w-[200px]"
+                className="min-w-[200px] order-1 sm:order-2"
               >
                 إنشاء المتجر
+              </Button>
+
+              {/* Back Button - يأتي ثانياً في RTL */}
+              <Button
+                onClick={handlePreviousStep}
+                variant="secondary"
+                startIcon={<ArrowLeft className="w-4 h-4 rotate-180" />}
+                className="order-2 sm:order-1"
+              >
+                رجوع
               </Button>
             </div>
           </div>

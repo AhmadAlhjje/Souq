@@ -4,12 +4,10 @@ import React, { useState } from "react";
 import { Menu } from "lucide-react";
 import useTheme from "@/hooks/useTheme";
 import { useTranslation } from "react-i18next";
-import { AdminNotification } from "@/types/admin";
 
 // Import components
 import ThemeToggle from "./header/ThemeToggle";
 import LanguageToggle from "./header/LanguageToggle";
-import NotificationDropdown from "./header/NotificationDropdown";
 import UserMenu from "./header/UserMenu";
 
 interface AdminHeaderProps {
@@ -86,18 +84,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({
 
         {/* Right Section - Action Buttons */}
         <div className="flex items-center gap-2 order-1">
-          {/* Mobile Menu Button */}
-          <button
-            onClick={onToggleSidebar}
-            className={`w-10 h-10 rounded-full transition-colors flex items-center justify-center md:hidden ${
-              isDark
-                ? "bg-gray-800 hover:bg-gray-700 text-gray-300"
-                : "bg-gray-100 hover:bg-gray-200 text-gray-600"
-            }`}
-          >
-            <Menu size={18} />
-          </button>
-
           <ThemeToggle />
           <LanguageToggle />
           
