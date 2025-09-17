@@ -73,8 +73,6 @@ const CreateStorePage: React.FC = () => {
     // Description validation
     if (!formData.description.trim()) {
       newErrors.description = "وصف المتجر مطلوب";
-    } else if (formData.description.trim().length < 10) {
-      newErrors.description = "الوصف قصير جداً (10 أحرف على الأقل)";
     }
 
     setErrors(newErrors);
