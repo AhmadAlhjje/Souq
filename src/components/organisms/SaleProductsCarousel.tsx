@@ -263,7 +263,7 @@
 //                       {product.salePrice ? (
 //                         <>
 //                           <span className="text-base font-bold text-teal-700">
-//                             {product.salePrice} ر.س
+//                             {product.salePrice} $
 //                           </span>
 //                           <span className="text-xs text-gray-500 line-through">
 //                             {product.price}
@@ -271,7 +271,7 @@
 //                         </>
 //                       ) : (
 //                         <span className="text-base font-bold text-teal-700">
-//                           {product.price} ر.س
+//                           {product.price} $
 //                         </span>
 //                       )}
 //                     </div>

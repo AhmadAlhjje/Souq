@@ -63,7 +63,7 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
             <div className="flex-1 text-right">
               <h4 className="font-medium text-gray-900">{item.nameAr || item.name}</h4>
               <p className="text-sm text-gray-600">
-                {(item.salePrice || item.price).toFixed(2)} ر.س
+                {(item.salePrice || item.price).toFixed(2)} $
               </p>
             </div>
           </div>
@@ -72,7 +72,7 @@ const ShoppingCartComponent: React.FC<ShoppingCartComponentProps> = ({
       
       <div className="border-t pt-4">
         <div className="flex justify-between items-center text-lg font-bold text-teal-800">
-          <span>{totalPrice.toFixed(2)} ر.س</span>
+          <span>{totalPrice.toFixed(2)} $</span>
           <span>المجموع:</span>
         </div>
         <Button 

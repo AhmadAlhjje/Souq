@@ -61,7 +61,45 @@ export interface Product {
   // نسخ بالعربية
   nameAr?: string;
   descriptionAr?: string;
+   reviewsData?: {
+    total?: number;
+    verified?: number;
+    pending?: number;
+    averageRating?: number;
+    overallAverageRating?: number;
+    ratingDistribution?: {
+      [key: string]: number;
+    };
+    reviews?: Array<{
+      review_id: number;
+      product_id: number;
+      reviewer_name: string;
+      reviewer_phone?: string;
+      rating: number;
+      comment: string;
+      is_verified: boolean;
+      created_at: string;
+      updated_at: string;
+    }>;
+    comments?: Array<{
+      review_id: number;
+      reviewer_name: string;
+      comment: string;
+      rating?: number;
+      is_verified: boolean;
+      created_at: string;
+      time_ago: string;
+    }>;
+    latestVerified?: any[];
+    performance?: {
+      excellentReviews: number;
+      poorReviews: number;
+      averageReviews: number;
+      recommendationRate: number;
+    };
+  };
 }
+
 
 // ✅ عنصر في سلة التسوق
 export interface CartItem extends Product {

@@ -418,13 +418,13 @@
 //                     ? product.salePrice
 //                     : product.originalPrice || product.price}
 //                 </span>
-//                 <span className="text-gray-500 mr-1">ر.س</span>
+//                 <span className="text-gray-500 mr-1">$</span>
 //                 {hasDiscount() &&
 //                   product.originalPrice !== undefined &&
 //                   product.salePrice !== undefined && (
 //                     <>
 //                       <span className="text-gray-400 line-through text-sm mr-2">
-//                         {getOriginalPrice()} ر.س
+//                         {getOriginalPrice()} $
 //                       </span>
 //                       <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
 //                         وفر{" "}

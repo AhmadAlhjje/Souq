@@ -1,7 +1,9 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import useTheme from "../../hooks/useTheme";
+import { useSimpleCartCount } from "@/hooks/useSimpleCartCount"; // استخدام Hook بسيط للعدد فقط
 
 // Import Components
 import Logo from "../atoms/Logo";
@@ -20,6 +22,9 @@ const Header: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { i18n } = useTranslation();
   const { isDark } = useTheme();
+  
+  // استخدام Hook بسيط للحصول على عدد المنتجات من API
+  const cartItemCount = useSimpleCartCount();
 
   // تحميل اللغة المحفوظة - فقط في العميل
   useEffect(() => {
@@ -104,10 +109,8 @@ const Header: React.FC = () => {
             {/* Action Buttons */}
             <div className="flex items-center space-x-reverse space-x-4">
               
-              {/* Shopping Cart */}
-              <div onClick={closeMobileMenu}>
-                <ShoppingCartButton />
-              </div>
+              {/* Shopping Cart - عرض العدد الحقيقي من API */}
+              <ShoppingCartButton itemCount={cartItemCount} />
 
               {/* Theme Selector */}
               <ThemeSelector />

@@ -93,7 +93,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       key: "price",
       title: "السعر",
       width: "120px",
-      render: (value) => `${value.toLocaleString()} ر.س`,
+      render: (value) => `${value.toLocaleString()} $`,
     },
     {
       key: "quantity",

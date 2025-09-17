@@ -361,7 +361,7 @@ const AddProductPage: React.FC = () => {
               className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
               disabled={loading}
             />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">ر.س</span>
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
           </div>
         </div>
 
@@ -394,7 +394,7 @@ const AddProductPage: React.FC = () => {
           </div>
           {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 && (
             <div className="mt-2 text-sm text-green-600">
-              السعر بعد الخصم: {calculateDiscountedPrice()?.toFixed(2)} ر.س
+              السعر بعد الخصم: {calculateDiscountedPrice()?.toFixed(2)} $
             </div>
           )}
         </div>
@@ -509,7 +509,7 @@ const AddProductPage: React.FC = () => {
       <LoadingSpinner
         size="lg"
         color="green"
-        message="جاري تحميل بيانات المتجر..."
+        message=""
         overlay={true}
         pulse={true}
       />
@@ -643,10 +643,10 @@ const AddProductPage: React.FC = () => {
                               {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 ? (
                                 <div>
                                   <div className="text-lg text-gray-400 line-through">
-                                    {formData.price ? `${formData.price} ر.س` : "65 ر.س"}
+                                    {formData.price ? `${formData.price} $` : "65 $"}
                                   </div>
                                   <div className="text-2xl font-bold text-green-600">
-                                    {calculateDiscountedPrice()?.toFixed(2) || "55.25"} ر.س
+                                    {calculateDiscountedPrice()?.toFixed(2) || "55.25"} $
                                   </div>
                                   <div className="text-sm text-red-600 font-medium">
                                     خصم {formData.discountPercentage}%
@@ -654,7 +654,7 @@ const AddProductPage: React.FC = () => {
                                 </div>
                               ) : (
                                 <div className="text-2xl font-bold text-gray-900">
-                                  {formData.price ? `${formData.price} ر.س` : "65 ر.س"}
+                                  {formData.price ? `${formData.price} $` : "65 $"}
                                 </div>
                               )}
                             </div>

@@ -87,14 +87,14 @@ const ProductInfo: React.FC<ProductInfoProps> = ({
       {/* السعر */}
       <div className={`font-bold text-teal-600 py-2 ${compact ? 'text-sm' : 'text-base'}`}>
         <span>{currentPrice}</span>
-        <span className="text-gray-500 mr-1">ر.س</span>
+        <span className="text-gray-500 mr-1">$</span>
         
         {hasDiscount && (
           <>
             <span className={`text-gray-400 line-through mr-2 ${
               compact ? 'text-xs' : 'text-sm'
             }`}>
-              {originalPrice} ر.س
+              {originalPrice} $
             </span>
             <Badge 
               variant="sale" 

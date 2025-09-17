@@ -115,25 +115,24 @@ interface ApiProductDetails {
   };
 }
 
-// ✅ تحديث دالة التحويل لتعامل مع التنسيق الجديد
+// تحديث دالة التحويل لتتضمن reviewsData
 const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
   console.log('🔄 بدء تحويل المنتج:', apiProduct);
+  console.log('📝 فحص reviewsData في التحويل:', apiProduct.reviewsData);
 
   const imageNames = parseImagesSafe(apiProduct.images);
   const imageUrls = imageNames.map(name => buildImageUrl(name));
   const primaryImageUrl = imageUrls.length > 0 ? imageUrls[0] : '/images/default-product.jpg';
   
-  // ✅ معالجة التقييمات من reviewsData أو Reviews
+  // معالجة التقييمات من reviewsData أو Reviews
   let avgRating = 0;
   let reviewCount = 0;
   
   if (apiProduct.reviewsData) {
-    // التنسيق الجديد
     avgRating = apiProduct.reviewsData.averageRating || 0;
     reviewCount = apiProduct.reviewsData.total || 0;
     console.log('📊 استخدام reviewsData:', { avgRating, reviewCount });
   } else if (apiProduct.Reviews && apiProduct.Reviews.length > 0) {
-    // التنسيق القديم
     avgRating = apiProduct.Reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / apiProduct.Reviews.length;
     reviewCount = apiProduct.Reviews.length;
     console.log('📊 استخدام Reviews:', { avgRating, reviewCount });
@@ -195,9 +194,13 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
     discountPercentage,
     discountAmount,
     hasDiscount,
-  };
+    // ✅ إضافة reviewsData هنا
+    reviewsData: apiProduct.reviewsData,
+  } as any; // استخدام any مؤقتاً حتى يتم تحديث نوع Product
 
-  console.log('✅ المنتج بعد التحويل:', convertedProduct);
+  console.log('✅ المنتج بعد التحويل مع reviewsData:', convertedProduct);
+  console.log('📝 reviewsData في المنتج النهائي:', convertedProduct.reviewsData);
+  
   return convertedProduct;
 };
 
@@ -218,7 +221,6 @@ export default function ProductPage() {
 
   // ✅ حل المشكلة: نقل loadingMessages إلى useMemo
   const loadingMessages = useMemo(() => [
-    'جاري تحميل بيانات المنتج...',
     'البحث عن تفاصيل المنتج...',
     'تحميل الصور والمعلومات...',
     'إعداد صفحة المنتج...',

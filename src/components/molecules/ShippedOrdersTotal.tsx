@@ -36,7 +36,7 @@ const ShippedOrdersTotal: React.FC<ShippedOrdersTotalProps> = ({
         <div className="flex items-center gap-4">
           <div className="text-right">
             <p className="text-2xl font-bold text-teal-600">
-              {stats.totalShippedPrice.toLocaleString()} ر.س
+              {stats.totalShippedPrice.toLocaleString()} $
             </p>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
               من {stats.shippedOrders} طلب مشحون

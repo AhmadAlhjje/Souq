@@ -88,7 +88,6 @@ export class CartAPI {
     if (!response.ok) {
       throw new Error('فشل في حذف المنتج');
     }
-
     return response.json();
   }
 

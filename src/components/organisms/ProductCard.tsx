@@ -218,14 +218,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
           src={product.image}
           alt={product.name}
           className="w-full h-44 object-cover"
-          onError={(e) => {
+           onError={(e) => {
             console.warn("فشل تحميل الصورة:", product.image);
-            (
-              e.target as HTMLImageElement
-            ).outerHTML = `<div style="padding:8px;color:red;font-size:12px">تعذر تحميل:<br>${product.image}</div>`;
+            (e.target as HTMLImageElement).src =
+              "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
           }}
         />
-
         {product.salePrice &&
           product.originalPrice &&
           calculateDiscountPercentage(

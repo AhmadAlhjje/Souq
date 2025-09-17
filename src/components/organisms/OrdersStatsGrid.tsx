@@ -33,13 +33,13 @@ const OrdersStatsGrid: React.FC<OrdersStatsGridProps> = ({
     },
     {
       title: "مبلغ الطلبات المشحونة",
-      value: `${stats.totalShippedPrice.toLocaleString()} ر.س`,
+      value: `${stats.totalShippedPrice.toLocaleString()} $`,
       icon: DollarSign,
       color: "purple" as const,
     },
     {
       title: "مبلغ الطلبات الغير مشحونة", // ✨ جديد
-      value: `${stats.totalUnshippedPrice.toLocaleString()} ر.س`,
+      value: `${stats.totalUnshippedPrice.toLocaleString()} $`,
       icon: DollarSign,
       color: "purple" as const,
     },

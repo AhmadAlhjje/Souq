@@ -1,4 +1,4 @@
-// components/organisms/OffersSlider.tsx - النسخة المحدثة والمضمونة
+// components/organisms/OffersSlider.tsx - النسخة المحدثة مع الصورة الافتراضية
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
 import { Product } from '@/api/storeProduct';
@@ -57,6 +57,9 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
   const { addToCart: addToCartAPI, fetchCart } = useCart();
   const { sessionId } = useSessionContext();
 
+  // الصورة الافتراضية المطلوبة
+  const DEFAULT_OFFER_IMAGE = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
+
   // في OffersSlider.tsx - إصلاح دالة convertApiProductToProduct
   const convertApiProductToProduct = useCallback((
     apiProduct: ApiProduct
@@ -82,12 +85,12 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       }
     } catch (e) {
       console.warn("خطأ في تحليل صور المنتج:", e);
-      images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
+      images = [DEFAULT_OFFER_IMAGE];
     }
 
-    // إذا لم توجد صور، استخدم صورة افتراضية
+    // إذا لم توجد صور، استخدم الصورة الافتراضية المطلوبة
     if (images.length === 0) {
-      images = ["https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop"];
+      images = [DEFAULT_OFFER_IMAGE];
     }
 
     // إصلاح نوع status - تحويل "inactive" إلى "out_of_stock" و تحديد low_stock
@@ -133,43 +136,44 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
 
   // دالة إنشاء العروض من المنتجات المخفضة
   const createOffersFromProducts = useCallback((products: ApiProduct[]): Offer[] => {
- const offerTypes = [
-  {
-    title: "خصم مميز",
-    description: "عرض لفترة محدودة",
-    bgColor: "bg-gray-50", // ← خلفية فاتحة جداً، قريبة من البياض
-    icon: <Tag className="w-5 h-5 text-gray-700" />, // ← لون الأيقونة هادئ
-    borderColor: "border border-gray-100", // ← حافة خفيفة للتمييز
-  },
-  {
-    title: "تخفيضات هائلة",
-    description: "وفر أكثر مع هذا العرض",
-    bgColor: "bg-gray-50",
-    icon: <Gift className="w-5 h-5 text-gray-700" />,
-    borderColor: "border border-gray-100",
-  },
-  {
-    title: "عرض حصري",
-    description: "احصل عليه قبل انتهاء الكمية",
-    bgColor: "bg-gray-50",
-    icon: <Tag className="w-5 h-5 text-gray-700" />,
-    borderColor: "border border-gray-100",
-  },
-  {
-    title: "خصم استثنائي",
-    description: "فرصة ذهبية للتوفير",
-    bgColor: "bg-gray-50",
-    icon: <Gift className="w-5 h-5 text-gray-700" />,
-    borderColor: "border border-gray-100",
-  },
-  {
-    title: "تخفيض كبير",
-    description: "عرض محدود الوقت",
-    bgColor: "bg-gray-50",
-    icon: <Tag className="w-5 h-5 text-gray-700" />,
-    borderColor: "border border-gray-100",
-  },
-];
+    const offerTypes = [
+      {
+        title: "خصم مميز",
+        description: "عرض لفترة محدودة",
+        bgColor: "bg-gray-50", // ← خلفية فاتحة جداً، قريبة من البياض
+        icon: <Tag className="w-5 h-5 text-gray-700" />, // ← لون الأيقونة هادئ
+        borderColor: "border border-gray-100", // ← حافة خفيفة للتمييز
+      },
+      {
+        title: "تخفيضات هائلة",
+        description: "وفر أكثر مع هذا العرض",
+        bgColor: "bg-gray-50",
+        icon: <Gift className="w-5 h-5 text-gray-700" />,
+        borderColor: "border border-gray-100",
+      },
+      {
+        title: "عرض حصري",
+        description: "احصل عليه قبل انتهاء الكمية",
+        bgColor: "bg-gray-50",
+        icon: <Tag className="w-5 h-5 text-gray-700" />,
+        borderColor: "border border-gray-100",
+      },
+      {
+        title: "خصم استثنائي",
+        description: "فرصة ذهبية للتوفير",
+        bgColor: "bg-gray-50",
+        icon: <Gift className="w-5 h-5 text-gray-700" />,
+        borderColor: "border border-gray-100",
+      },
+      {
+        title: "تخفيض كبير",
+        description: "عرض محدود الوقت",
+        bgColor: "bg-gray-50",
+        icon: <Tag className="w-5 h-5 text-gray-700" />,
+        borderColor: "border border-gray-100",
+      },
+    ];
+
     const createdOffers: Offer[] = [];
     
     products.forEach((apiProduct, index) => {
@@ -179,18 +183,24 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       const product = convertApiProductToProduct(apiProduct);
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
 
-      // تحديد صورة العرض (أولوية للمنتج، ثم شعار المتجر)
-      let offerImage = product.image;
+      // تحديد صورة العرض مع إعطاء أولوية للصورة الافتراضية عند عدم وجود صورة صالحة
+      let offerImage = DEFAULT_OFFER_IMAGE; // البداية بالصورة الافتراضية
       
-      if (!product.image || product.image.includes('placehold.co')) {
-        if (apiProduct.Store?.logo_image) {
-          if (apiProduct.Store.logo_image.startsWith('/uploads')) {
-            offerImage = `${baseUrl}${apiProduct.Store.logo_image}`;
-          } else if (apiProduct.Store.logo_image.startsWith('http')) {
-            offerImage = apiProduct.Store.logo_image;
-          } else {
-            offerImage = `${baseUrl}/${apiProduct.Store.logo_image}`;
-          }
+      // محاولة استخدام صورة المنتج إذا كانت متوفرة وصالحة
+      if (product.image && 
+          !product.image.includes('placehold.co') && 
+          !product.image.includes('unsplash.com') &&
+          product.image.trim() !== '') {
+        offerImage = product.image;
+      } 
+      // إذا لم تكن صورة المنتج متوفرة، حاول استخدام شعار المتجر
+      else if (apiProduct.Store?.logo_image) {
+        if (apiProduct.Store.logo_image.startsWith('/uploads')) {
+          offerImage = `${baseUrl}${apiProduct.Store.logo_image}`;
+        } else if (apiProduct.Store.logo_image.startsWith('http')) {
+          offerImage = apiProduct.Store.logo_image;
+        } else {
+          offerImage = `${baseUrl}/${apiProduct.Store.logo_image}`;
         }
       }
 
@@ -354,34 +364,6 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
 
     try {
       setAddingStates((prev) => ({ ...prev, [offer.id]: true }));
-
-      // تحويل المنتج للنوع المطلوب من Cart Context
-      const cartProduct = {
-        id: offer.product.id.toString(), // تحويل إلى string كما هو مطلوب
-        name: offer.product.name,
-        nameAr: offer.product.nameAr,
-        category: offer.product.category,
-        categoryAr: offer.product.categoryAr,
-        price: offer.product.price,
-        salePrice: offer.product.salePrice,
-        originalPrice: offer.product.originalPrice,
-        rating: offer.product.rating,
-        reviewCount: offer.product.reviewCount,
-        image: offer.product.image,
-        isNew: offer.product.isNew,
-        status: offer.product.status,
-        description: offer.product.description,
-        descriptionAr: offer.product.descriptionAr,
-        brand: offer.product.brand,
-        brandAr: offer.product.brandAr,
-        sales: offer.product.sales,
-        inStock: offer.product.inStock,
-        createdAt: offer.product.createdAt,
-        // إضافة الخصائص المفقودة المطلوبة من النوع الخارجي
-        product_id: offer.product.id,
-        store_id: 1, // قيمة افتراضية
-        stock_quantity: offer.product.stock,
-      };
 
       // ✅ الإضافة للخادم
       await addToCartAPI(offer.product.id, 1);
@@ -550,8 +532,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
                       loading="lazy"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src =
-                          "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=250&fit=crop";
+                        target.src = DEFAULT_OFFER_IMAGE;
                       }}
                     />
                   </div>
