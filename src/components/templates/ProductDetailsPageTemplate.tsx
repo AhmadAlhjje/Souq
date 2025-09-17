@@ -47,6 +47,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [imageError, setImageError] = useState<{ [key: number]: boolean }>({});
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [showAllComments, setShowAllComments] = useState(false);
 
   // جلب التقييم السابق من localStorage
   function getUserRating(productId: number | undefined): number | null {
@@ -55,6 +56,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     const saved = localStorage.getItem(key);
     return saved ? parseFloat(saved) : null;
   }
+
+  // دالة لجلب التعليقات
+  const getProductComments = () => {
+    const comments = (product as any)?.reviewsData?.comments || [];
+    console.log('📝 التعليقات المجلبة:', comments); // للتأكد من وصول البيانات
+    return comments
+      .filter((comment: any) => comment.comment && comment.comment.trim() !== '')
+      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  };
 
   // State مبسط للتقييم والتعليق
   const [reviewState, setReviewState] = useState({
@@ -69,6 +79,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     isSubmittingReview: false,
     reviewError: null as string | null,
   });
+
+  const productComments = getProductComments();
+  const displayedComments = showAllComments ? productComments : productComments.slice(0, 3);
 
   // التقييم السريع (النجوم العلوية) - تقييم فقط بدون تعليق
   const handleQuickRating = async (rating: number) => {
@@ -110,7 +123,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     }
   };
 
-  // إرسال التعليق فقط (بدون تقييم داخلي)
+  // إرسال التعليق مع إعادة تحميل البيانات
   const handleSubmitReview = async () => {
     if (reviewState.isSubmittingReview || !product.id) return;
 
@@ -145,6 +158,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         comment: reviewState.comment.trim(),
       };
 
+      console.log('🔄 إرسال التعليق:', reviewData);
       await createReview(reviewData);
 
       // إعادة تعيين النموذج
@@ -154,7 +168,12 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
         comment: ''
       }));
 
-      showToast("تم إرسال تعليقك بنجاح", 'success');
+      showToast("تم إرسال تعليقك بنجاح، جاري تحديث الصفحة...", 'success');
+      
+      // إعادة تحميل الصفحة لجلب التعليقات المحدثة
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
       
     } catch (error: any) {
       console.error("فشل إرسال التعليق:", error);
@@ -370,11 +389,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <span>
                   {product.salePrice ? product.salePrice : product.originalPrice || product.price}
                 </span>
-                <span className="text-gray-500 mr-1">ر.س</span>
+                <span className="text-gray-500 mr-1">$</span>
                 {product.salePrice && product.originalPrice && (
                   <>
                     <span className="text-gray-400 line-through text-sm mr-2">
-                      {product.originalPrice} ر.س
+                      {product.originalPrice} $
                     </span>
                     <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
                       وفر {Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
@@ -532,6 +551,59 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   <p className="text-red-500 text-xs mt-2">{reviewState.reviewError}</p>
                 )}
               </div>
+
+              {/* قسم عرض التعليقات */}
+              {productComments.length > 0 && (
+                <div className="py-6 border-t border-gray-100">
+                  <h3 className="font-semibold text-gray-900 text-lg mb-4">
+                    التعليقات ({productComments.length})
+                  </h3>
+
+                  <div className="space-y-4">
+                    {displayedComments.map((comment: any) => (
+                      <div key={comment.review_id} className="bg-gray-50 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-teal-600 text-lg font-medium">
+                              {(comment.reviewer_name || 'م').charAt(0)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium text-gray-900">
+                                {comment.reviewer_name || 'مستخدم مجهول'}
+                              </h4>
+                              <span className="text-sm text-gray-500">
+                                {comment.time_ago}
+                              </span>
+                            </div>
+                            
+                            <p className="text-gray-700 leading-relaxed">
+                              {comment.comment}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {productComments.length > 3 && (
+                    <div className="mt-6 text-center">
+                      <button
+                        onClick={() => setShowAllComments(!showAllComments)}
+                        className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+                      >
+                        {showAllComments 
+                          ? 'عرض أقل' 
+                          : `عرض المزيد `
+                        }
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              
             </div>
 
             {/* القسم 2: الصور */}

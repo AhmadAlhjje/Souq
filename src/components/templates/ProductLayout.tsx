@@ -186,7 +186,6 @@ function ProductContent() {
       try {
         setLoading(true);
         setError(null);
-        showToast("جاري تحميل بيانات المتجر...", "info");
 
         console.log("🔄 جلب بيانات المتجر...", storeId);
         const storeData = await getStore(parseInt(storeId)) as any; // ✅ استخدام any للمرونة
@@ -257,7 +256,6 @@ function ProductContent() {
           
           setStoreInfo(storeInfo);
           setProducts(convertedProducts);
-          showToast(`${convertedProducts.length} منتج تم تحميله بنجاح!`, "success");
         }
         
       } catch (err: any) {

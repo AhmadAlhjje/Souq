@@ -39,10 +39,10 @@ const ProductsList: React.FC<ProductsListProps> = ({ products, isDark }) => {
             </div>
             <div className="text-right">
               <p className="font-semibold">
-                {product.totalPrice.toLocaleString()} ر.س
+                {product.totalPrice.toLocaleString()} $
               </p>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                {product.price.toLocaleString()} ر.س / قطعة
+                {product.price.toLocaleString()} $ / قطعة
               </p>
             </div>
           </div>

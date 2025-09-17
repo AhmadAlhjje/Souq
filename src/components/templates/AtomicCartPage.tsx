@@ -122,7 +122,7 @@ const PriceDisplay: React.FC<{
   currency?: string;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-}> = ({ price, originalPrice, currency = 'ر.س', size = 'md', className = '' }) => {
+}> = ({ price, originalPrice, currency = '$', size = 'md', className = '' }) => {
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
@@ -279,7 +279,7 @@ const CartItemRow: React.FC<{
 
       {/* Total */}
       <TableCell>
-        <span className="font-bold text-teal-600 text-base">{item.total.toFixed(2)} ر.س</span>
+        <span className="font-bold text-teal-600 text-base">{item.total.toFixed(2)} $</span>
       </TableCell>
 
       {/* Actions */}
@@ -439,26 +439,19 @@ const AtomicCartSummary: React.FC<{
       </div>
       
       <div className="space-y-4">
-        <SummaryRow
-          label="المجموع الفرعي"
-          value={`${subtotal.toFixed(2)} ر.س`}
-        />
+      
         
-        <SummaryRow
-          label="رسوم التوصيل"
-          value={deliveryFee === 0 ? 'مجاني' : `${deliveryFee.toFixed(2)} ر.س`}
-        />
 
-        {tax > 0 && (
-          <SummaryRow
-            label="ضريبة القيمة المضافة (15%)"
-            value={`${tax.toFixed(2)} ر.س`}
-          />
-        )}
-        
+   
+         {/* ملاحظة رسوم التوصيل */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+          <p className="text-sm text-black font-bold text-center">
+            ملاحظة: رسوم التوصيل على المشتري
+          </p>
+        </div>
         <SummaryRow
           label="الإجمالي النهائي"
-          value={`${total.toFixed(2)} ر.س`}
+          value={`${subtotal.toFixed(2)} $`}
           isTotal
         />
       </div>

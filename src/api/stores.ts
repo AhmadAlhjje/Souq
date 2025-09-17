@@ -203,13 +203,19 @@ export const getProduct = async (productId: number): Promise<any> => {
   try {
     console.log(`🔄 جلب منتج برقم ${productId}...`);
 
-    const response = await api.get(`/products/${productId}`);
+    // يمكن إضافة parameter للتأكد من جلب التعليقات
+    const response = await api.get(`/products/${productId}?include_reviews=true`);
 
     console.log("✅ تم جلب المنتج بنجاح:", response.data);
 
     // التحقق من وجود البيانات
     if (!response.data) {
       throw new Error("لم يتم العثور على المنتج");
+    }
+
+    // تحقق إضافي للتعليقات
+    if (response.data.product?.reviewsData?.comments) {
+      console.log(`📝 عدد التعليقات المجلبة: ${response.data.product.reviewsData.comments.length}`);
     }
 
     return response.data;

@@ -14,7 +14,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ order, isDark }) => {
       <div className="flex items-center justify-between mb-2">
         <span className="text-lg font-semibold">السعر الكلي:</span>
         <span className="text-xl font-bold text-teal-600">
-          {order.price.toLocaleString()} ر.س
+          {order.price.toLocaleString()} $
         </span>
       </div>
       <div className="flex items-center justify-between">

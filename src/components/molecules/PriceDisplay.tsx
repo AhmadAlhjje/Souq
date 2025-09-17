@@ -13,7 +13,7 @@ interface PriceDisplayProps {
 const PriceDisplay: React.FC<PriceDisplayProps> = ({ 
   originalPrice, 
   salePrice, 
-  currency = "ر.س" 
+  currency = "$" 
 }) => (
   <div className="flex items-center space-x-2">
     {salePrice ? (
@@ -33,7 +33,7 @@ interface CarouselPriceDisplayProps {
 const CarouselPriceDisplay: React.FC<CarouselPriceDisplayProps> = ({ 
   originalPrice, 
   salePrice, 
-  currency = "ر.س" 
+  currency = "$" 
 }) => (
   <div className="flex items-center space-x-2">
     <span className="text-lg font-bold text-[#004D5A]">{salePrice} {currency}</span>
@@ -51,7 +51,7 @@ interface SimplePriceDisplayProps extends PriceDisplayProps {
 const SimplePriceDisplay: React.FC<SimplePriceDisplayProps> = ({ 
   originalPrice, 
   salePrice, 
-  currency = "ر.س", 
+  currency = "$", 
   variant = 'default' 
 }) => {
   const textColor = variant === 'new' ? 'text-[#004D5A]' : 'text-teal-800';

@@ -725,7 +725,7 @@ const ProfilePage = () => {
                   <div
                     className={`text-2xl font-bold ${themeClasses.textPrimary}`}
                   >
-                    {profileData.totalRevenue || 0} ر.س
+                    {profileData.totalRevenue || 0} $
                   </div>
                   <div className={`text-sm ${themeClasses.textMuted}`}>
                     الإيرادات

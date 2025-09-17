@@ -1,4 +1,4 @@
-// hooks/useCart.ts - محسن
+// hooks/useCart.ts - محسن مع التحديث الفوري
 import { useState, useEffect, useCallback } from 'react';
 import { useSessionContext } from '@/components/SessionProvider';
 import { useToast } from '@/hooks/useToast';
@@ -12,6 +12,11 @@ import {
   debugCartItem 
 } from '@/utils/cartUtils';
 import { CartAPI } from '@/api/cartApi';
+import { 
+  updateGlobalCartCount, 
+  incrementCartCount, 
+  decrementCartCount 
+} from '@/hooks/useSimpleCartCount';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://192.168.1.127';
 
@@ -120,6 +125,9 @@ if (Array.isArray(rawImages)) {
       
       setCartData(transformedData);
       
+      // ✅ تحديث العدد الشامل بعد جلب البيانات
+      updateGlobalCartCount(transformedData.items.length);
+      
       const allItemIds = new Set(transformedData.items.map((item: CartItem) => item.id));
       setSelectedItems(allItemIds);
 
@@ -133,60 +141,66 @@ if (Array.isArray(rawImages)) {
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId, showToast]);const addToCart = async (productId: number, quantity: number = 1) => {
-  if (!sessionId) {
-    showToast('جلسة غير صحيحة', 'error');
-    return;
-  }
+  }, [sessionId, showToast]);
 
-  setIsLoading(true);
-  try {
-    console.log('➕ Adding item to cart via CartAPI:', {
-      productId,
-      quantity,
-      sessionId
-    });
-
-    await CartAPI.addItem(sessionId, productId, quantity);
-
-    console.log('✅ Item added successfully, refreshing cart...');
-    await fetchCart();
-    showToast('تم إضافة المنتج بنجاح تابع الشحن   ', 'success');
-  } catch (err) {
-    console.error('❌ Add to cart error:', err);
-
-    let userFriendlyMessage = 'فشل في إضافة المنتج للسلة';
-
-    if (err instanceof Error) {
-      // ✅ إذا كانت الرسالة تحتوي على JSON من الخادم
-      if (err.message.includes('{"error":')) {
-        try {
-          // استخراج النص من {"error":"..."}
-          const jsonMatch = err.message.match(/\{"error":"(.*?)"\}/);
-          if (jsonMatch && jsonMatch[1]) {
-            const rawError = jsonMatch[1];
-            // ✅ إذا كانت الرسالة تحتوي على "المخزون غير كافٍ"
-            if (rawError.includes("المخزون غير كافٍ")) {
-              userFriendlyMessage = "الكمية المطلوبة غير متوفرة";
-            } else {
-              userFriendlyMessage = rawError; // استخدام الرسالة الأصلية إذا لم نعرفها
-            }
-          }
-        } catch (e) {
-          console.warn("فشل في تحليل رسالة الخطأ:", e);
-        }
-      } else {
-        userFriendlyMessage = err.message;
-      }
+  const addToCart = async (productId: number, quantity: number = 1) => {
+    if (!sessionId) {
+      showToast('جلسة غير صحيحة', 'error');
+      return;
     }
 
-    // ✅ عرض الرسالة النظيفة للمستخدم
-    showToast(userFriendlyMessage, 'error');
-    throw err;
-  } finally {
-    setIsLoading(false);
-  }
-};
+    setIsLoading(true);
+    try {
+      console.log('➕ Adding item to cart via CartAPI:', {
+        productId,
+        quantity,
+        sessionId
+      });
+
+      await CartAPI.addItem(sessionId, productId, quantity);
+
+      // ✅ تحديث العدد فورياً قبل fetchCart
+      incrementCartCount();
+
+      console.log('✅ Item added successfully, refreshing cart...');
+      await fetchCart();
+      showToast('تم إضافة المنتج بنجاح تابع الشحن   ', 'success');
+    } catch (err) {
+      console.error('❌ Add to cart error:', err);
+
+      let userFriendlyMessage = 'فشل في إضافة المنتج للسلة';
+
+      if (err instanceof Error) {
+        // ✅ إذا كانت الرسالة تحتوي على JSON من الخادم
+        if (err.message.includes('{"error":')) {
+          try {
+            // استخراج النص من {"error":"..."}
+            const jsonMatch = err.message.match(/\{"error":"(.*?)"\}/);
+            if (jsonMatch && jsonMatch[1]) {
+              const rawError = jsonMatch[1];
+              // ✅ إذا كانت الرسالة تحتوي على "المخزون غير كافٍ"
+              if (rawError.includes("المخزون غير كافٍ")) {
+                userFriendlyMessage = "الكمية المطلوبة غير متوفرة";
+              } else {
+                userFriendlyMessage = rawError; // استخدام الرسالة الأصلية إذا لم نعرفها
+              }
+            }
+          } catch (e) {
+            console.warn("فشل في تحليل رسالة الخطأ:", e);
+          }
+        } else {
+          userFriendlyMessage = err.message;
+        }
+      }
+
+      // ✅ عرض الرسالة النظيفة للمستخدم
+      showToast(userFriendlyMessage, 'error');
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   /**
    * Update item quantity using CartAPI
    */
@@ -216,6 +230,9 @@ if (Array.isArray(rawImages)) {
     setIsLoading(true);
     try {
       await CartAPI.removeItem(sessionId, cartItemId);
+
+      // ✅ تقليل العدد فورياً
+      decrementCartCount();
 
       setSelectedItems(prev => {
         const newSet = new Set(prev);
@@ -249,6 +266,12 @@ if (Array.isArray(rawImages)) {
         CartAPI.removeItem(sessionId, itemId)
       );
 
+      // ✅ تقليل العدد بعدد المنتجات المحذوفة
+      const deletedCount = selectedItems.size;
+      for (let i = 0; i < deletedCount; i++) {
+        decrementCartCount();
+      }
+
       await Promise.all(deletePromises);
       setSelectedItems(new Set());
       await fetchCart();
@@ -271,6 +294,10 @@ if (Array.isArray(rawImages)) {
     setIsLoading(true);
     try {
       await CartAPI.clearCart(sessionId);
+      
+      // ✅ تصفير العدد فورياً
+      updateGlobalCartCount(0);
+      
       setCartData(null);
       setSelectedItems(new Set());
       showToast('تم تفريغ السلة بالكامل', 'success');

@@ -441,7 +441,6 @@ const StoresPage: React.FC = () => {
 
       // تحديث الحالة
       setStores(convertedStores);
-      showToast(`تم تحميل ${convertedStores.length} متجر بنجاح ✓`, "success");
     } catch (error: any) {
       console.error("💥 خطأ في fetchStores:", error);
       setError(`خطأ في تحميل المتاجر: ${error.message}`);
