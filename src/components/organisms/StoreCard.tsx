@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { MapPin, Star } from "lucide-react";
 import { createReview, generateSessionId } from "@/api/stores";
-import { useToast } from "@/hooks/useToast"; // ✅ استيراد useToast
+import { useToast } from "@/hooks/useToast";
 
 interface Store {
   id: number;
@@ -20,13 +20,13 @@ interface StoreCardProps {
 }
 
 const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
-  const { showToast } = useToast(); // ✅ استخدام hook Toast
+  const { showToast } = useToast();
 
   const handleVisitStore = () => {
     onViewDetails(store);
   };
 
-  // ✅ جلب التقييم الشخصي من localStorage
+  // جلب التقييم الشخصي من localStorage
   const getUserRating = (storeId: number): number | null => {
     if (typeof window === "undefined") return null;
     const key = `userReview_${storeId}`;
@@ -36,10 +36,10 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
 
   const [userRating, setUserRating] = useState<number | null>(getUserRating(store.id));
   const [hoverRating, setHoverRating] = useState<number | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false); // حالة التحميل
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // ✅ عند النقر على نجمة — إرسال التقييم للخادم مع session_id فقط
+  // عند النقر على نجمة — إرسال التقييم للخادم مع session_id فقط
   const handleStarClick = async (rating: number) => {
     if (isSubmitting) return;
 
@@ -47,18 +47,15 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
     setSubmitError(null);
 
     try {
-      // ✅ إرسال التقييم للخادم مع البيانات المطلوبة فقط
       await createReview({
         store_id: store.id,
         rating,
-        session_id: generateSessionId(), // ✅ استخدام session_id بدلاً من البيانات الشخصية
+        session_id: generateSessionId(),
       });
 
-      // ✅ حفظ التقييم محليًا
       setUserRating(rating);
       localStorage.setItem(`userReview_${store.id}`, rating.toString());
 
-      // ✅ إظهار رسالة نجاح مع Toast
       showToast(`تم تقييم ${store.name} بـ ${rating} نجوم`, 'success');
       console.log("✅ تم إرسال التقييم بنجاح:", rating);
     } catch (error: any) {
@@ -70,12 +67,12 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
     }
   };
 
-  // ✅ عند التمرير فوق النجمة
+  // عند التمرير فوق النجمة
   const handleStarHover = (rating: number) => {
     setHoverRating(rating);
   };
 
-  // ✅ عند مغادرة النجوم
+  // عند مغادرة النجوم
   const handleMouseLeave = () => {
     setHoverRating(null);
   };
@@ -94,7 +91,7 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
           }}
         />
 
-        {/* ✅ المتوسط العام في الزاوية اليمنى العليا */}
+        {/* المتوسط العام في الزاوية اليمنى العليا */}
         {store.rating && store.rating > 0 && (
           <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow-md z-10">
             <div className="flex items-center space-x-1">
@@ -113,12 +110,12 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
           {store.name}
         </h3>
 
-       
         <div className="flex items-center text-gray-500 mb-4">
           <MapPin className="w-4 h-4 ml-1" />
           <span className="text-sm">{store.location}</span>
         </div>
- {/* ✅ التقييم الشخصي التفاعلي — 5 نجوم قابلة للنقر */}
+
+        {/* التقييم الشخصي التفاعلي — 5 نجوم قابلة للنقر */}
         <div className="mb-3">
           <div
             className="flex items-center text-sm text-gray-600 cursor-pointer"
@@ -154,12 +151,12 @@ const StoreCard: React.FC<StoreCardProps> = ({ store, onViewDetails }) => {
             })}
           </div>
 
-          {/* ✅ عرض خطأ إذا وقع */}
+          {/* عرض خطأ إذا وقع */}
           {submitError && (
             <p className="text-red-500 text-xs mt-1">{submitError}</p>
           )}
 
-          {/* ✅ عرض تأكيد التقييم أثناء التحميل */}
+          {/* عرض تأكيد التقييم أثناء التحميل */}
           {isSubmitting && (
             <p className="text-teal-600 text-xs mt-1">جاري إرسال تقييمك...</p>
           )}

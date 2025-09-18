@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { Sun, Moon } from "lucide-react";
 import dynamic from "next/dynamic";
 import { Product } from "@/api/storeProduct";
-import { ApiStore, getStore, ApiProduct } from "@/api/stores"; // ✅ استيراد ApiProduct من الملف الأصلي
+import { ApiStore, getStore, ApiProduct } from "@/api/stores";
 import { ToastProvider, useToast } from '@/hooks/useToast';
+import { useThemeContext } from '@/contexts/ThemeContext';
 import LoadingSpinner from "../ui/LoadingSpinner";
+import Button from "@/components/atoms/Button";
 
 const DynamicProductsSection = dynamic(
   () => import("../organisms/ProductsSection"),
@@ -15,7 +18,6 @@ const DynamicProductsSection = dynamic(
   }
 );
 
-// ✅ إضافة interface للاستجابة الجديدة فقط
 interface StoreApiResponse {
   success: boolean;
   store: {
@@ -52,73 +54,109 @@ interface StoreApiResponse {
       totalDiscountValue: number;
       discountPercentage: number;
     };
-    products: any[]; // ✅ استخدام any[] لتجنب التضارب
+    products: any[];
   };
 }
 
-// ✅ دالة محدثة لمعالجة الصور (تدعم المصفوفة والـ string)
+// دالة مُصححة لمعالجة الصور - تدعم المصفوفات والنصوص
 function getFirstImageFromArray(imagesField: string[] | string | undefined): string {
-  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
-  const defaultImage = `${BASE_URL}/default-product.jpg`;
+  const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
+  const DEFAULT_PRODUCT_IMAGE = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
 
   if (!imagesField) {
     console.log("📷 لا توجد صور، استخدام الافتراضية");
-    return defaultImage;
+    return DEFAULT_PRODUCT_IMAGE;
   }
 
   try {
     // إذا كانت مصفوفة بالفعل (الحالة الجديدة)
-    if (Array.isArray(imagesField) && imagesField.length > 0) {
-      const firstImage = imagesField[0];
-      if (firstImage && firstImage.trim() !== "" && firstImage !== "null") {
-        const imageUrl = firstImage.startsWith("http") 
-          ? firstImage 
-          : `${BASE_URL}${firstImage.replace(/^\/+/, "/")}`;
-        console.log("📷 صورة من المصفوفة:", imageUrl);
-        return imageUrl;
+    if (Array.isArray(imagesField)) {
+      console.log("📷 الصور عبارة عن مصفوفة:", imagesField);
+      
+      if (imagesField.length > 0) {
+        const firstImage = imagesField[0];
+        
+        // فحص إذا كانت الصورة صالحة وحقيقية
+        if (firstImage && 
+            typeof firstImage === 'string' &&
+            firstImage.trim() !== "" && 
+            firstImage !== "null" &&
+            !firstImage.includes('placehold.co') && 
+            !firstImage.includes('unsplash.com')) {
+          
+          const imageUrl = firstImage.startsWith("http") 
+            ? firstImage 
+            : `${BASE_URL}${firstImage.startsWith('/') ? firstImage : '/' + firstImage}`;
+          
+          console.log("📷 صورة حقيقية من المصفوفة:", imageUrl);
+          return imageUrl;
+        }
       }
+      
+      console.log("📷 مصفوفة فارغة أو صور غير صالحة، استخدام الافتراضية");
+      return DEFAULT_PRODUCT_IMAGE;
     }
     
     // إذا كانت string (الحالة القديمة)
     if (typeof imagesField === "string") {
-      // محاولة تحليل JSON
+      console.log("📷 الصور عبارة عن نص:", imagesField);
+      
+      // محاولة تحليل JSON إذا بدأ بأقواس
       if (imagesField.startsWith("[") || imagesField.startsWith("{")) {
-        const parsed = JSON.parse(imagesField);
-        
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const firstImage = parsed[0];
-          if (firstImage && firstImage.trim() !== "") {
-            const imageUrl = firstImage.startsWith("http") 
-              ? firstImage 
-              : `${BASE_URL}${firstImage.replace(/^\/+/, "/")}`;
-            console.log("📷 صورة من JSON:", imageUrl);
-            return imageUrl;
+        try {
+          const parsed = JSON.parse(imagesField);
+          console.log("📷 تم تحليل JSON:", parsed);
+          
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const firstImage = parsed[0];
+            
+            if (firstImage && 
+                typeof firstImage === 'string' &&
+                firstImage.trim() !== "" &&
+                !firstImage.includes('placehold.co') && 
+                !firstImage.includes('unsplash.com')) {
+              
+              const imageUrl = firstImage.startsWith("http") 
+                ? firstImage 
+                : `${BASE_URL}${firstImage.startsWith('/') ? firstImage : '/' + firstImage}`;
+              
+              console.log("📷 صورة حقيقية من JSON:", imageUrl);
+              return imageUrl;
+            }
           }
+        } catch (jsonError) {
+          console.warn("❌ خطأ في تحليل JSON:", jsonError);
         }
       } else {
-        // معاملة كصورة واحدة
-        const imageUrl = imagesField.startsWith("http") 
-          ? imagesField 
-          : `${BASE_URL}${imagesField.replace(/^\/+/, "/")}`;
-        console.log("📷 صورة مباشرة:", imageUrl);
-        return imageUrl;
+        // معاملة النص كاسم ملف واحد
+        if (imagesField.trim() !== "" &&
+            !imagesField.includes('placehold.co') && 
+            !imagesField.includes('unsplash.com')) {
+          
+          const imageUrl = imagesField.startsWith("http") 
+            ? imagesField 
+            : `${BASE_URL}${imagesField.startsWith('/') ? imagesField : '/' + imagesField}`;
+          
+          console.log("📷 صورة حقيقية مباشرة:", imageUrl);
+          return imageUrl;
+        }
       }
     }
 
-    console.log("📷 فشل في معالجة الصور، استخدام الافتراضية");
-    return defaultImage;
+    console.log("📷 لم توجد صورة صالحة، استخدام الافتراضية");
+    return DEFAULT_PRODUCT_IMAGE;
   } catch (err) {
     console.error("❌ خطأ في معالجة الصور:", err, imagesField);
-    return defaultImage;
+    return DEFAULT_PRODUCT_IMAGE;
   }
 }
 
-// ✅ دالة تحويل محدثة - تقبل any لتجنب تضارب الأنواع
+// دالة تحويل محدثة
 const convertApiProductToProduct = (
-  apiProduct: any, // ✅ استخدام any لتجنب التضارب
+  apiProduct: any,
   storeInfo?: any
 ): Product => {
-  // استخدام الدالة المحدثة للصور
+  // استخدام الدالة المُصححة للصور
   const imageUrl = getFirstImageFromArray(apiProduct.images);
 
   let productStatus: "active" | "out_of_stock" | "low_stock";
@@ -145,7 +183,7 @@ const convertApiProductToProduct = (
     originalPrice: apiProduct.original_price,
     rating: apiProduct.averageRating || Math.round((Math.random() * 2 + 3) * 10) / 10,
     reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 200) + 10,
-    image: imageUrl,
+    image: imageUrl, // الآن سيأخذ الصورة الحقيقية إذا وُجدت
     isNew: Math.random() > 0.8,
     stock: apiProduct.stock_quantity,
     status: productStatus,
@@ -166,13 +204,23 @@ function ProductContent() {
   const searchParams = useSearchParams();
   const storeId = searchParams?.get("store");
   const storeName = searchParams?.get("storeName");
+  const { theme, toggleTheme, isDark, isLight } = useThemeContext();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [storeInfo, setStoreInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const { showToast } = useToast();
+
+  const getBackgroundGradient = () => {
+    if (isLight) {
+      return 'linear-gradient(135deg, #96EDD9 0%, #96EDD9 20%, #96EDD9 50%, #96EDD9 80%, #FFFFFF 100%)';
+    } else {
+      return 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)';
+    }
+  };
 
   useEffect(() => {
     const fetchStoreData = async () => {
@@ -188,12 +236,11 @@ function ProductContent() {
         setError(null);
 
         console.log("🔄 جلب بيانات المتجر...", storeId);
-        const storeData = await getStore(parseInt(storeId)) as any; // ✅ استخدام any للمرونة
+        const storeData = await getStore(parseInt(storeId)) as any;
         
         console.log("✅ تم استلام بيانات المتجر:", storeData);
 
-        // ✅ فحص تنسيق الاستجابة 
-        let products: any[] = []; // ✅ استخدام any[] لتجنب التضارب
+        let products: any[] = [];
         let storeInfo: any = null;
 
         // فحص الاستجابة الجديدة
@@ -223,14 +270,15 @@ function ProductContent() {
 
         console.log(`📦 عدد المنتجات المستخرجة: ${products.length}`);
         
-        // عرض تفاصيل المنتجات
+        // عرض تفاصيل المنتجات مع الصور
         products.forEach((product, index) => {
           console.log(`منتج ${index + 1}:`, {
             id: product.product_id,
             name: product.name,
             price: product.price,
             stock: product.stock_quantity,
-            images: product.images
+            images: product.images,
+            imageProcessed: getFirstImageFromArray(product.images)
           });
         });
 
@@ -247,7 +295,9 @@ function ProductContent() {
               id: product.product_id,
               name: product.name,
               price: product.price,
-              stock: product.stock_quantity
+              stock: product.stock_quantity,
+              originalImages: product.images,
+              processedImage: getFirstImageFromArray(product.images)
             });
             return convertApiProductToProduct(product, storeInfo);
           });
@@ -256,6 +306,14 @@ function ProductContent() {
           
           setStoreInfo(storeInfo);
           setProducts(convertedProducts);
+          setHasLoaded(true);
+
+          // Toast ترحيبي مع إحصائيات
+          showToast(`تم تحميل ${convertedProducts.length} منتج من ${storeInfo?.store_name || 'المتجر'}`, "success");
+
+          // Toast إضافي للترحيب
+          setTimeout(() => {
+          }, 2000);
         }
         
       } catch (err: any) {
@@ -271,20 +329,29 @@ function ProductContent() {
       }
     };
 
-    fetchStoreData();
+    const startTime = Date.now();
+    const timer = setTimeout(() => {
+      const loadTime = Date.now() - startTime;
+      fetchStoreData();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [storeId, showToast]);
 
   // شاشة التحميل
   if (loading) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center font-cairo"
-        style={{ backgroundColor: "#F6F8F9" }}
+        className="min-h-screen flex items-center justify-center font-cairo p-4 transition-all duration-500"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
       >
         <LoadingSpinner
           size="lg"
           color="green"
-          message="جاري تحميل منتجات المتجر..."
+          message="جاري تجميل المنتجات..."
           overlay={true}
           pulse={true}
           dots={true}
@@ -297,13 +364,43 @@ function ProductContent() {
   if (error) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center font-cairo"
-        style={{ backgroundColor: "#F6F8F9" }}
+        className="min-h-screen flex items-center justify-center font-cairo transition-all duration-500"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
       >
-        <div className="text-center max-w-md mx-auto p-8">
+        {/* شريط علوي مع زر تبديل الثيم */}
+        <div className="absolute top-0 left-0 right-0 z-10 bg-white/10 backdrop-blur-sm border-b border-white/20">
+          <div className="flex justify-between items-center px-4 py-3">
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-2"
+              startIcon={isLight ? <Moon size={18} /> : <Sun size={18} />}
+            >
+              {isLight ? 'الوضع المظلم' : 'الوضع المضيء'}
+            </Button>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+              <h1 className={`text-lg font-bold ${
+                isDark ? 'text-white' : 'text-gray-800'
+              }`}>
+                خطأ في التحميل
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center max-w-md mx-auto p-8 mt-20">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">حدث خطأ</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className={`text-2xl font-bold mb-4 ${
+            isDark ? 'text-red-400' : 'text-red-600'
+          }`}>حدث خطأ</h2>
+          <p className={`mb-6 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>{error}</p>
           <button
             onClick={() => {
               window.location.reload();
@@ -322,15 +419,47 @@ function ProductContent() {
   if (products.length === 0) {
     return (
       <div
-        className="min-h-screen flex items-center justify-center font-cairo"
-        style={{ backgroundColor: "#F6F8F9" }}
+        className="min-h-screen flex items-center justify-center font-cairo transition-all duration-500"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
       >
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="text-gray-400 text-6xl mb-4">📦</div>
-          <h2 className="text-2xl font-bold text-gray-600 mb-4">
+        {/* شريط علوي مع زر تبديل الثيم */}
+        <div className="absolute top-0 left-0 right-0 z-10 bg-white/10 backdrop-blur-sm border-b border-white/20">
+          <div className="flex justify-between items-center px-4 py-3">
+            <Button
+              onClick={toggleTheme}
+              variant="ghost"
+              size="sm"
+              className="rounded-full p-2"
+              startIcon={isLight ? <Moon size={18} /> : <Sun size={18} />}
+            >
+              {isLight ? 'الوضع المظلم' : 'الوضع المضيء'}
+            </Button>
+
+            <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+              <h1 className={`text-lg font-bold ${
+                isDark ? 'text-white' : 'text-gray-800'
+              }`}>
+                {storeInfo?.store_name || "المتجر"}
+              </h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center max-w-md mx-auto p-8 mt-20">
+          <div className={`text-6xl mb-4 ${
+            isDark ? 'text-gray-400' : 'text-gray-400'
+          }`}>📦</div>
+          <h2 className={`text-2xl font-bold mb-4 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
             لا توجد منتجات
           </h2>
-          <p className="text-gray-500 mb-6">
+          <p className={`mb-6 ${
+            isDark ? 'text-gray-400' : 'text-gray-500'
+          }`}>
             {storeInfo?.store_name || "هذا المتجر"} لا يحتوي على منتجات حالياً
           </p>
         </div>
@@ -340,18 +469,91 @@ function ProductContent() {
 
   return (  
     <div
-      className="min-h-screen mt-20 font-cairo"
-      style={{ backgroundColor: "#F6F8F9" }}
+      className="min-h-screen font-cairo transition-all duration-500 relative"
+      style={{
+        background: getBackgroundGradient(),
+        backgroundAttachment: 'fixed',
+      }}
     >
-      <div className="mx-auto">
-        <div className="grid grid-cols-1 gap-8">
-          <DynamicProductsSection
-            products={products}
-            storeId={storeInfo?.store_id}
-            storeName={storeInfo?.store_name}
-          />
+      {/* شريط علوي مع زر تبديل الثيم */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-white/10 backdrop-blur-sm border-b border-white/20">
+        <div className="flex justify-between items-center px-4 py-3">
+          <Button
+            onClick={toggleTheme}
+            variant="ghost"
+            size="sm"
+            className="rounded-full p-2"
+            startIcon={isLight ? <Moon size={18} /> : <Sun size={18} />}
+          >
+            {isLight ? 'الوضع المظلم' : 'الوضع المضيء'}
+          </Button>
+
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+            <h1 className={`text-lg font-bold ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>
+              {storeInfo?.store_name || "منتجات المتجر"}
+            </h1>
+          </div>
         </div>
       </div>
+
+      {/* المحتوى الرئيسي */}
+      <div
+        className={`transition-opacity duration-1000 ${
+          hasLoaded ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="pt-20">
+          <div className="mx-auto">
+            <div className="grid grid-cols-1 gap-8">
+              <DynamicProductsSection
+                products={products}
+                storeId={storeInfo?.store_id}
+                storeName={storeInfo?.store_name}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* CSS مخصص للتأثيرات */}
+      <style jsx global>{`
+        .opacity-0 {
+          opacity: 0;
+        }
+        .opacity-100 {
+          opacity: 1;
+        }
+
+        /* تأثيرات hover للتفاعل */
+        .hover-lift:hover {
+          transform: translateY(-2px);
+          transition: transform 0.2s ease;
+        }
+
+        /* تأثير pulse للعناصر المهمة */
+        .pulse-glow {
+          animation: pulse-glow 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+          0%,
+          100% {
+            box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+          }
+        }
+
+        /* تحسين responsive للأجهزة الصغيرة */
+        @media (max-width: 768px) {
+          .fixed.left-4 {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -362,10 +564,7 @@ const ProductLayout: React.FC = () => {
     <ToastProvider>
       <Suspense
         fallback={
-          <div
-            className="min-h-screen flex items-center justify-center font-cairo"
-            style={{ backgroundColor: "#F6F8F9" }}
-          >
+          <div className="min-h-screen flex items-center justify-center font-cairo bg-gradient-to-br from-gray-50 to-gray-100">
             <LoadingSpinner
               size="lg"
               color="green"

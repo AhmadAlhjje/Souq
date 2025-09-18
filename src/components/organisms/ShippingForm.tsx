@@ -1,13 +1,8 @@
-// ========================================
-// تحديث src/components/organisms/ShippingForm.tsx - مع إضافة إنشاء الطلب
-// ========================================
-
 'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileText, User, Phone, MapPin, MessageSquare } from 'lucide-react';
-import { COLORS } from '@/constants/colors';
 import FormField from '@/components/molecules/FormField';
 import FileUpload from '@/components/molecules/FileUpload';
 import Button from '@/components/atoms/Button';
@@ -15,13 +10,13 @@ import Label from '@/components/atoms/Label';
 import { shippingService } from '@/api/shipping';
 import { useToast } from '@/hooks/useToast';
 import { SessionManager } from '@/utils/SessionManager';
+import { useThemeContext } from '@/contexts/ThemeContext'; // ✅ استيراد الثيم
 
 interface ShippingFormData {
   customer_name: string;
   customer_phone: string;
   customer_whatsapp: string;
   recipient_name: string;
-  shipping_address: string;
   destination: string;
   identity_front_file: File | null;
   identity_back_file: File | null;
@@ -32,27 +27,21 @@ interface FormErrors {
   customer_phone?: string;
   customer_whatsapp?: string;
   recipient_name?: string;
-  shipping_address?: string;
   destination?: string;
   identity_front_file?: string;
   identity_back_file?: string;
 }
 
-interface ShippingFormProps {
-  theme?: 'light' | 'dark';
-}
-
-const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
-  const colors = COLORS[theme];
+const ShippingForm: React.FC = () => { // ✅ إزالة prop theme
+  const { isDark, isLight } = useThemeContext(); // ✅ استخدام السياق
   const { showToast } = useToast();
-  const router = useRouter(); // ✅ إضافة useRouter للتنقل
+  const router = useRouter();
 
   const [formData, setFormData] = useState<ShippingFormData>({
     customer_name: '',
     customer_phone: '',
     customer_whatsapp: '',
     recipient_name: '',
-    shipping_address: '',
     destination: '',
     identity_front_file: null,
     identity_back_file: null,
@@ -74,7 +63,6 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
     if (!formData.customer_phone.trim()) newErrors.customer_phone = 'رقم هاتف العميل مطلوب';
     if (!formData.customer_whatsapp.trim()) newErrors.customer_whatsapp = 'رقم واتساب العميل مطلوب';
     if (!formData.recipient_name.trim()) newErrors.recipient_name = 'اسم المستلم مطلوب';
-    if (!formData.shipping_address.trim()) newErrors.shipping_address = 'عنوان المصدر مطلوب';
     if (!formData.destination.trim()) newErrors.destination = 'عنوان الوجهة مطلوب';
     if (!formData.identity_front_file) newErrors.identity_front_file = 'صورة الهوية الأمامية مطلوبة';
     if (!formData.identity_back_file) newErrors.identity_back_file = 'صورة الهوية الخلفية مطلوبة';
@@ -132,8 +120,8 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
 
     setIsSubmitting(true);
     try {
-      // ✅ الخطوة 1: إنشاء الشحن
-      console.log('🚚 بدء عملية إنشاء الشحن والطلب...');
+      // الخطوة 1: إنشاء الشحن
+      console.log('بدء عملية إنشاء الشحن والطلب...');
       
       // الحصول على الـ session الثابت للمستخدم
       const userSessionId = SessionManager.getOrCreateSessionId();
@@ -143,25 +131,28 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
       const timestamp = Date.now();
       const requestId = `req_${timestamp}_${Math.random().toString(36).substr(2, 6)}`;
       
-      console.log('📋 معلومات الطلب:');
+      console.log('معلومات الطلب:');
       console.log('  - User Session (ثابت):', userSessionId);
       console.log('  - Request ID (فريد):', requestId);
       console.log('  - Timestamp:', new Date(timestamp).toLocaleString());
 
       const formDataToSend = new FormData();
 
-      // استخدام الـ session الثابت (سيتم تعديله تلقائياً في حالة 409)
+      // استخدام الـ session الثابت
       formDataToSend.append('customer_session_id', userSessionId);
       formDataToSend.append('request_id', requestId);
       formDataToSend.append('request_timestamp', timestamp.toString());
       
+      // البيانات الأساسية
       formDataToSend.append('customer_name', formData.customer_name.trim());
       formDataToSend.append('customer_phone', formData.customer_phone.trim());
       formDataToSend.append('customer_whatsapp', formData.customer_whatsapp.trim());
       formDataToSend.append('recipient_name', formData.recipient_name.trim());
-      
-      formDataToSend.append('shipping_address', formData.shipping_address.trim());
       formDataToSend.append('destination', formData.destination.trim());
+      
+      // إضافة shipping_address كقيمة افتراضية أو نفس قيمة destination
+      formDataToSend.append('shipping_address', formData.destination.trim());
+      
       formDataToSend.append('shipping_method', 'express');
 
       // إضافة الملفات
@@ -173,27 +164,27 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
         formDataToSend.append('identity_back', formData.identity_back_file, backFileName);
       }
 
-      console.log('📤 إرسال طلب شحن جديد...');
+      console.log('إرسال طلب شحن جديد...');
       const shippingResult = await shippingService.createShipping(formDataToSend);
 
-      console.log('✅ تم إنشاء طلب الشحن بنجاح:', shippingResult);
+      console.log('تم إنشاء طلب الشحن بنجاح:', shippingResult);
 
-      // ✅ الخطوة 2: استخراج purchase_id وإنشاء الطلب
+      // الخطوة 2: استخراج purchase_id وإنشاء الطلب
       const purchaseId = shippingResult.data?.purchase_id;
       
       if (!purchaseId) {
-        console.error('❌ لم يتم العثور على purchase_id في رد الشحن');
+        console.error('لم يتم العثور على purchase_id في رد الشحن');
         showToast('حدث خطأ: لم يتم العثور على معرف الشراء', 'error');
         return;
       }
 
-      console.log('📦 إنشاء طلب جديد باستخدام purchase_id:', purchaseId);
+      console.log('إنشاء طلب جديد باستخدام purchase_id:', purchaseId);
       
       const orderResult = await shippingService.createOrder(purchaseId);
       
-      console.log('✅ تم إنشاء الطلب بنجاح:', orderResult);
+      console.log('تم إنشاء الطلب بنجاح:', orderResult);
 
-      // ✅ إظهار رسائل النجاح
+      // إظهار رسائل النجاح
       showToast(shippingResult.message || 'تم إنشاء الشحن بنجاح', 'success');
       
       // رسالة إضافية للطلب إذا كان لديها رسالة مختلفة
@@ -209,26 +200,25 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
         customer_phone: '',
         customer_whatsapp: '',
         recipient_name: '',
-        shipping_address: '',
         destination: '',
         identity_front_file: null,
         identity_back_file: null,
       });
 
-      console.log('🎉 تمت العملية بنجاح - النموذج جاهز لطلب جديد');
-      console.log('📊 ملخص العملية:');
+      console.log('تمت العملية بنجاح - النموذج جاهز لطلب جديد');
+      console.log('ملخص العملية:');
       console.log('  - Shipping ID:', shippingResult.data?.shipping_id);
       console.log('  - Purchase ID:', purchaseId);
       console.log('  - Order ID:', orderResult.data?.order_id);
 
-      // ✅ التوجه للصفحة الرئيسية بعد النجاح
+      // التوجه للصفحة الرئيسية بعد النجاح
       setTimeout(() => {
-        console.log('🏠 توجيه المستخدم للصفحة الرئيسية...');
-        router.push('/'); // التوجه للصفحة الرئيسية
-      }, 2000); // انتظار ثانيتين لإظهار رسائل النجاح
+        console.log('توجيه المستخدم للصفحة الرئيسية...');
+        router.push('/');
+      }, 2000);
 
     } catch (error: any) {
-      console.error('❌ خطأ في عملية إنشاء الشحن أو الطلب:', error);
+      console.error('خطأ في عملية إنشاء الشحن أو الطلب:', error);
       showToast(error.message || 'حدث خطأ غير متوقع', 'error');
     } finally {
       setIsSubmitting(false);
@@ -237,28 +227,35 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
 
   return (
     <div className="w-full flex items-center justify-center p-4">
-      {/* ✅ التعديل: إضافة overflow-y-auto وحذف height: fit-content */}
       <div
-        className="w-full max-w-7xl p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border border-white/20 overflow-y-auto"
+        className={`w-full max-w-7xl p-4 sm:p-6 rounded-2xl shadow-xl backdrop-blur-sm border overflow-y-auto ${
+          isDark 
+            ? 'bg-gray-900 border-gray-700 text-white' 
+            : 'bg-white border-white/20 text-gray-900'
+        }`}
         style={{
-          background: 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
+          background: isDark 
+            ? 'linear-gradient(135deg, #1f2937 0%, #374151 50%, #111827 100%)'
+            : 'linear-gradient(135deg, #FFFFFF 3%, #F8F9FA 20%, #F1F3F4 40%, #E8EAED 60%, #F1F3F4 80%, #FFFFFF 100%)',
           direction: 'rtl',
-          maxHeight: '95vh', // ✅ الحد الأقصى للارتفاع
-          // ✅ تم حذف: height: 'fit-content',
+          maxHeight: '95vh',
         }}
       >
-        {/* العنوان - مدمج */}
+        {/* العنوان */}
         <div className="text-center mb-4">
           <h2
             className="text-lg sm:text-xl font-bold mb-1"
-            style={{ color: colors.text.primary }}
+            style={{ color: isDark ? '#FFFFFF' : '#111827' }}
           >
             معلومات الشحن
           </h2>
-          <p className="text-xs text-gray-500">جميع المعلومات محمية ومشفرة بأمان</p>
+          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+            جميع المعلومات محمية ومشفرة بأمان
+          </p>
         </div>
 
-        {/* الحقول الأساسية - صف واحد */}
+        {/* الحقول الأساسية - صفين: 3 في الأول و 2 في الثاني */}
+        {/* الصف الأول - 3 حقول */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
           <FormField
             label="اسم العميل"
@@ -269,7 +266,7 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
             icon={User}
             id="customer_name"
             required
-            theme={theme}
+            theme={isDark ? 'dark' : 'light'} // ✅ تمرير الثيم حسب السياق
             error={errors.customer_name}
           />
 
@@ -282,7 +279,7 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
             icon={Phone}
             id="customer_phone"
             required
-            theme={theme}
+            theme={isDark ? 'dark' : 'light'}
             error={errors.customer_phone}
           />
 
@@ -295,10 +292,13 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
             icon={MessageSquare}
             id="customer_whatsapp"
             required
-            theme={theme}
+            theme={isDark ? 'dark' : 'light'}
             error={errors.customer_whatsapp}
           />
+        </div>
 
+        {/* الصف الثاني - 2 حقول */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
           <FormField
             label="اسم المستلم"
             type="text"
@@ -308,21 +308,8 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
             icon={User}
             id="recipient_name"
             required
-            theme={theme}
+            theme={isDark ? 'dark' : 'light'}
             error={errors.recipient_name}
-          />
-
-          <FormField
-            label="عنوان المصدر"
-            type="text"
-            placeholder="عنوان المصدر"
-            value={formData.shipping_address}
-            onChange={handleInputChange('shipping_address')}
-            icon={MapPin}
-            id="shipping_address"
-            required={true}
-            theme={theme}
-            error={errors.shipping_address}
           />
 
           <FormField
@@ -334,34 +321,31 @@ const ShippingForm: React.FC<ShippingFormProps> = ({ theme = 'light' }) => {
             icon={MapPin}
             id="destination"
             required
-            theme={theme}
+            theme={isDark ? 'dark' : 'light'}
             error={errors.destination}
           />
         </div>
 
-        {/* صور الهوية والزر - صف واحد */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 items-end">
-          {/* صور الهوية */}
-          <div className="lg:col-span-2">
-            <Label>صور الهوية للمستلم</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <FileUpload
-                label="الوجه الأمامي"
-                icon={<FileText size={16} />}
-                accept="image/*"
-                onChange={handleFileChange('identity_front_file')}
-                theme={theme}
-                error={errors.identity_front_file}
-              />
-              <FileUpload
-                label="الوجه الخلفي"
-                icon={<FileText size={16} />}
-                accept="image/*"
-                onChange={handleFileChange('identity_back_file')}
-                theme={theme}
-                error={errors.identity_back_file}
-              />
-            </div>
+        {/* صور الهوية */}
+        <div className="mb-4">
+          <Label>صور الهوية للمستلم</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <FileUpload
+              label="الوجه الأمامي"
+              icon={<FileText size={16} />}
+              accept="image/*"
+              onChange={handleFileChange('identity_front_file')}
+              theme={isDark ? 'dark' : 'light'}
+              error={errors.identity_front_file}
+            />
+            <FileUpload
+              label="الوجه الخلفي"
+              icon={<FileText size={16} />}
+              accept="image/*"
+              onChange={handleFileChange('identity_back_file')}
+              theme={isDark ? 'dark' : 'light'}
+              error={errors.identity_back_file}
+            />
           </div>
         </div>
 

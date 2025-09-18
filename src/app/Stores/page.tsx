@@ -2,12 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 import StoresSection from "../../components/templates/StoresSection";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import Button from "@/components/atoms/Button";
 import { useToast } from "@/hooks/useToast";
+import { useThemeContext } from '@/contexts/ThemeContext';
 import { Store as APIStore, getStores, testConnection } from "../../api/stores";
 
-// ✅ إضافة interfaces للاستجابة
+// إضافة interfaces للاستجابة
 interface APIStoreResponse {
   store_id: number;
   user_id: number;
@@ -52,10 +55,12 @@ interface LocalStore {
 const StoresPage: React.FC = () => {
   const router = useRouter();
   const { showToast } = useToast();
+  const { theme, toggleTheme, isDark, isLight } = useThemeContext();
   const [stores, setStores] = useState<LocalStore[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   const addDebugInfo = useCallback((info: string) => {
     setDebugInfo((prev) => [
@@ -63,6 +68,14 @@ const StoresPage: React.FC = () => {
       `${new Date().toLocaleTimeString()}: ${info}`,
     ]);
   }, []);
+
+  const getBackgroundGradient = () => {
+    if (isLight) {
+      return 'linear-gradient(135deg, #96EDD9 0%, #96EDD9 20%, #96EDD9 50%, #96EDD9 80%, #FFFFFF 100%)';
+    } else {
+      return 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)';
+    }
+  };
 
   // دالة محسنة لتحليل الصور - نفس المنطق المستخدم في ProductLayout
   const parseImagesSafe = (
@@ -110,13 +123,11 @@ const StoresPage: React.FC = () => {
           const parsed = JSON.parse(trimmedImages);
           console.log("🔄 [STORES] تم تحليل JSON بنجاح:", parsed);
 
-          // ✅ إصلاح: فحص النوع أولاً
           if (Array.isArray(parsed)) {
             return parsed.filter(
               (img) => img && typeof img === "string" && img.trim() !== ""
             );
           } else if (typeof parsed === "string") {
-            // فقط هنا نستخدم startsWith لأننا متأكدين أنه string
             if (
               parsed.trim() !== "" &&
               (parsed.startsWith("[") || parsed.startsWith("{"))
@@ -212,7 +223,7 @@ const StoresPage: React.FC = () => {
     return fullUrl;
   };
 
-  // ✅ دالة convertAPIStoreToLocal المحدثة مع الأنواع الصحيحة
+  // دالة convertAPIStoreToLocal المحدثة مع الأنواع الصحيحة
   const convertAPIStoreToLocal = useCallback(
     (apiStore: APIStoreResponse): LocalStore => {
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
@@ -227,7 +238,7 @@ const StoresPage: React.FC = () => {
         reviewsCount: apiStore.reviewsCount,
       });
 
-      // ✅ التأكد من البيانات الأساسية أولاً
+      // التأكد من البيانات الأساسية أولاً
       if (!apiStore) {
         console.error("❌ [CONVERT] بيانات المتجر فارغة!");
         return {
@@ -238,7 +249,7 @@ const StoresPage: React.FC = () => {
         };
       }
 
-      // ✅ فحص البيانات المطلوبة
+      // فحص البيانات المطلوبة
       const storeId = apiStore.store_id;
       const storeName = apiStore.store_name;
       const storeAddress = apiStore.store_address;
@@ -257,7 +268,7 @@ const StoresPage: React.FC = () => {
         });
       }
 
-      // ✅ معالجة الصورة
+      // معالجة الصورة
       let imageUrl = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
 
       // أولوية للصور العادية
@@ -297,7 +308,7 @@ const StoresPage: React.FC = () => {
         console.log("📷 [CONVERT] استخدام الصورة الافتراضية");
       }
 
-      // ✅ بناء الكائن المحول
+      // بناء الكائن المحول
       const convertedStore: LocalStore = {
         id: storeId || 0,
         name: storeName || "بدون اسم",
@@ -377,7 +388,7 @@ const StoresPage: React.FC = () => {
       // جلب البيانات
       const apiResponse = await getStores();
 
-      // ✅ تشخيص مفصل
+      // تشخيص مفصل
       console.log("=== تشخيص مفصل للاستجابة ===");
       console.log("1. نوع الاستجابة:", typeof apiResponse);
       console.log("2. هل هي مصفوفة؟", Array.isArray(apiResponse));
@@ -412,6 +423,10 @@ const StoresPage: React.FC = () => {
         throw new Error("لا يمكن استخراج المتاجر من الاستجابة");
       }
 
+      // ✅ ✅ ✅ التصفية الجديدة: عرض فقط المتاجر غير المحظورة
+      apiStores = apiStores.filter(store => store.is_blocked === 0);
+      console.log(`✅ تم تصفية المتاجر — عدد الظاهر: ${apiStores.length}`);
+
       console.log("=== بيانات المتاجر المستخرجة ===");
       console.log("عدد المتاجر:", apiStores.length);
       apiStores.forEach((store, index) => {
@@ -441,6 +456,14 @@ const StoresPage: React.FC = () => {
 
       // تحديث الحالة
       setStores(convertedStores);
+      setHasLoaded(true);
+
+      // Toast ترحيبي مع إحصائيات
+      showToast(`تم تحميل ${convertedStores.length} متجر بنجاح`, "success");
+
+      // Toast إضافي للترحيب
+      setTimeout(() => {
+      }, 2000);
     } catch (error: any) {
       console.error("💥 خطأ في fetchStores:", error);
       setError(`خطأ في تحميل المتاجر: ${error.message}`);
@@ -456,17 +479,29 @@ const StoresPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchStores();
+    const startTime = Date.now();
+    const timer = setTimeout(() => {
+      const loadTime = Date.now() - startTime;
+      fetchStores();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [fetchStores]);
 
   // شاشة التحميل
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#96EDD9]/20 via-[#96EDD9]/10 to-white pt-20 flex items-center justify-center">
+      <div 
+        className="min-h-screen flex items-center justify-center p-4 transition-all duration-500"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <LoadingSpinner
           size="lg"
           color="green"
-          message="جاري تحميل متاجركم..."
+          message="جاري تجميل المتاجر..."
           overlay={true}
           pulse={true}
           dots={true}
@@ -476,33 +511,111 @@ const StoresPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#96EDD9]/20 via-[#96EDD9]/10 to-white pt-20">
-      {/* عرض رسالة خطأ محسنة مع إمكانية إعادة المحاولة */}
-      {error && (
-        <div className="max-w-7xl mx-auto px-4 mb-4">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="text-red-500 text-xl">❌</div>
-                <div className="mr-3">
-                  <h4 className="text-red-800 font-medium">
-                    خطأ في تحميل البيانات
-                  </h4>
-                  <p className="text-red-700 text-sm">{error}</p>
-                </div>
-              </div>
-              <button
-                onClick={handleRetry}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                إعادة المحاولة
-              </button>
-            </div>
+    <div 
+      className="min-h-screen transition-all duration-500 relative"
+      style={{
+        background: getBackgroundGradient(),
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      {/* شريط علوي مع زر تبديل الثيم */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-white/10 backdrop-blur-sm border-b border-white/20">
+        <div className="flex justify-between items-center px-4 py-3">
+          {/* زر تبديل الثيم */}
+          <Button
+            onClick={toggleTheme}
+            variant="ghost"
+            size="sm"
+            className="rounded-full p-2"
+            startIcon={isLight ? <Moon size={18} /> : <Sun size={18} />}
+          >
+            {isLight ? 'الوضع المظلم' : 'الوضع المضيء'}
+          </Button>
+
+          {/* عنوان الصفحة */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
+            <h1 className={`text-lg font-bold ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>
+              متاجرنا المميزة
+            </h1>
           </div>
         </div>
-      )}
+      </div>
 
-      <StoresSection stores={stores} onViewDetails={handleViewDetails} />
+      {/* المحتوى الرئيسي */}
+      <div
+        className={`transition-opacity duration-1000 ${
+          hasLoaded ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <div className="pt-20">
+          {/* عرض رسالة خطأ محسنة مع إمكانية إعادة المحاولة */}
+          {error && (
+            <div className="max-w-7xl mx-auto px-4 mb-4">
+              <div className="bg-red-50/90 border border-red-200 rounded-lg p-4 backdrop-blur-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="text-red-500 text-xl">❌</div>
+                    <div className="mr-3">
+                      <h4 className="text-red-800 font-medium">
+                        خطأ في تحميل البيانات
+                      </h4>
+                      <p className="text-red-700 text-sm">{error}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleRetry}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    إعادة المحاولة
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <StoresSection stores={stores} onViewDetails={handleViewDetails} />
+        </div>
+      </div>
+
+      {/* CSS مخصص للتأثيرات */}
+      <style jsx global>{`
+        .opacity-0 {
+          opacity: 0;
+        }
+        .opacity-100 {
+          opacity: 1;
+        }
+
+        /* تأثيرات hover للتفاعل */
+        .hover-lift:hover {
+          transform: translateY(-2px);
+          transition: transform 0.2s ease;
+        }
+
+        /* تأثير pulse للعناصر المهمة */
+        .pulse-glow {
+          animation: pulse-glow 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+          0%,
+          100% {
+            box-shadow: 0 0 0 rgba(52, 211, 153, 0);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
+          }
+        }
+
+        /* تحسين responsive للأجهزة الصغيرة */
+        @media (max-width: 768px) {
+          .fixed.left-4 {
+            display: none;
+          }
+        }
+      `}</style>
     </div>
   );
 };

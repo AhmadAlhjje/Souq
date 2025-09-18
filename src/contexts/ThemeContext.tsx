@@ -6,7 +6,7 @@ type Theme = 'light' | 'dark';
 interface ThemeContextProps {
   theme: Theme;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
+  setTheme: (themee: Theme) => void;
   isDark: boolean;
   isLight: boolean;
 }

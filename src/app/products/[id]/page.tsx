@@ -8,6 +8,7 @@ import { getProduct } from '@/api/stores';
 import { useCart } from '@/hooks/useCart';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
+import { useThemeContext } from '@/contexts/ThemeContext';
 
 // دالة محسّنة لتحليل الصور
 const parseImagesSafe = (images: string | string[] | null): string[] => {
@@ -52,7 +53,7 @@ const buildImageUrl = (imageName: string): string => {
   return fullUrl;
 };
 
-// ✅ نوع بيانات المنتج من API محدث
+// ✅ تعريف ApiProductDetails هنا — داخل الملف
 interface ApiProductDetails {
   product_id: number;
   store_id: number;
@@ -77,14 +78,13 @@ interface ApiProductDetails {
     review_id: number;
     product_id: number;
     reviewer_name: string;
-    reviewer_phone?: string; // ✅ جعل reviewer_phone اختيارية
+    reviewer_phone?: string;
     rating: number;
     comment: string;
     is_verified: boolean;
     created_at: string;
     updated_at: string;
   }>;
-  // ✅ إضافة reviewsData للتنسيق الجديد
   reviewsData?: {
     total: number;
     verified: number;
@@ -115,7 +115,7 @@ interface ApiProductDetails {
   };
 }
 
-// تحديث دالة التحويل لتتضمن reviewsData
+// ✅ تعريف convertApiProductToProduct هنا — داخل الملف
 const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
   console.log('🔄 بدء تحويل المنتج:', apiProduct);
   console.log('📝 فحص reviewsData في التحويل:', apiProduct.reviewsData);
@@ -194,9 +194,8 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
     discountPercentage,
     discountAmount,
     hasDiscount,
-    // ✅ إضافة reviewsData هنا
     reviewsData: apiProduct.reviewsData,
-  } as any; // استخدام any مؤقتاً حتى يتم تحديث نوع Product
+  } as any;
 
   console.log('✅ المنتج بعد التحويل مع reviewsData:', convertedProduct);
   console.log('📝 reviewsData في المنتج النهائي:', convertedProduct.reviewsData);
@@ -207,6 +206,7 @@ const convertApiProductToProduct = (apiProduct: ApiProductDetails): Product => {
 export default function ProductPage() {
   const params = useParams();
   const router = useRouter();
+  const { isDark } = useThemeContext();
 
   const rawId = params?.id;
   const productId = rawId && !isNaN(Number(rawId)) ? parseInt(rawId as string, 10) : null;
@@ -219,17 +219,14 @@ export default function ProductPage() {
   const { addToCart, fetchCart } = useCart();
   const { showToast } = useToast();
 
-  // ✅ حل المشكلة: نقل loadingMessages إلى useMemo
   const loadingMessages = useMemo(() => [
     'البحث عن تفاصيل المنتج...',
     'تحميل الصور والمعلومات...',
     'إعداد صفحة المنتج...',
     'جاري تحضير العرض...'
-  ], []); // مصفوفة فارغة لأن الرسائل ثابتة
+  ], []);
 
-  // ✅ دمج useEffect في واحد
   useEffect(() => {
-    // جزء تغيير رسالة التحميل
     const messageInterval = setInterval(() => {
       setLoadingMessage(prev => {
         const currentIndex = loadingMessages.indexOf(prev);
@@ -238,13 +235,12 @@ export default function ProductPage() {
       });
     }, 1500);
 
-    // جزء جلب المنتج
     const fetchProduct = async () => {
       if (!productId) {
         console.error('❌ معرف المنتج غير صحيح:', rawId);
         setError('معرف المنتج غير صحيح');
         setLoading(false);
-        clearInterval(messageInterval); // تنظيف interval عند الخطأ
+        clearInterval(messageInterval);
         return;
       }
 
@@ -254,19 +250,15 @@ export default function ProductPage() {
         setError(null);
         setLoadingMessage('جاري الاتصال بالخادم...');
 
-        // ✅ جلب البيانات من API
         const apiResponse = await getProduct(productId);
         console.log('📦 استجابة API الخام:', apiResponse);
 
-        // ✅ استخراج بيانات المنتج من الاستجابة
-        let productData: ApiProductDetails;
+        let productData: ApiProductDetails; // ✅ الآن TypeScript يعرف هذا النوع
 
         if (apiResponse && typeof apiResponse === 'object' && 'product' in apiResponse) {
-          // الحالة الجديدة: { success: true, product: {...} }
           productData = apiResponse.product;
           console.log('✅ تم استخراج المنتج من response.product');
         } else if (apiResponse && 'product_id' in apiResponse) {
-          // الحالة القديمة: البيانات مباشرة
           productData = apiResponse;
           console.log('✅ البيانات مباشرة كمنتج');
         } else {
@@ -281,16 +273,11 @@ export default function ProductPage() {
         }
 
         setLoadingMessage('جاري معالجة البيانات...');
-        
-        // إضافة تأخير قصير لإظهار رسالة المعالجة
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // ✅ تحويل البيانات مع معالجة التقييمات الجديدة
         const convertedProductData = {
           ...productData,
-          // معالجة التقييمات من reviewsData
           Reviews: productData.reviewsData?.reviews || productData.Reviews || [],
-          // تأكد من وجود Store
           Store: productData.Store || {
             store_name: 'متجر غير محدد',
             logo_image: '',
@@ -298,7 +285,7 @@ export default function ProductPage() {
           }
         };
 
-        const converted = convertApiProductToProduct(convertedProductData);
+        const converted = convertApiProductToProduct(convertedProductData); // ✅ الآن TypeScript يعرف هذه الدالة
         console.log('🎯 المنتج النهائي بعد التحويل:', converted);
 
         setProduct(converted);
@@ -320,18 +307,16 @@ export default function ProductPage() {
         }
       } finally {
         setLoading(false);
-        clearInterval(messageInterval); // تنظيف interval عند انتهاء التحميل
+        clearInterval(messageInterval);
       }
     };
 
-    // تشغيل جلب المنتج
     fetchProduct();
 
-    // تنظيف عند إلغاء المكون
     return () => {
       clearInterval(messageInterval);
     };
-  }, [productId, rawId, loadingMessages]); // إضافة loadingMessages للـ dependencies
+  }, [productId, rawId, loadingMessages]);
 
   const handleBuyNow = async (pid: string | number, qty: number) => {
     try {
@@ -365,10 +350,16 @@ export default function ProductPage() {
     }
   };
 
-  // شاشة التحميل المخصصة بنص متغير
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center font-cairo"
+        style={{
+          background: isDark 
+            ? 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)' 
+            : 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 50%, #F1F3F4 100%)',
+        }}
+      >
         <LoadingSpinner
           size="lg"
           color="green"
@@ -381,16 +372,30 @@ export default function ProductPage() {
     );
   }
 
-  // شاشة الخطأ المحسنة
   if (error || !product) {
     return (
-      <div className="min-h-screen flex items-center justify-center font-cairo bg-gradient-to-br from-gray-50 to-red-50/30">
-        <div className="text-center max-w-md mx-auto p-8 bg-white rounded-2xl shadow-lg">
+      <div 
+        className="min-h-screen flex items-center justify-center font-cairo"
+        style={{
+          background: isDark 
+            ? 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)' 
+            : 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 50%, #F1F3F4 100%)',
+        }}
+      >
+        <div className={`text-center max-w-md mx-auto p-8 rounded-2xl shadow-lg ${
+          isDark ? 'bg-gray-900 text-white' : 'bg-white text-gray-900'
+        }`}>
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">
+          <h2 className={`text-2xl font-bold mb-4 ${
+            isDark ? 'text-red-400' : 'text-red-600'
+          }`}>
             {error === 'المنتج غير موجود' ? 'المنتج غير موجود' : 'خطأ في التحميل'}
           </h2>
-          <p className="text-gray-600 mb-6">{error || 'حدث خطأ أثناء تحميل المنتج'}</p>
+          <p className={`mb-6 ${
+            isDark ? 'text-gray-300' : 'text-gray-600'
+          }`}>
+            {error || 'حدث خطأ أثناء تحميل المنتج'}
+          </p>
           <div className="space-y-3">
             <button
               onClick={() => {
@@ -398,13 +403,21 @@ export default function ProductPage() {
                 setError(null);
                 window.location.reload();
               }}
-              className="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+              className={`w-full px-6 py-3 rounded-lg transition-colors ${
+                isDark
+                  ? 'bg-teal-700 hover:bg-teal-600 text-white'
+                  : 'bg-teal-600 hover:bg-teal-700 text-white'
+              }`}
             >
               إعادة المحاولة
             </button>
             <button
               onClick={() => router.back()}
-              className="w-full border border-teal-600 text-teal-600 px-6 py-3 rounded-lg hover:bg-teal-50 transition-colors"
+              className={`w-full px-6 py-3 rounded-lg transition-colors ${
+                isDark
+                  ? 'border border-teal-600 text-teal-400 hover:bg-teal-900/30'
+                  : 'border border-teal-600 text-teal-600 hover:bg-teal-50'
+              }`}
             >
               العودة للخلف
             </button>

@@ -1,7 +1,7 @@
-// components/templates/AtomicCartPage.tsx
 "use client"
 import React from 'react';
 import { ShoppingCart, Trash2, ArrowRight, Minus, Plus } from 'lucide-react';
+import { useThemeContext } from '@/contexts/ThemeContext'; // ✅ استيراد الثيم
 
 // Types
 interface CartItem {
@@ -36,7 +36,7 @@ interface AtomicCartPageProps {
 
 // Helper function to get fallback image if the main image fails
 const getFallbackImage = (): string => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   return `${baseUrl}/uploads/placeholder.jpg`;
 };
 
@@ -47,13 +47,19 @@ const Checkbox: React.FC<{
   disabled?: boolean;
   className?: string;
 }> = ({ checked, onChange, disabled = false, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
     <input
       type="checkbox"
       checked={checked}
       onChange={(e) => onChange(e.target.checked)}
       disabled={disabled}
-      className={`w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 ${className}`}
+      className={`w-4 h-4 ${
+        isDark 
+          ? 'bg-gray-700 border-gray-600 text-teal-400' 
+          : 'bg-gray-100 border-gray-300 text-blue-600'
+      } rounded focus:ring-2 focus:ring-teal-500 ${className}`}
     />
   );
 };
@@ -87,13 +93,13 @@ const ProductImage: React.FC<{
   return (
     <div className={`relative w-16 h-16 rounded-lg overflow-hidden shadow-sm group-hover:shadow-md transition-shadow ${className}`}>
       <img
-  src={imageSrc}
-  alt={alt}
-  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-  onError={handleImageError}
-  onLoad={handleImageLoad}
-  style={{ objectFit: 'cover' }}
-/>
+        src={imageSrc}
+        alt={alt}
+        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+        onError={handleImageError}
+        onLoad={handleImageLoad}
+        style={{ objectFit: 'cover' }}
+      />
       
       {imageError && (
         <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
@@ -123,6 +129,7 @@ const PriceDisplay: React.FC<{
   size?: 'sm' | 'md' | 'lg';
   className?: string;
 }> = ({ price, originalPrice, currency = '$', size = 'md', className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
@@ -131,11 +138,13 @@ const PriceDisplay: React.FC<{
 
   return (
     <div className={`space-y-1 ${className}`}>
-      <span className={`text-teal-600 font-bold ${sizeClasses[size]}`}>
+      <span className={`font-bold ${sizeClasses[size]} ${
+        isDark ? 'text-teal-400' : 'text-teal-600'
+      }`}>
         {price.toFixed(2)} {currency}
       </span>
       {originalPrice && originalPrice > price && (
-        <div className="text-sm text-gray-400 line-through">
+        <div className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'} line-through`}>
           {originalPrice.toFixed(2)} {currency}
         </div>
       )}
@@ -147,8 +156,12 @@ const TableHeader: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
-    <th className={`text-right py-3 px-4 text-gray-700 font-bold text-sm ${className}`}>
+    <th className={`text-right py-3 px-4 font-bold text-sm ${
+      isDark ? 'text-gray-300 bg-gray-800' : 'text-gray-700 bg-gray-50'
+    } ${className}`}>
       {children}
     </th>
   );
@@ -158,8 +171,12 @@ const TableCell: React.FC<{
   children: React.ReactNode;
   className?: string;
 }> = ({ children, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
-    <td className={`py-3 px-4 ${className}`}>
+    <td className={`py-3 px-4 ${
+      isDark ? 'text-gray-200' : 'text-gray-900'
+    } ${className}`}>
       {children}
     </td>
   );
@@ -171,13 +188,19 @@ const ProductInfo: React.FC<{
   description?: string;
   className?: string;
 }> = ({ name, description, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
     <div className={`space-y-1 ${className}`}>
-      <h3 className="font-semibold text-gray-900 text-sm group-hover:text-blue-600 transition-colors line-clamp-2">
+      <h3 className={`font-semibold text-sm group-hover:text-blue-500 transition-colors line-clamp-2 ${
+        isDark ? 'text-white' : 'text-gray-900'
+      }`}>
         {name}
       </h3>
       {description && (
-        <p className="text-xs text-gray-500 line-clamp-1">{description}</p>
+        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'} line-clamp-1`}>
+          {description}
+        </p>
       )}
     </div>
   );
@@ -192,25 +215,40 @@ const QuantityControl: React.FC<{
   max?: number;
   className?: string;
 }> = ({ quantity, onIncrease, onDecrease, disabled = false, min = 1, max = 99, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
   const canDecrease = quantity > min && !disabled;
   const canIncrease = quantity < max && !disabled;
 
   return (
-    <div className={`flex items-center border border-gray-300 rounded-md overflow-hidden bg-white shadow-sm ${className}`}>
+    <div className={`flex items-center border rounded-md overflow-hidden shadow-sm ${
+      isDark 
+        ? 'border-gray-700 bg-gray-800' 
+        : 'border-gray-300 bg-white'
+    } ${className}`}>
       <button 
         onClick={onDecrease}
         disabled={!canDecrease}
-        className="px-2 py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`px-2 py-1 transition-colors ${
+          isDark 
+            ? 'text-teal-400 hover:bg-gray-700' 
+            : 'text-teal-600 hover:bg-gray-100'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         <Minus className="w-4 h-4" />
       </button>
-      <span className="px-3 py-1 bg-gray-50 min-w-[3rem] text-center font-medium text-sm">
+      <span className={`px-3 py-1 min-w-[3rem] text-center font-medium text-sm ${
+        isDark ? 'bg-gray-700 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
         {quantity}
       </span>
       <button 
         onClick={onIncrease}
         disabled={!canIncrease}
-        className="px-2 py-1 hover:bg-gray-100 transition-colors text-teal-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`px-2 py-1 transition-colors ${
+          isDark 
+            ? 'text-teal-400 hover:bg-gray-700' 
+            : 'text-teal-600 hover:bg-gray-100'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         <Plus className="w-4 h-4" />
       </button>
@@ -226,9 +264,17 @@ const CartItemRow: React.FC<{
   onQuantityChange: (newQuantity: number) => void;
   onRemove: () => void;
 }> = ({ item, index, isSelected, onSelect, onQuantityChange, onRemove }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
     <tr className={`group transition-all duration-200 ${
-      index % 2 === 0 ? 'bg-gray-50/50' : 'bg-white'
+      isDark
+        ? index % 2 === 0 
+          ? 'bg-gray-900/50' 
+          : 'bg-gray-800'
+        : index % 2 === 0 
+          ? 'bg-gray-50/50' 
+          : 'bg-white'
     } hover:bg-blue-50/30 ${!item.inStock ? 'opacity-60' : ''}`}>
       
       {/* Checkbox */}
@@ -279,14 +325,22 @@ const CartItemRow: React.FC<{
 
       {/* Total */}
       <TableCell>
-        <span className="font-bold text-teal-600 text-base">{item.total.toFixed(2)} $</span>
+        <span className={`font-bold text-base ${
+          isDark ? 'text-teal-400' : 'text-teal-600'
+        }`}>
+          {item.total.toFixed(2)} $
+        </span>
       </TableCell>
 
       {/* Actions */}
       <TableCell>
         <button 
           onClick={onRemove}
-          className="text-gray-400 hover:text-red-500 p-2 rounded hover:bg-red-50 transition-all duration-200 transform group-hover:scale-110"
+          className={`p-2 rounded transition-all duration-200 transform group-hover:scale-110 ${
+            isDark
+              ? 'text-gray-400 hover:text-red-400 hover:bg-red-900/30'
+              : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+          }`}
         >
           <Trash2 className="w-5 h-5" />
         </button>
@@ -301,18 +355,24 @@ const SummaryRow: React.FC<{
   isTotal?: boolean;
   className?: string;
 }> = ({ label, value, isTotal = false, className = '' }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   const baseClasses = "flex justify-between items-center py-3";
   const borderClasses = isTotal 
-    ? "bg-white rounded-lg px-4 shadow-md border-2 border-teal-200" 
-    : "border-b border-gray-200";
+    ? isDark
+      ? "bg-gray-800 rounded-lg px-4 shadow-md border border-teal-800"
+      : "bg-white rounded-lg px-4 shadow-md border-2 border-teal-200"
+    : isDark
+      ? "border-b border-gray-700"
+      : "border-b border-gray-200";
   
   const textClasses = isTotal
-    ? "text-xl font-bold text-gray-900"
-    : "text-gray-700 font-medium";
+    ? isDark ? "text-xl font-bold text-white" : "text-xl font-bold text-gray-900"
+    : isDark ? "text-gray-300 font-medium" : "text-gray-700 font-medium";
     
   const valueClasses = isTotal
-    ? "text-2xl font-bold text-teal-600"
-    : "font-bold text-gray-900";
+    ? isDark ? "text-2xl font-bold text-teal-400" : "text-2xl font-bold text-teal-600"
+    : isDark ? "font-bold text-gray-200" : "font-bold text-gray-900";
 
   return (
     <div className={`${baseClasses} ${borderClasses} ${className}`}>
@@ -328,25 +388,41 @@ const CartHeader: React.FC<{
   onDeleteSelected: () => void;
   onBack?: () => void;
 }> = ({ selectedCount, onDeleteSelected, onBack }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
-    <div className="bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800 px-6 py-5 relative overflow-hidden">
+    <div className={`px-6 py-5 relative overflow-hidden ${
+      isDark
+        ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900'
+        : 'bg-gradient-to-r from-teal-600 via-teal-700 to-teal-800'
+    }`}>
       <div className="absolute inset-0 bg-black/10"></div>
       <div className="relative flex justify-between items-center">
         <button 
           onClick={onDeleteSelected}
           disabled={selectedCount === 0}
-          className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2"
+          className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center gap-2 ${
+            isDark
+              ? 'bg-red-700 hover:bg-red-600 disabled:bg-gray-700 text-white disabled:cursor-not-allowed'
+              : 'bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white disabled:cursor-not-allowed'
+          }`}
         >
           <Trash2 className="w-4 h-4" />
           حذف المحدد ({selectedCount})
         </button>
         
-        <h1 className="text-2xl font-bold text-white drop-shadow-md">سلة التسوق</h1>
+        <h1 className={`text-2xl font-bold drop-shadow-md ${
+          isDark ? 'text-white' : 'text-white'
+        }`}>
+          سلة التسوق
+        </h1>
         
         {onBack && (
           <button 
             onClick={onBack}
-            className="text-white/80 hover:text-white transition-colors p-2 rounded hover:bg-white/10"
+            className={`p-2 rounded transition-colors ${
+              isDark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-white/80 hover:text-white hover:bg-white/10'
+            }`}
           >
             <ArrowRight className="w-6 h-6" />
           </button>
@@ -365,14 +441,19 @@ const AtomicCartTable: React.FC<{
   onQuantityChange: (itemId: number, newQuantity: number) => void;
   onRemoveItem: (itemId: number) => void;
 }> = ({ items, selectedItems, onSelectItem, onSelectAll, onQuantityChange, onRemoveItem }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
   const allSelected = items.length > 0 && selectedItems.size === items.length;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+    <div className={`rounded-xl shadow-lg overflow-hidden ${
+      isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
+    }`}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <tr className={`border-b ${
+              isDark ? 'border-gray-700' : 'border-gray-200'
+            }`}>
               <TableHeader className="w-16">
                 <div className="flex items-center justify-center">
                   <Checkbox checked={allSelected} onChange={onSelectAll} />
@@ -431,24 +512,39 @@ const AtomicCartSummary: React.FC<{
   onCheckout: () => void;
   loading?: boolean;
 }> = ({ subtotal, deliveryFee, tax = 0, total, onCheckout, loading = false }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+  
   return (
-    <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-6 shadow-lg border border-teal-100 h-fit sticky top-4">
+    <div className={`rounded-xl p-6 shadow-lg h-fit sticky top-4 ${
+      isDark
+        ? 'bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700'
+        : 'bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100'
+    }`}>
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">ملخص الطلب</h2>
-        <div className="w-16 h-1 bg-gradient-to-r from-teal-400 to-emerald-500 rounded mx-auto"></div>
+        <h2 className={`text-2xl font-bold mb-2 ${
+          isDark ? 'text-white' : 'text-gray-900'
+        }`}>
+          ملخص الطلب
+        </h2>
+        <div className={`w-16 h-1 mx-auto rounded ${
+          isDark ? 'bg-teal-700' : 'bg-gradient-to-r from-teal-400 to-emerald-500'
+        }`}></div>
       </div>
       
       <div className="space-y-4">
-      
-        
-
-   
-         {/* ملاحظة رسوم التوصيل */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-          <p className="text-sm text-black font-bold text-center">
+        {/* ملاحظة رسوم التوصيل */}
+        <div className={`rounded-lg p-3 mt-4 ${
+          isDark
+            ? 'bg-blue-900/30 border border-blue-800'
+            : 'bg-blue-50 border border-blue-200'
+        }`}>
+          <p className={`text-sm font-bold text-center ${
+            isDark ? 'text-blue-300' : 'text-black'
+          }`}>
             ملاحظة: رسوم التوصيل على المشتري
           </p>
         </div>
+        
         <SummaryRow
           label="الإجمالي النهائي"
           value={`${subtotal.toFixed(2)} $`}
@@ -459,12 +555,19 @@ const AtomicCartSummary: React.FC<{
       <button 
         onClick={onCheckout}
         disabled={loading}
-        className="w-full mt-6 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] flex items-center justify-center gap-3 disabled:transform-none disabled:cursor-not-allowed"
+        className={`w-full mt-6 py-4 rounded-xl text-lg font-bold shadow-lg transition-all duration-300 flex items-center justify-center gap-3 ${
+          isDark
+            ? loading
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-teal-700 to-emerald-700 hover:from-teal-600 hover:to-emerald-600 text-white hover:shadow-xl transform hover:scale-[1.02]'
+            : loading
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+              : 'bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white hover:shadow-xl transform hover:scale-[1.02]'
+        } disabled:transform-none`}
       >
         <ShoppingCart className="w-5 h-5" />
         {loading ? 'جاري المعالجة...' : 'المتابعة للدفع'}
       </button>
-     
     </div>
   );
 };
@@ -486,10 +589,23 @@ const AtomicCartPage: React.FC<AtomicCartPageProps> = ({
   onCheckout,
   onBackToShopping
 }) => {
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30" dir="rtl">
+    <div 
+      className="min-h-screen" 
+      dir="rtl"
+      style={{
+        background: isDark 
+          ? 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)'
+          : 'linear-gradient(135deg, #96EDD9 0%, #96EDD9 20%, #96EDD9 50%, #96EDD9 80%, #FFFFFF 100%)',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white shadow-2xl overflow-hidden">
+        <div className={`shadow-2xl overflow-hidden ${
+          isDark ? 'bg-gray-900' : 'bg-white'
+        }`}>
           
           {/* Header */}
           <CartHeader
