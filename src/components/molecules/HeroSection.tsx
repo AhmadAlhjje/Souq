@@ -2,7 +2,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Heading from "../atoms/Heading";
 import Text from "../atoms/Text";
-import Button from "../atoms/Button";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 

@@ -13,7 +13,7 @@ export default function Home() {
 
     <>
     <MainLayout>
-      <HeroSection />
+      <HeroSection /> 
       <HeroTitleSection />
       <ServicesSection />
       <JoinUsSection />

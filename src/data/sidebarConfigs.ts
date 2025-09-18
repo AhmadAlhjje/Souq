@@ -120,7 +120,7 @@ export const getAdminSidebarConfig = (t: any): SidebarConfig => ({
       id: "logout",
       label: t("sidebar.bottom.logout"),
       icon: LogOut,
-      href: "/LoginPage",
+      href: "/",
     },
   ],
 });
