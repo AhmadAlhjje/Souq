@@ -50,7 +50,7 @@ const AdminDashboardStats: React.FC<AdminDashboardStatsProps> = ({
         new Intl.NumberFormat("ar-SA", {
           minimumFractionDigits: 0,
           maximumFractionDigits: 2,
-        }).format(value) + " ل.س"
+        }).format(value) + " $"
       );
     }
     return new Intl.NumberFormat("ar-SA").format(value);
