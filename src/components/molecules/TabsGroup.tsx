@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Package, Check, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import TabButton from '../atoms/TabButton';
 import { TabType, OrderStats } from '../../types/orders';
+import { useTranslation } from "react-i18next";
 
 interface TabsGroupProps {
   activeTab: TabType;
@@ -16,73 +17,52 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
   stats,
   isDark
 }) => {
+  const { t } = useTranslation();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
 
   const tabs = [
-    { id: "all" as TabType, label: "كل الطلبات", icon: Package, count: stats.totalOrders },
-    { id: "shipped" as TabType, label: "الطلبات المشحونة", icon: Check, count: stats.shippedOrders },
-    { id: "unshipped" as TabType, label: "الطلبات غير المشحونة", icon: X, count: stats.unshippedOrders },
-    { id: "monitored" as TabType, label: "الطلبات المرصودة", icon: Eye, count: stats.monitoredOrders || 0 },
+    { id: "all" as TabType, label: t("tabs.all"), icon: Package, count: stats.totalOrders },
+    { id: "shipped" as TabType, label: t("tabs.shipped"), icon: Check, count: stats.shippedOrders },
+    { id: "unshipped" as TabType, label: t("tabs.unshipped"), icon: X, count: stats.unshippedOrders },
+    { id: "monitored" as TabType, label: t("tabs.monitored"), icon: Eye, count: stats.monitoredOrders || 0 },
   ];
 
-  // التحقق من حالة التمرير
   const checkScrollability = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      
       setCanScrollLeft(scrollLeft > 0);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
       setShowScrollButtons(scrollWidth > clientWidth);
     }
   };
 
-  // التمرير إلى اليسار
   const scrollLeft = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: -200,
-        behavior: 'smooth'
-      });
-    }
+    scrollContainerRef.current?.scrollBy({ left: -200, behavior: 'smooth' });
   };
 
-  // التمرير إلى اليمين
   const scrollRight = () => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollBy({
-        left: 200,
-        behavior: 'smooth'
-      });
-    }
+    scrollContainerRef.current?.scrollBy({ left: 200, behavior: 'smooth' });
   };
 
-  // مراقبة تغيير حجم الشاشة والتمرير
   useEffect(() => {
     checkScrollability();
-    
     const handleResize = () => checkScrollability();
     const handleScroll = () => checkScrollability();
 
     window.addEventListener('resize', handleResize);
-    
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.addEventListener('scroll', handleScroll);
-    }
+    scrollContainerRef.current?.addEventListener('scroll', handleScroll);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.removeEventListener('scroll', handleScroll);
-      }
+      scrollContainerRef.current?.removeEventListener('scroll', handleScroll);
     };
   }, []);
 
   return (
     <div className="relative mb-6" dir="rtl">
-      {/* زر التمرير الأيسر */}
       {showScrollButtons && canScrollLeft && (
         <button
           onClick={scrollLeft}
@@ -96,7 +76,6 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
         </button>
       )}
 
-      {/* زر التمرير الأيمن */}
       {showScrollButtons && canScrollRight && (
         <button
           onClick={scrollRight}
@@ -110,17 +89,12 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
         </button>
       )}
 
-      {/* حاوي التمرير */}
       <div className={`overflow-hidden ${showScrollButtons ? 'mx-10' : ''}`}>
         <div
           ref={scrollContainerRef}
           className="flex overflow-x-auto scrollbar-hide scroll-smooth"
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-          }}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {/* حاوي التبويبات */}
           <div
             className={`flex rounded-xl min-w-max ${
               isDark
@@ -144,7 +118,6 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
         </div>
       </div>
 
-      {/* مؤشرات النقاط للشاشات الصغيرة جداً (اختياري) */}
       {showScrollButtons && (
         <div className="flex justify-center mt-2 gap-1 sm:hidden">
           {tabs.map((_, index) => (

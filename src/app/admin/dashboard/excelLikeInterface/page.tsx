@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Trash2,
@@ -14,6 +15,7 @@ import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { uploadMultipleProducts } from "@/api/products";
 import { useStore } from "@/contexts/StoreContext";
+import { useThemeContext } from "@/contexts/ThemeContext";
 import * as XLSX from "xlsx";
 
 interface ProductRow {
@@ -45,6 +47,10 @@ interface BulkProductData {
 }
 
 const ExcelLikeInterface = () => {
+  const { t, i18n } = useTranslation("");
+  const { isDark } = useThemeContext();
+  const isRTL = i18n.language === 'ar';
+  
   const [products, setProducts] = useState<ProductRow[]>([
     {
       id: "1",
@@ -72,53 +78,68 @@ const ExcelLikeInterface = () => {
     };
   }, []);
 
+  // Theme classes
+  const bgClass = isDark ? 'bg-gray-900' : 'bg-gray-50';
+  const cardBgClass = isDark ? 'bg-gray-800' : 'bg-white';
+  const textClass = isDark ? 'text-white' : 'text-gray-800';
+  const textSecondaryClass = isDark ? 'text-gray-300' : 'text-gray-600';
+  const textMutedClass = isDark ? 'text-gray-400' : 'text-gray-500';
+  const borderClass = isDark ? 'border-gray-600' : 'border-gray-300';
+  const borderLightClass = isDark ? 'border-gray-700' : 'border-gray-200';
+  const hoverBgClass = isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50';
+  const inputBgClass = isDark ? 'bg-gray-700' : 'bg-transparent';
+  const inputHoverClass = isDark ? 'hover:bg-gray-600' : 'hover:bg-blue-50';
+  const inputFocusClass = isDark ? 'focus:bg-gray-600' : 'focus:bg-white';
+  const headerBgClass = isDark ? 'bg-gray-700' : 'bg-gray-100';
+  const rowHeaderBgClass = isDark ? 'bg-gray-700' : 'bg-gray-50';
+  const instructionsBgClass = isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200';
+  const instructionsTextClass = isDark ? 'text-blue-300' : 'text-blue-800';
+  const instructionsTextSecondaryClass = isDark ? 'text-blue-200' : 'text-blue-700';
+
   const columns = [
-    { key: "name", label: "اسم المنتج", width: "200px" },
-    { key: "description", label: "الوصف", width: "300px" },
-    { key: "price", label: "السعر $", width: "120px" },
-    { key: "discount_percentage", label: "نسبة الخصم %", width: "120px" },
-    { key: "stock_quantity", label: "الكمية المتاحة", width: "120px" },
-    { key: "images", label: "الصور (حتى 8 صور)", width: "250px" },
+    { key: "name", label: t("columns.name"), width: "200px" },
+    { key: "description", label: t("columns.description"), width: "300px" },
+    { key: "price", label: t("columns.price"), width: "120px" },
+    { key: "discount_percentage", label: t("columns.discount"), width: "120px" },
+    { key: "stock_quantity", label: t("columns.quantity"), width: "120px" },
+    { key: "images", label: t("columns.images"), width: "250px" },
   ];
 
-  // دالة تحميل ملف Excel نموذجي
   const downloadExcelTemplate = () => {
     const templateData = [
       {
-        "اسم المنتج": "مثال - قميص قطني",
-        الوصف: "قميص قطني عالي الجودة مناسب لجميع المناسبات",
-        السعر: 29.99,
-        "نسبة الخصم %": 10,
-        "الكمية المتاحة": 50,
+        [t("excelColumns.name")]: t("exampleData.product1.name"),
+        [t("excelColumns.description")]: t("exampleData.product1.description"),
+        [t("excelColumns.price")]: 29.99,
+        [t("excelColumns.discount")]: 10,
+        [t("excelColumns.quantity")]: 50,
       },
       {
-        "اسم المنتج": "مثال - حذاء رياضي",
-        الوصف: "حذاء رياضي مريح للجري والأنشطة اليومية",
-        السعر: 79.99,
-        "نسبة الخصم %": "",
-        "الكمية المتاحة": 25,
+        [t("excelColumns.name")]: t("exampleData.product2.name"),
+        [t("excelColumns.description")]: t("exampleData.product2.description"),
+        [t("excelColumns.price")]: 79.99,
+        [t("excelColumns.discount")]: "",
+        [t("excelColumns.quantity")]: 25,
       },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(templateData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "المنتجات");
+    XLSX.utils.book_append_sheet(workbook, worksheet, t("excelWorksheetName"));
 
-    // تحسين عرض الأعمدة
     const colWidths = [
-      { wch: 25 }, // اسم المنتج
-      { wch: 40 }, // الوصف
-      { wch: 10 }, // السعر
-      { wch: 15 }, // نسبة الخصم
-      { wch: 15 }, // الكمية
+      { wch: 25 },
+      { wch: 40 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 15 },
     ];
     worksheet["!cols"] = colWidths;
 
-    XLSX.writeFile(workbook, "نموذج_المنتجات.xlsx");
-    showToast("تم تحميل النموذج بنجاح", "success");
+    XLSX.writeFile(workbook, t("templateFileName"));
+    showToast(t("messages.templateDownloaded"), "success");
   };
 
-  // دالة رفع ملف Excel
   const handleExcelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -133,34 +154,34 @@ const ExcelLikeInterface = () => {
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
         if (jsonData.length === 0) {
-          showToast("الملف فارغ أو لا يحتوي على بيانات صحيحة", "error");
+          showToast(t("errors.emptyFile"), "error");
           return;
         }
 
-        // تحويل البيانات إلى تنسيق المنتجات
         const importedProducts: ProductRow[] = jsonData.map(
           (row: any, index: number) => {
+            const nameKey = t("excelColumns.name");
+            const descKey = t("excelColumns.description");
+            const priceKey = t("excelColumns.price");
+            const discountKey = t("excelColumns.discount");
+            const quantityKey = t("excelColumns.quantity");
+
             return {
               id: (Date.now() + index).toString(),
-              name: row["اسم المنتج"] || row["name"] || "",
-              description: row["الوصف"] || row["description"] || "",
-              price: (row["السعر"] || row["price"] || "").toString(),
+              name: row[nameKey] || row["name"] || "",
+              description: row[descKey] || row["description"] || "",
+              price: (row[priceKey] || row["price"] || "").toString(),
               discount_percentage: (
-                row["نسبة الخصم %"] ||
-                row["discount_percentage"] ||
-                ""
+                row[discountKey] || row["discount_percentage"] || ""
               ).toString(),
               stock_quantity: (
-                row["الكمية المتاحة"] ||
-                row["stock_quantity"] ||
-                ""
+                row[quantityKey] || row["stock_quantity"] || ""
               ).toString(),
               images: [],
             };
           }
         );
 
-        // التحقق من صحة البيانات
         const validProducts = importedProducts.filter(
           (product) =>
             product.name.trim() &&
@@ -170,16 +191,11 @@ const ExcelLikeInterface = () => {
         );
 
         if (validProducts.length === 0) {
-          showToast(
-            "لا توجد منتجات صالحة في الملف. تأكد من وجود: اسم المنتج، الوصف، السعر، والكمية",
-            "error"
-          );
+          showToast(t("errors.noValidProducts"), "error");
           return;
         }
 
-        // إضافة المنتجات المستوردة
         setProducts((prevProducts) => {
-          // إزالة الصف الفارغ الأول إذا كان فارغاً
           const filteredPrev = prevProducts.filter(
             (p) =>
               p.name.trim() ||
@@ -190,27 +206,20 @@ const ExcelLikeInterface = () => {
           return [...filteredPrev, ...validProducts];
         });
 
-        showToast(`تم استيراد ${validProducts.length} منتج بنجاح`, "success");
+        showToast(t("messages.productsImported", { count: validProducts.length }), "success");
 
         if (importedProducts.length > validProducts.length) {
           const skipped = importedProducts.length - validProducts.length;
-          showToast(
-            `تم تجاهل ${skipped} منتج لعدم اكتمال البيانات المطلوبة`,
-            "warning"
-          );
+          showToast(t("messages.productsSkipped", { count: skipped }), "warning");
         }
       } catch (error) {
-        console.error("خطأ في قراءة ملف Excel:", error);
-        showToast(
-          "خطأ في قراءة الملف. تأكد من أن الملف من نوع Excel صحيح",
-          "error"
-        );
+        console.error("Excel reading error:", error);
+        showToast(t("errors.excelReadError"), "error");
       }
     };
 
     reader.readAsArrayBuffer(file);
 
-    // إعادة تعيين input
     if (excelInputRef.current) {
       excelInputRef.current.value = "";
     }
@@ -227,15 +236,15 @@ const ExcelLikeInterface = () => {
       images: [],
     };
     setProducts([...products, newRow]);
-    showToast("تم إضافة صف جديد", "info");
+    showToast(t("messages.rowAdded"), "info");
   };
 
   const deleteRow = (id: string) => {
     if (products.length > 1) {
       setProducts(products.filter((product) => product.id !== id));
-      showToast("تم حذف الصف", "success");
+      showToast(t("messages.rowDeleted"), "success");
     } else {
-      showToast("لا يمكن حذف الصف الأخير", "warning");
+      showToast(t("messages.cannotDeleteLastRow"), "warning");
     }
   };
 
@@ -255,7 +264,7 @@ const ExcelLikeInterface = () => {
     const totalImages = currentProduct.images.length + newImages.length;
 
     if (totalImages > 8) {
-      showToast("يمكن رفع حتى 8 صور فقط لكل منتج", "warning");
+      showToast(t("errors.maxImagesExceeded"), "warning");
       return;
     }
 
@@ -263,7 +272,7 @@ const ExcelLikeInterface = () => {
       file.type.startsWith("image/")
     );
     if (validImages.length !== newImages.length) {
-      showToast("يرجى اختيار ملفات صور فقط", "error");
+      showToast(t("errors.invalidImageFiles"), "error");
       return;
     }
 
@@ -271,12 +280,12 @@ const ExcelLikeInterface = () => {
       (file) => file.size > 5 * 1024 * 1024
     );
     if (oversizedFiles.length > 0) {
-      showToast("حجم الصورة يجب أن يكون أقل من 5 ميجابايت", "error");
+      showToast(t("errors.imageTooLarge"), "error");
       return;
     }
 
     updateCell(productId, "images", [...currentProduct.images, ...validImages]);
-    showToast(`تم إضافة ${validImages.length} صورة`, "success");
+    showToast(t("messages.imagesAdded", { count: validImages.length }), "success");
   };
 
   const removeImage = (productId: string, imageIndex: number) => {
@@ -285,7 +294,7 @@ const ExcelLikeInterface = () => {
 
     const newImages = product.images.filter((_, index) => index !== imageIndex);
     updateCell(productId, "images", newImages);
-    showToast("تم حذف الصورة", "success");
+    showToast(t("messages.imageRemoved"), "success");
   };
 
   const saveProducts = useCallback(async () => {
@@ -294,23 +303,21 @@ const ExcelLikeInterface = () => {
 
       products.forEach((product, index) => {
         if (!product.name.trim()) {
-          errors.push(`المنتج ${index + 1}: الاسم مطلوب`);
+          errors.push(t("validation.nameRequired", { index: index + 1 }));
         }
         if (!product.description.trim()) {
-          errors.push(`المنتج ${index + 1}: الوصف مطلوب`);
+          errors.push(t("validation.descriptionRequired", { index: index + 1 }));
         }
         if (!product.price || parseFloat(product.price) <= 0) {
-          errors.push(`المنتج ${index + 1}: السعر يجب أن يكون أكبر من صفر`);
+          errors.push(t("validation.priceRequired", { index: index + 1 }));
         }
         if (!product.stock_quantity || parseInt(product.stock_quantity) < 0) {
-          errors.push(`المنتج ${index + 1}: الكمية يجب أن تكون صفر أو أكثر`);
+          errors.push(t("validation.quantityRequired", { index: index + 1 }));
         }
         if (product.discount_percentage) {
           const discount = parseFloat(product.discount_percentage);
           if (isNaN(discount) || discount < 0 || discount > 100) {
-            errors.push(
-              `المنتج ${index + 1}: نسبة الخصم يجب أن تكون بين 0 و 100`
-            );
+            errors.push(t("validation.discountInvalid", { index: index + 1 }));
           }
         }
       });
@@ -319,7 +326,7 @@ const ExcelLikeInterface = () => {
     };
 
     if (!isLoaded || !storeId) {
-      showToast("لم يتم تحديد المتجر. يرجى المحاولة مرة أخرى.", "error");
+      showToast(t("errors.storeNotIdentified"), "error");
       return;
     }
 
@@ -332,10 +339,7 @@ const ExcelLikeInterface = () => {
     );
 
     if (validProducts.length === 0) {
-      showToast(
-        "يرجى ملء البيانات المطلوبة للمنتجات (الاسم، الوصف، السعر، الكمية)",
-        "warning"
-      );
+      showToast(t("errors.noValidData"), "warning");
       return;
     }
 
@@ -346,19 +350,20 @@ const ExcelLikeInterface = () => {
     }
 
     setIsLoading(true);
-    setLoadingMessage("جاري تحضير بيانات المنتجات...");
+    setLoadingMessage(t("loading.preparingData"));
 
     try {
-      setLoadingMessage("معالجة المنتجات وصورها...");
+      setLoadingMessage(t("loading.processingProducts"));
 
       const allImages: File[] = [];
       const productsData = validProducts.map((product, index) => {
         const productImages = product.images;
         allImages.push(...productImages);
 
-        setLoadingMessage(
-          `معالجة المنتج ${index + 1} من ${validProducts.length}...`
-        );
+        setLoadingMessage(t("loading.processingProduct", { 
+          current: index + 1, 
+          total: validProducts.length 
+        }));
 
         const productData: any = {
           name: product.name.trim(),
@@ -384,10 +389,10 @@ const ExcelLikeInterface = () => {
         images: allImages,
       };
 
-      setLoadingMessage("جاري حفظ المنتجات في قاعدة البيانات...");
+      setLoadingMessage(t("loading.savingToDatabase"));
       const result = await uploadMultipleProducts(bulkData);
 
-      showToast(`تم حفظ ${validProducts.length} منتج بنجاح!`, "success");
+      showToast(t("messages.productsSaved", { count: validProducts.length }), "success");
 
       setProducts([
         {
@@ -401,8 +406,8 @@ const ExcelLikeInterface = () => {
         },
       ]);
     } catch (error: any) {
-      console.error("خطأ في حفظ المنتجات:", error);
-      const errorMessage = error.message || "حدث خطأ أثناء حفظ المنتجات";
+      console.error("Error saving products:", error);
+      const errorMessage = error.message || t("errors.savingError");
       showToast(`${errorMessage}`, "error");
     } finally {
       setIsLoading(false);
@@ -413,6 +418,7 @@ const ExcelLikeInterface = () => {
     storeId,
     products,
     showToast,
+    t,
     setIsLoading,
     setLoadingMessage,
     setProducts,
@@ -467,23 +473,23 @@ const ExcelLikeInterface = () => {
       <LoadingSpinner
         size="lg"
         color="green"
-        message="جاري تحميل البيانات..."
+        message={t("loading.loadingData")}
       />
     );
   }
 
   if (!storeId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center bg-white p-8 rounded-lg shadow-sm">
+      <div className={`min-h-screen flex items-center justify-center ${bgClass}`}>
+        <div className={`text-center p-8 rounded-lg shadow-sm ${cardBgClass}`}>
           <div className="text-red-500 mb-4">
             <FileSpreadsheet className="w-16 h-16 mx-auto mb-4 opacity-50" />
           </div>
           <p className="text-red-600 mb-4 font-medium">
-            لم يتم تحديد معرف المتجر
+            {t("errors.storeNotIdentified")}
           </p>
-          <p className="text-gray-600">
-            يرجى تسجيل الدخول أو تحديد المتجر أولاً
+          <p className={textSecondaryClass}>
+            {t("errors.loginRequired")}
           </p>
         </div>
       </div>
@@ -491,38 +497,36 @@ const ExcelLikeInterface = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className={`min-h-screen ${bgClass}`} dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="p-6">
         <div className="max-w-full mx-auto">
           {/* Header */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <div className="flex items-center justify-between">
+          <div className={`rounded-lg shadow-sm p-6 mb-6 ${cardBgClass}`}>
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="bg-[#004D5A] p-3 rounded-lg">
+                <div className="bg-[#004D5A] p-3 rounded-lg flex-shrink-0">
                   <FileSpreadsheet className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800 mb-1">
-                    جدول بيانات المنتجات
+                  <h1 className={`text-2xl font-bold mb-1 ${textClass}`}>
+                    {t("pageTitle")}
                   </h1>
-                  <p className="text-gray-600">
-                    أدخل بيانات المنتجات مباشرة في الجدول • متجر رقم: {storeId}
+                  <p className={textSecondaryClass}>
+                    {t("pageDescription")} • {t("storeId")}: {storeId}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-3 flex-wrap">
-                {/* زر تحميل نموذج Excel */}
+              <div className="flex flex-wrap gap-2 justify-end">
                 <button
                   onClick={downloadExcelTemplate}
                   disabled={isLoading}
-                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                  title="تحميل نموذج Excel"
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
+                  title={t("tooltips.downloadTemplate")}
                 >
                   <Download className="w-4 h-4" />
-                  تحميل نموذج Excel
+                  {t("buttons.downloadTemplate")}
                 </button>
 
-                {/* زر رفع ملف Excel */}
                 <div className="relative">
                   <input
                     type="file"
@@ -534,70 +538,62 @@ const ExcelLikeInterface = () => {
                   />
                   <button
                     disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                    title="رفع ملف Excel"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
+                    title={t("tooltips.uploadExcel")}
                   >
                     <FileUp className="w-4 h-4" />
-                    رفع ملف Excel
+                    {t("buttons.uploadExcel")}
                   </button>
                 </div>
 
                 <button
                   onClick={addRow}
                   disabled={isLoading}
-                  className="bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                  title="إضافة صف جديد"
+                  className="bg-teal-600 hover:bg-teal-700 disabled:bg-teal-400 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
+                  title={t("tooltips.addRow")}
                 >
                   <Plus className="w-4 h-4" />
-                  إضافة صف
+                  {t("buttons.addRow")}
                 </button>
                 <button
                   onClick={saveProducts}
                   disabled={isLoading}
-                  className="bg-[#004D5A] hover:bg-[#006672] text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                  title="حفظ جميع المنتجات (Ctrl+S)"
+                  className="bg-[#004D5A] hover:bg-[#006672] text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
+                  title={t("tooltips.saveData")}
                 >
                   <Save className="w-4 h-4" />
-                  حفظ البيانات
+                  {t("buttons.saveData")}
                 </button>
               </div>
             </div>
           </div>
 
           {/* Excel Instructions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <h3 className="font-semibold text-blue-800 mb-2">
-              تعليمات استخدام Excel:
+          <div className={`rounded-lg p-4 mb-6 border ${instructionsBgClass}`}>
+            <h3 className={`font-semibold mb-2 ${instructionsTextClass}`}>
+              {t("instructions.title")}
             </h3>
-            <div className="text-sm text-blue-700 space-y-1">
-              <p>
-                • اضغط &quot;تحميل نموذج Excel&quot; للحصول على ملف Excel
-                بالتنسيق الصحيح
-              </p>
-              <p>
-                • املأ البيانات في ملف Excel (الاسم والوصف والسعر والكمية
-                مطلوبة، نسبة الخصم اختيارية)
-              </p>
-              <p>
-                • احفظ الملف واضغط &quot;رفع ملف Excel&quot; لاستيراد البيانات
-              </p>
-              <p>• بعد الاستيراد، يمكنك رفع الصور لكل منتج من الواجهة</p>
+            <div className={`text-sm space-y-1 ${instructionsTextSecondaryClass}`}>
+              <p>• {t("instructions.step1")}</p>
+              <p>• {t("instructions.step2")}</p>
+              <p>• {t("instructions.step3")}</p>
+              <p>• {t("instructions.step4")}</p>
             </div>
           </div>
 
           {/* Excel-like Table */}
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className={`rounded-lg shadow-sm overflow-hidden ${cardBgClass}`}>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100 border-b-2 border-gray-200">
-                    <th className="w-12 p-3 text-center text-gray-600 font-medium border-r border-gray-300">
+                  <tr className={`border-b-2 ${headerBgClass} ${borderClass}`}>
+                    <th className={`w-12 p-3 text-center font-medium ${textSecondaryClass} ${borderClass} ${isRTL ? 'border-l' : 'border-r'}`}>
                       #
                     </th>
                     {columns.map((col, index) => (
                       <th
                         key={col.key}
-                        className="p-3 text-right text-gray-700 font-medium border-r border-gray-300 bg-gray-50"
+                        className={`p-3 ${isRTL ? 'text-right' : 'text-left'} font-medium ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${textClass} ${rowHeaderBgClass}`}
                         style={{ width: col.width }}
                       >
                         {col.label}
@@ -605,17 +601,17 @@ const ExcelLikeInterface = () => {
                           col.key === "description" ||
                           col.key === "price" ||
                           col.key === "stock_quantity") && (
-                          <span className="text-red-500 mr-1">*</span>
+                          <span className={`text-red-500 ${isRTL ? 'ml-1' : 'mr-1'}`}>*</span>
                         )}
                         {col.key === "discount_percentage" && (
-                          <span className="text-gray-400 mr-1 text-xs">
-                            (اختياري)
+                          <span className={`text-xs ${textMutedClass} ${isRTL ? 'ml-1' : 'mr-1'}`}>
+                            ({t("labels.optional")})
                           </span>
                         )}
                       </th>
                     ))}
-                    <th className="w-16 p-3 text-center text-gray-600 font-medium">
-                      إجراءات
+                    <th className={`w-16 p-3 text-center font-medium ${textSecondaryClass}`}>
+                      {t("labels.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -623,15 +619,15 @@ const ExcelLikeInterface = () => {
                   {products.map((product, rowIndex) => (
                     <tr
                       key={product.id}
-                      className="border-b border-gray-200 hover:bg-gray-50 transition-colors"
+                      className={`border-b ${borderLightClass} ${hoverBgClass} transition-colors`}
                     >
-                      <td className="p-3 text-center text-gray-500 font-medium bg-gray-50 border-r border-gray-300">
+                      <td className={`p-3 text-center font-medium ${textMutedClass} ${rowHeaderBgClass} ${borderClass} ${isRTL ? 'border-l' : 'border-r'}`}>
                         {rowIndex + 1}
                       </td>
 
-                      {/* اسم المنتج */}
+                      {/* Product Name */}
                       <td
-                        className={`p-0 border-r border-gray-300 ${
+                        className={`p-0 ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${
                           selectedCell?.row === rowIndex &&
                           selectedCell?.col === 0
                             ? "ring-2 ring-blue-500"
@@ -647,14 +643,14 @@ const ExcelLikeInterface = () => {
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 0)}
                           disabled={isLoading}
-                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white disabled:bg-gray-100"
-                          placeholder="أدخل اسم المنتج..."
+                          className={`w-full h-12 px-3 border-none outline-none ${inputBgClass} ${inputHoverClass} ${inputFocusClass} disabled:opacity-50 ${textClass}`}
+                          placeholder={t("placeholders.productName")}
                         />
                       </td>
 
-                      {/* وصف المنتج */}
+                      {/* Product Description */}
                       <td
-                        className={`p-0 border-r border-gray-300 ${
+                        className={`p-0 ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${
                           selectedCell?.row === rowIndex &&
                           selectedCell?.col === 1
                             ? "ring-2 ring-blue-500"
@@ -666,22 +662,18 @@ const ExcelLikeInterface = () => {
                           type="text"
                           value={product.description}
                           onChange={(e) =>
-                            updateCell(
-                              product.id,
-                              "description",
-                              e.target.value
-                            )
+                            updateCell(product.id, "description", e.target.value)
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 1)}
                           disabled={isLoading}
-                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white disabled:bg-gray-100"
-                          placeholder="أدخل وصف المنتج..."
+                          className={`w-full h-12 px-3 border-none outline-none ${inputBgClass} ${inputHoverClass} ${inputFocusClass} disabled:opacity-50 ${textClass}`}
+                          placeholder={t("placeholders.productDescription")}
                         />
                       </td>
 
-                      {/* السعر */}
+                      {/* Price */}
                       <td
-                        className={`p-0 border-r border-gray-300 ${
+                        className={`p-0 ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${
                           selectedCell?.row === rowIndex &&
                           selectedCell?.col === 2
                             ? "ring-2 ring-blue-500"
@@ -697,16 +689,16 @@ const ExcelLikeInterface = () => {
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 2)}
                           disabled={isLoading}
-                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white text-center disabled:bg-gray-100"
+                          className={`w-full h-12 px-3 border-none outline-none ${inputBgClass} ${inputHoverClass} ${inputFocusClass} text-center disabled:opacity-50 ${textClass}`}
                           placeholder="0.00"
                           step="0.01"
                           min="0"
                         />
                       </td>
 
-                      {/* نسبة الخصم */}
+                      {/* Discount Percentage */}
                       <td
-                        className={`p-0 border-r border-gray-300 ${
+                        className={`p-0 ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${
                           selectedCell?.row === rowIndex &&
                           selectedCell?.col === 3
                             ? "ring-2 ring-blue-500"
@@ -718,15 +710,11 @@ const ExcelLikeInterface = () => {
                           type="number"
                           value={product.discount_percentage}
                           onChange={(e) =>
-                            updateCell(
-                              product.id,
-                              "discount_percentage",
-                              e.target.value
-                            )
+                            updateCell(product.id, "discount_percentage", e.target.value)
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 3)}
                           disabled={isLoading}
-                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white text-center disabled:bg-gray-100"
+                          className={`w-full h-12 px-3 border-none outline-none ${inputBgClass} ${inputHoverClass} ${inputFocusClass} text-center disabled:opacity-50 ${textClass}`}
                           placeholder="0"
                           step="1"
                           min="0"
@@ -734,9 +722,9 @@ const ExcelLikeInterface = () => {
                         />
                       </td>
 
-                      {/* الكمية المتاحة */}
+                      {/* Stock Quantity */}
                       <td
-                        className={`p-0 border-r border-gray-300 ${
+                        className={`p-0 ${borderClass} ${isRTL ? 'border-l' : 'border-r'} ${
                           selectedCell?.row === rowIndex &&
                           selectedCell?.col === 4
                             ? "ring-2 ring-blue-500"
@@ -748,22 +736,18 @@ const ExcelLikeInterface = () => {
                           type="number"
                           value={product.stock_quantity}
                           onChange={(e) =>
-                            updateCell(
-                              product.id,
-                              "stock_quantity",
-                              e.target.value
-                            )
+                            updateCell(product.id, "stock_quantity", e.target.value)
                           }
                           onKeyDown={(e) => handleKeyDown(e, rowIndex, 4)}
                           disabled={isLoading}
-                          className="w-full h-12 px-3 border-none outline-none bg-transparent hover:bg-blue-50 focus:bg-white text-center disabled:bg-gray-100"
+                          className={`w-full h-12 px-3 border-none outline-none ${inputBgClass} ${inputHoverClass} ${inputFocusClass} text-center disabled:opacity-50 ${textClass}`}
                           placeholder="0"
                           min="0"
                         />
                       </td>
 
-                      {/* الصور */}
-                      <td className="p-3 border-r border-gray-300">
+                      {/* Images */}
+                      <td className={`p-3 ${borderClass} ${isRTL ? 'border-l' : 'border-r'}`}>
                         <div className="flex flex-col gap-2">
                           <div className="flex items-center gap-2">
                             <input
@@ -783,17 +767,21 @@ const ExcelLikeInterface = () => {
                                 fileInputRefs.current[product.id]?.click()
                               }
                               disabled={product.images.length >= 8 || isLoading}
-                              className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className={`px-3 py-1 rounded text-sm flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                                isDark 
+                                  ? 'bg-blue-900/30 hover:bg-blue-900/50 text-blue-300' 
+                                  : 'bg-blue-100 hover:bg-blue-200 text-blue-700'
+                              }`}
                               title={
                                 product.images.length >= 8
-                                  ? "تم الوصول للحد الأقصى"
-                                  : "رفع صور (حد أقصى 5MB لكل صورة)"
+                                  ? t("tooltips.maxImagesReached")
+                                  : t("tooltips.uploadImages")
                               }
                             >
                               <Upload className="w-3 h-3" />
-                              رفع صور
+                              {t("buttons.uploadImages")}
                             </button>
-                            <span className="text-xs text-gray-500">
+                            <span className={`text-xs ${textMutedClass}`}>
                               {product.images.length}/8
                             </span>
                           </div>
@@ -807,10 +795,12 @@ const ExcelLikeInterface = () => {
                                     key={imageIndex}
                                     className="relative group"
                                   >
-                                    <div className="w-12 h-12 bg-gray-100 rounded border flex items-center justify-center overflow-hidden">
+                                    <div className={`w-12 h-12 rounded border flex items-center justify-center overflow-hidden ${
+                                      isDark ? 'bg-gray-600 border-gray-500' : 'bg-gray-100 border-gray-300'
+                                    }`}>
                                       <img
                                         src={URL.createObjectURL(image)}
-                                        alt={`صورة ${imageIndex + 1}`}
+                                        alt={t("labels.imageAlt", { index: imageIndex + 1 })}
                                         className="w-full h-full object-cover"
                                       />
                                     </div>
@@ -820,15 +810,17 @@ const ExcelLikeInterface = () => {
                                       }
                                       disabled={isLoading}
                                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-30"
-                                      title="حذف الصورة"
+                                      title={t("tooltips.deleteImage")}
                                     >
                                       <X className="w-2 h-2" />
                                     </button>
                                   </div>
                                 ))}
                               {product.images.length > 4 && (
-                                <div className="w-12 h-12 bg-gray-200 rounded border flex items-center justify-center">
-                                  <span className="text-xs text-gray-600">
+                                <div className={`w-12 h-12 rounded border flex items-center justify-center ${
+                                  isDark ? 'bg-gray-600 border-gray-500' : 'bg-gray-200 border-gray-300'
+                                }`}>
+                                  <span className={`text-xs ${textMutedClass}`}>
                                     +{product.images.length - 4}
                                   </span>
                                 </div>
@@ -838,16 +830,20 @@ const ExcelLikeInterface = () => {
                         </div>
                       </td>
 
-                      {/* إجراءات */}
+                      {/* Actions */}
                       <td className="p-3 text-center">
                         <button
                           onClick={() => deleteRow(product.id)}
                           disabled={products.length === 1 || isLoading}
-                          className="text-red-600 hover:text-red-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          className={`hover:text-red-800 disabled:cursor-not-allowed transition-colors ${
+                            products.length === 1 || isLoading 
+                              ? textMutedClass 
+                              : 'text-red-600'
+                          }`}
                           title={
                             products.length === 1
-                              ? "لا يمكن حذف الصف الأخير"
-                              : "حذف الصف"
+                              ? t("tooltips.cannotDeleteLastRow")
+                              : t("tooltips.deleteRow")
                           }
                         >
                           <Trash2 className="w-4 h-4" />
@@ -859,25 +855,27 @@ const ExcelLikeInterface = () => {
               </table>
             </div>
 
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
+            {/* Add Row Footer */}
+            <div className={`p-4 border-t ${borderLightClass} ${rowHeaderBgClass}`}>
               <button
                 onClick={addRow}
                 disabled={isLoading}
                 className="w-full py-2 text-white bg-teal-600 hover:bg-teal-700 transition-colors rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Plus className="w-4 h-4" />
-                إضافة صف جديد
+                {t("buttons.addNewRow")}
               </button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Loading Overlay */}
       {isLoading && (
         <LoadingSpinner
           size="lg"
           color="green"
-          message={loadingMessage || "جاري معالجة طلبك..."}
+          message={loadingMessage || t("loading.processing")}
           overlay={true}
           pulse={true}
           dots={true}

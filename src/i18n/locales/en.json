@@ -370,7 +370,6 @@
   "view_all_notifications": "View All Notifications",
   "profile": "Profile",
   "settings": "Settings",
-  "messages": "Messages",
   "help": "Help",
   "logout": "Logout",
   "admin_name": "Ahmed Mohammed",
@@ -457,11 +456,14 @@
     "close": "Close",
     "save": "Save Changes",
     "saving": "Saving...",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "viewDetails": "View Details",
+    "markAsShipped": "Mark as Shipped"
   },
 
   "status": {
     "inactive": "Inactive",
+    "draft": "Draft",
     "pending": "Pending",
     "approved": "Approved",
     "rejected": "Rejected",
@@ -473,7 +475,9 @@
     "active": "Active",
     "out_of_stock": "Out of Stock",
     "low_stock": "Low Stock",
-    "all": "All Status"
+    "all": "All Status",
+    "unshipped": "Unshipped",
+    "monitored": "Monitored"
   },
 
   "notifications_types": {
@@ -494,7 +498,25 @@
     "forbidden": "Forbidden",
     "not_found": "Not found",
     "timeout": "Request timeout",
-    "unknown_error": "Unknown error"
+    "unknown_error": "Unknown error",
+    "title": "Error",
+    "noStore": "Error: Cannot identify the store. Please log in again",
+    "badRequest": "Error in entered data. Please check all fields",
+    "sessionExpired": "Session expired. Please log in again",
+    "imageTooLarge": "Images are too large. Please choose smaller images",
+    "serverError": "Server error. Please try again later",
+    "unexpected": "An unexpected error occurred. Please try again",
+    "storeNotFound": "Error identifying store",
+    "storeNotFoundMessage": "Cannot identify the store. Please log in again.",
+    "emptyFile": "File is empty or doesn't contain valid data",
+    "noValidProducts": "No valid products found in the file. Make sure to include: product name, description, price, and quantity",
+    "excelReadError": "Error reading the file. Make sure the file is a valid Excel format",
+    "maxImagesExceeded": "You can upload up to 8 images per product only",
+    "invalidImageFiles": "Please select image files only",
+    "storeNotIdentified": "Store not identified. Please try again.",
+    "loginRequired": "Please log in or select a store first",
+    "noValidData": "Please fill in the required product data (name, description, price, quantity)",
+    "savingError": "An error occurred while saving products"
   },
 
   "forms": {
@@ -567,7 +589,18 @@
       "all": "All Orders",
       "pending": "Pending Orders",
       "shipped": "Shipped Orders",
-      "completed": "Completed Orders"
+      "completed": "Completed Orders",
+      "undefined": "Undefined",
+      "product": "Product",
+      "defaultProduct": "Default Product",
+      "monitored": "Monitored",
+      "unshipped": "Unshipped",
+      "confirmShipping": "Confirm Shipping",
+      "confirmShippingMessage": "Are you sure order {{orderNumber}} for {{customerName}} has been shipped?",
+      "resetTotal": "Reset Total",
+      "resetTotalMessage": "Are you sure you want to reset shipped orders total? This action cannot be undone.",
+      "resetSuccess": "Settlement request sent successfully",
+      "resetError": "An error occurred while sending settlement request"
     },
     "customers": {
       "main": "Customers",
@@ -681,7 +714,22 @@
     "placeholder": "Search products..."
   },
   "buttons": {
-    "addProduct": "Add New Product"
+    "addProduct": "Add New Product",
+    "continue": "Continue",
+    "back": "Back",
+    "finish": "Finish",
+    "creating": "Creating...",
+    "getHelp": "Get Help",
+    "retry": "Retry",
+    "downloadTemplate": "Download Excel Template",
+    "uploadExcel": "Upload Excel File",
+    "addRow": "Add Row",
+    "saveData": "Save Data",
+    "uploadImages": "Upload Images",
+    "addNewRow": "Add New Row",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "viewModes": {
     "grid": "Grid View",
@@ -705,7 +753,7 @@
   "productEdit": {
     "title": "Edit Product",
     "basicInfo": "Basic Information",
-    "discountPercentage":"Discount Percentage",
+    "discountPercentage": "Discount Percentage",
     "image": "Product Image",
     "uploadImage": "Upload Image",
     "imageUrl": "Image URL",
@@ -730,11 +778,188 @@
     "tagsHelp": "Separate tags with commas"
   },
   "validation": {
+    "descriptionRequired": "Product {{index}}: Description is required",
     "nameRequired": "Product name is required",
     "nameArRequired": "Arabic name is required",
     "priceRequired": "Price must be greater than 0",
     "stockRequired": "Stock quantity is required",
     "categoryRequired": "Category is required",
-    "statusRequired": "Status is required"
-  }
+    "statusRequired": "Status is required",
+    "quantityRequired": "Please enter a valid product quantity",
+    "imageRequired": "Please upload at least one product image",
+    "discountInvalid": "Please enter a valid discount percentage between 0 and 100",
+    "nameRequiredToContinue": "Please enter the product name before continuing"
+  },
+  "pageTitle": "Add New Product",
+  "pageSubtitle": "Add a new product to your store",
+  "step1": {
+    "title": "Let's help you add a product",
+    "nameLabel": "What is your product name?",
+    "namePlaceholder": "Example: D-Link 3000 Router",
+    "descriptionLabel": "How would you like to describe the content? (optional)",
+    "descriptionPlaceholder": "Example: Advanced user experience",
+    "imageLabel": "Upload product cover image here"
+  },
+  "step2": {
+    "title": "Choose price and quantity",
+    "priceLabel": "What is the product price?",
+    "pricePlaceholder": "Example: 65.50",
+    "discountLabel": "What is the discount percentage? (optional)",
+    "discountPlaceholder": "Example: 15",
+    "discountedPrice": "Price after discount",
+    "quantityLabel": "What is the product quantity?",
+    "quantityPlaceholder": "Example: 150",
+    "quantityUnit": "pieces",
+    "additionalImagesLabel": "Upload additional product images here"
+  },
+  "success": {
+    "productCreated": "🎉 Product created successfully! It will be reviewed soon"
+  },
+  "imageUploadSuccess": "{{count}} image(s) uploaded successfully",
+  "imageRemoved": "Image removed",
+  "stepChanged": {
+    "toStep1": "Returned to previous step",
+    "toStep2": "Moved to next step - Set price and quantity"
+  },
+  "preview": {
+    "defaultName": "Product Name",
+    "defaultDescription": "Short description explaining your product goes here",
+    "productImage": "Product Image",
+    "coverImage": "Cover",
+    "stockQuantity": "Stock Quantity",
+    "price": "Price",
+    "discount": "Discount"
+  },
+  "loading": {
+    "creatingProduct": "🛍️ Creating your new product...",
+    "loadingData": "Loading data...",
+    "preparingData": "Preparing product data...",
+    "processingProducts": "Processing products and images...",
+    "processingProduct": "Processing product {{current}} of {{total}}...",
+    "savingToDatabase": "Saving products to database...",
+    "processing": "Processing your request..."
+  },
+  "pageDescription": "Enter product data directly in the table",
+  "storeId": "Store ID",
+  "columns": {
+    "name": "Product Name",
+    "description": "Description",
+    "price": "Price $",
+    "discount": "Discount %",
+    "quantity": "Available Quantity",
+    "images": "Images (up to 8 images)",
+    "customerName": "Customer Name",
+    "product": "Product",
+    "orderNumber": "Order Number",
+    "status": "Status",
+    "actions": "Actions"
+  },
+  "excelColumns": {
+    "name": "Product Name",
+    "description": "Description",
+    "price": "Price",
+    "discount": "Discount %",
+    "quantity": "Available Quantity"
+  },
+  "exampleData": {
+    "product1": {
+      "name": "Example - Cotton Shirt",
+      "description": "High-quality cotton shirt suitable for all occasions"
+    },
+    "product2": {
+      "name": "Example - Sports Shoes",
+      "description": "Comfortable sports shoes for running and daily activities"
+    }
+  },
+  "excelWorksheetName": "Products",
+  "templateFileName": "Product_Template.xlsx",
+  "tooltips": {
+    "downloadTemplate": "Download Excel Template",
+    "uploadExcel": "Upload Excel File",
+    "addRow": "Add New Row",
+    "saveData": "Save All Products (Ctrl+S)",
+    "maxImagesReached": "Maximum limit reached",
+    "uploadImages": "Upload images (max 5MB per image)",
+    "deleteImage": "Delete Image",
+    "cannotDeleteLastRow": "Cannot delete the last row",
+    "deleteRow": "Delete Row"
+  },
+  "labels": {
+    "optional": "optional",
+    "actions": "Actions",
+    "imageAlt": "Image {{index}}"
+  },
+  "placeholders": {
+    "productName": "Enter product name...",
+    "productDescription": "Enter product description..."
+  },
+  "instructions": {
+    "title": "Excel Usage Instructions:",
+    "step1": "Click \"Download Excel Template\" to get an Excel file with the correct format",
+    "step2": "Fill in the data in Excel file (name, description, price, and quantity are required, discount percentage is optional)",
+    "step3": "Save the file and click \"Upload Excel File\" to import the data",
+    "step4": "After importing, you can upload images for each product from the interface"
+  },
+  "messages": {
+    "messages": "Messages",
+    "templateDownloaded": "Template downloaded successfully",
+    "productsImported": "{{count}} products imported successfully",
+    "productsSkipped": "{{count}} products skipped due to incomplete required data",
+    "rowAdded": "New row added",
+    "rowDeleted": "Row deleted",
+    "cannotDeleteLastRow": "Cannot delete the last row",
+    "imagesAdded": "{{count}} images added",
+    "imageRemoved": "Image removed",
+    "productsSaved": "{{count}} products saved successfully!",
+    "noMatchingOrders": "No orders found matching the search criteria",
+    "noOrdersToDisplay": "No orders to display"
+  },
+  "productCount": "{{count}} product",
+  "productCount_one": "1 product",
+  "productCount_zero": "No products",
+  "productCount_other": "{{count}} products",
+
+  "sections": {
+    "statistics": "Order Statistics",
+    "tabs": "Order Tabs",
+    "ordersTable": "Orders Table",
+    "shippedTotal": "Shipped Orders Total"
+  },
+  "confirmButtons": {
+    "reset": "Reset",
+    "confirmShipping": "Confirm Shipping",
+    "confirm": "Confirm"
+  },
+  "accessibility": {
+    "ordersPage": "Orders Management Page",
+    "mainContent": "Main Orders Content"
+  },
+  "shippedOrdersTotal": {
+    "title": "Total Shipped Orders",
+    "subtitle": "Total value of shipped orders",
+    "fromOrders": "From {{count}} shipped orders",
+    "resetButton": "Reset",
+    "resetTooltip": "Reset amount"
+  },
+  "tabs": {
+    "all": "All Orders",
+    "shipped": "Shipped Orders",
+    "unshipped": "Unshipped Orders",
+    "monitored": "Monitored Orders"
+  },
+  "ordersStats": {
+    "totalOrders": "Total Orders",
+    "shippedOrders": "Shipped Orders",
+    "unshippedOrders": "Unshipped Orders",
+    "shippedAmount": "Shipped Orders Amount",
+    "unshippedAmount": "Unshipped Orders Amount"
+  },
+  "customerInfo": "Customer Info",
+  "name": "Name",
+  "orderDate": "Order Date",
+  "phone": "Phone",
+  "address": "Address",
+  "recipientName": "Recipient Name",
+  "notSpecified": "Not specified",
+  "invalidDate": "Invalid date"
 }

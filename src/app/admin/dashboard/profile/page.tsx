@@ -1,15 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  Settings,
   Share2,
-  Bell,
   Users,
   Eye,
   EyeOff,
   Shield,
   Phone,
-  Download,
   Camera,
   Loader2,
 } from "lucide-react";
@@ -435,20 +432,193 @@ const ProfilePage = () => {
   };
 
   // دالة لنسخ الرابط
-  const handleCopyLink = async () => {
+  const handleCopyLink = async (): Promise<void> => {
     try {
       const baseUrl = window.location.origin;
       const encodedStoreName = encodeURIComponent(profileData.storeName);
       const storeUrl = `${baseUrl}/products?store=${storeId}&storeName=${encodedStoreName}`;
 
-      await navigator.clipboard.writeText(storeUrl);
-      showToast("تم نسخ رابط المتجر بنجاح", "success");
+      // التحقق من دعم navigator.clipboard
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(storeUrl);
+        showToast("تم نسخ رابط المتجر بنجاح", "success");
+      } else {
+        // استخدام الطريقة البديلة
+        copyTextFallback(storeUrl);
+        showToast("تم نسخ رابط المتجر بنجاح", "success");
+      }
       setShowShareModal(false);
     } catch (error) {
       console.error("Error copying link:", error);
       showToast("فشل في نسخ الرابط", "error");
     }
   };
+
+  // دالة النسخ البديلة
+  const copyTextFallback = (text: string): void => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      const successful = document.execCommand("copy");
+      if (!successful) {
+        throw new Error("execCommand failed");
+      }
+    } catch (err) {
+      console.error("Fallback copy failed:", err);
+      throw err;
+    } finally {
+      document.body.removeChild(textArea);
+    }
+  };
+
+  // الحل الثاني: التحقق من الأذونات أولاً
+  const handleCopyLinkWithPermissions = async (): Promise<void> => {
+    try {
+      const baseUrl = window.location.origin;
+      const encodedStoreName = encodeURIComponent(profileData.storeName);
+      const storeUrl = `${baseUrl}/products?store=${storeId}&storeName=${encodedStoreName}`;
+
+      // التحقق من الأذونات (مع type assertion للتعامل مع TypeScript)
+      if (navigator.permissions) {
+        try {
+          const result = await navigator.permissions.query({
+            name: "clipboard-write" as PermissionName,
+          } as PermissionDescriptor);
+
+          if (result.state === "denied") {
+            showToast("الرجاء السماح بنسخ النصوص في إعدادات المتصفح", "error");
+            return;
+          }
+        } catch (permissionError) {
+          // في حالة عدم دعم clipboard-write permission، نتجاهل الخطأ ونكمل
+          console.log("Permission check not supported:", permissionError);
+        }
+      }
+
+      // محاولة النسخ
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(storeUrl);
+        showToast("تم نسخ رابط المتجر بنجاح", "success");
+      } else {
+        copyTextFallback(storeUrl);
+        showToast("تم نسخ رابط المتجر بنجاح", "success");
+      }
+
+      setShowShareModal(false);
+    } catch (error) {
+      console.error("Error copying link:", error);
+      showToast("فشل في نسخ الرابط", "error");
+    }
+  };
+
+  // الحل الثالث: إضافة زر للنسخ اليدوي
+  const ShareModal = () => {
+    const [showManualCopy, setShowManualCopy] = useState(false);
+    const baseUrl = window.location.origin;
+    const encodedStoreName = encodeURIComponent(profileData.storeName);
+    const storeUrl = `${baseUrl}/products?store=${storeId}&storeName=${encodedStoreName}`;
+
+    return (
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        dir="rtl"
+      >
+        <div
+          className={`${themeClasses.cardBackground} rounded-2xl p-6 mx-4 w-full max-w-md shadow-2xl`}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <h3 className={`text-lg font-bold ${themeClasses.textPrimary}`}>
+              مشاركة رابط المتجر
+            </h3>
+            <button
+              onClick={() => setShowShareModal(false)}
+              className={`${themeClasses.textMuted} hover:${themeClasses.textPrimary} transition-colors`}
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <p className={`${themeClasses.textSecondary} mb-4`}>
+            شارك رابط متجرك مع العملاء ليتمكنوا من تصفح منتجاتك
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label
+                className={`block text-sm font-medium ${themeClasses.textPrimary} mb-2`}
+              >
+                رابط المتجر:
+              </label>
+              <div
+                className={`${themeClasses.inputBackground} ${themeClasses.inputBorder} border rounded-lg p-3 break-all text-sm ${themeClasses.textSecondary} relative`}
+              >
+                {storeUrl}
+                {showManualCopy && (
+                  <div className="mt-2 p-2 bg-yellow-100 rounded text-yellow-800 text-xs">
+                    اضغط واسحب لتحديد النص، ثم اضغط Ctrl+C (أو Cmd+C على Mac)
+                    للنسخ
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleCopyLink}
+                className="flex-1 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+              >
+                نسخ تلقائي
+              </button>
+              <button
+                onClick={() => setShowManualCopy(!showManualCopy)}
+                className={`px-4 py-2 rounded-lg transition-colors font-medium ${themeClasses.buttonBackground} ${themeClasses.textPrimary} ${themeClasses.borderColor} border`}
+              >
+                نسخ يدوي
+              </button>
+              <button
+                onClick={() => setShowShareModal(false)}
+                className={`px-4 py-2 rounded-lg transition-colors font-medium ${themeClasses.buttonBackground} ${themeClasses.textPrimary} ${themeClasses.borderColor} border`}
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // الحل الرابع: التحقق من البيئة
+  const isClipboardSupported = () => {
+    return !!(navigator.clipboard && window.isSecureContext);
+  };
+
+  // استخدام الحل في الكود
+  useEffect(() => {
+    // التحقق من دعم الحافظة عند تحميل الصفحة
+    if (!isClipboardSupported()) {
+      console.warn("Clipboard API not supported in this environment");
+    }
+  }, []);
 
   // تحديد الألوان حسب الوضع
   const themeClasses = {

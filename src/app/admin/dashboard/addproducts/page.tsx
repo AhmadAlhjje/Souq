@@ -9,12 +9,12 @@ import {
   HelpCircle,
   Percent,
 } from "lucide-react";
-import useTheme from "@/hooks/useTheme";
 import AdminLayout from "../../../../components/templates/admin/products/AdminLayout";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/useToast";
 import { createProduct } from "@/api/products";
 import { useStore } from "@/contexts/StoreContext";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
 interface ProductImage {
   id: string;
@@ -29,7 +29,7 @@ interface ProductFormData {
   description: string;
   descriptionAr: string;
   price: string;
-  discountPercentage: string; // تغيير من salePrice إلى discountPercentage
+  discountPercentage: string;
   quantity: string;
   category: string;
   status: string;
@@ -37,14 +37,13 @@ interface ProductFormData {
 }
 
 const AddProductPage: React.FC = () => {
-  const { t, i18n } = useTranslation("products");
-  const { isDark } = useTheme();
+  const { t, i18n } = useTranslation("");
+  const { isDark } = useThemeContext();
   const { showToast } = useToast();
   const { storeId, isLoaded } = useStore();
-  const isRTL = i18n.language === "ar";
-
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const isRTL = i18n.language === 'ar';
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
@@ -52,7 +51,7 @@ const AddProductPage: React.FC = () => {
     description: "",
     descriptionAr: "",
     price: "",
-    discountPercentage: "", // تغيير من salePrice إلى discountPercentage
+    discountPercentage: "",
     quantity: "",
     category: "",
     status: "draft",
@@ -91,7 +90,7 @@ const AddProductPage: React.FC = () => {
         ...prev,
         images: [...prev.images, ...newImages].slice(0, 8),
       }));
-      showToast(`تم رفع ${newImages.length} صورة بنجاح`, "success");
+      showToast(t("imageUploadSuccess", { count: newImages.length }), "success");
     }
   };
 
@@ -100,35 +99,35 @@ const AddProductPage: React.FC = () => {
       ...prev,
       images: prev.images.filter((img) => img.id !== imageId),
     }));
-    showToast("تم حذف الصورة", "info");
+    showToast(t("imageRemoved"), "info");
   };
 
   const validateForm = (): boolean => {
-    if (!formData.nameAr.trim()) {
-      showToast("يرجى إدخال اسم المنتج", "error");
+    const nameField = isRTL ? formData.nameAr : formData.name;
+    if (!nameField.trim()) {
+      showToast(t("validation.nameRequired"), "error");
       return false;
     }
     
     if (!formData.price.trim()) {
-      showToast("يرجى إدخال سعر المنتج", "error");
+      showToast(t("validation.priceRequired"), "error");
       return false;
     }
     
     if (!formData.quantity.trim() || parseInt(formData.quantity) < 0) {
-      showToast("يرجى إدخال كمية صحيحة للمنتج", "error");
+      showToast(t("validation.quantityRequired"), "error");
       return false;
     }
     
     if (formData.images.length === 0) {
-      showToast("يرجى رفع صورة واحدة على الأقل للمنتج", "warning");
+      showToast(t("validation.imageRequired"), "warning");
       return false;
     }
 
-    // التحقق من صحة نسبة الخصم إذا تم إدخالها
     if (formData.discountPercentage.trim() !== "") {
       const discount = parseFloat(formData.discountPercentage);
       if (isNaN(discount) || discount < 0 || discount > 100) {
-        showToast("يرجى إدخال نسبة خصم صحيحة بين 0 و 100", "error");
+        showToast(t("validation.discountInvalid"), "error");
         return false;
       }
     }
@@ -136,7 +135,6 @@ const AddProductPage: React.FC = () => {
     return true;
   };
 
-  // دالة لحساب السعر بعد الخصم
   const calculateDiscountedPrice = (): number | null => {
     const price = parseFloat(formData.price);
     const discount = parseFloat(formData.discountPercentage);
@@ -149,13 +147,11 @@ const AddProductPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    // التحقق من وجود store_id
     if (!storeId) {
-      showToast("خطأ: لا يمكن تحديد المتجر. يرجى إعادة تسجيل الدخول", "error");
+      showToast(t("errors.noStore"), "error");
       return;
     }
 
-    // التحقق من صحة البيانات
     if (!validateForm()) {
       return;
     }
@@ -168,8 +164,8 @@ const AddProductPage: React.FC = () => {
       console.log("User store context:", { storeId, isLoaded });
 
       const payload: any = {
-        name: formData.name || formData.nameAr,
-        description: formData.description || formData.descriptionAr,
+        name: isRTL ? (formData.nameAr || formData.name) : (formData.name || formData.nameAr),
+        description: isRTL ? (formData.descriptionAr || formData.description) : (formData.description || formData.descriptionAr),
         price: formData.price,
         stock_quantity: formData.quantity,
         store_id: storeId,
@@ -178,7 +174,6 @@ const AddProductPage: React.FC = () => {
           .map((img) => img.file!) as File[],
       };
 
-      // إضافة نسبة الخصم إذا كانت موجودة وصحيحة
       if (formData.discountPercentage.trim() !== "") {
         const discount = parseFloat(formData.discountPercentage);
         if (!isNaN(discount) && discount > 0 && discount <= 100) {
@@ -190,45 +185,42 @@ const AddProductPage: React.FC = () => {
 
       const response = await createProduct(payload);
       
-      // نجح الإنشاء
-      showToast("🎉 تم إنشاء المنتج بنجاح! سيتم مراجعته قريباً", "success");
+      showToast(t("success.productCreated"), "success");
       
-      // إعادة تعيين النموذج
+      // Reset form
       setFormData({
         name: "",
         nameAr: "",
         description: "",
         descriptionAr: "",
         price: "",
-        discountPercentage: "", // تغيير من salePrice إلى discountPercentage
+        discountPercentage: "",
         quantity: "",
         category: "",
         status: "draft",
         images: [],
       });
       
-      // العودة للخطوة الأولى
       setCurrentStep(1);
       
-      console.log("تم إنشاء المنتج:", response);
+      console.log("Product created:", response);
       
     } catch (error: any) {
-      console.error("خطأ أثناء إنشاء المنتج:", error.response?.data || error.message);
+      console.error("Error creating product:", error.response?.data || error.message);
       
-      // معالجة محسنة للأخطاء
       if (error.response?.status === 403) {
-        showToast("غير مصرح لك بإضافة منتجات لهذا المتجر. تحقق من صلاحياتك", "error");
+        showToast(t("errors.unauthorized"), "error");
       } else if (error.response?.status === 400) {
-        showToast("خطأ في البيانات المدخلة. يرجى التحقق من جميع الحقول", "error");
+        showToast(t("errors.badRequest"), "error");
       } else if (error.response?.status === 401) {
-        showToast("انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى", "error");
+        showToast(t("errors.sessionExpired"), "error");
       } else if (error.response?.status === 413) {
-        showToast("حجم الصور كبير جداً. يرجى اختيار صور أصغر", "error");
+        showToast(t("errors.imageTooLarge"), "error");
       } else if (error.response?.status >= 500) {
-        showToast("خطأ في الخادم. يرجى المحاولة لاحقاً", "error");
+        showToast(t("errors.serverError"), "error");
       } else {
         showToast(
-          error.response?.data?.message || "حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى",
+          error.response?.data?.message || t("errors.unexpected"),
           "error"
         );
       }
@@ -239,13 +231,13 @@ const AddProductPage: React.FC = () => {
 
   const handleContinue = () => {
     if (currentStep === 1) {
-      // التحقق الأساسي قبل الانتقال للخطوة التالية
-      if (!formData.nameAr.trim()) {
-        showToast("يرجى إدخال اسم المنتج قبل المتابعة", "warning");
+      const nameField = isRTL ? formData.nameAr : formData.name;
+      if (!nameField.trim()) {
+        showToast(t("validation.nameRequiredToContinue"), "warning");
         return;
       }
       setCurrentStep(2);
-      showToast("انتقلت للخطوة التالية - تحديد السعر والكمية", "info");
+      showToast(t("stepChanged.toStep2"), "info");
     } else {
       handleSubmit();
     }
@@ -254,7 +246,7 @@ const AddProductPage: React.FC = () => {
   const handleBack = () => {
     if (currentStep === 2) {
       setCurrentStep(1);
-      showToast("عدت للخطوة السابقة", "info");
+      showToast(t("stepChanged.toStep1"), "info");
     }
   };
 
@@ -263,50 +255,74 @@ const AddProductPage: React.FC = () => {
   };
 
   const getProductName = () => {
-    return formData.nameAr || "اسم المنتج";
+    if (isRTL) {
+      return formData.nameAr || t("preview.defaultName");
+    }
+    return formData.name || t("preview.defaultName");
   };
 
   const getProductDescription = () => {
-    return formData.descriptionAr || "وصف قصير يوضع هنا شرح منتجك";
+    if (isRTL) {
+      return formData.descriptionAr || t("preview.defaultDescription");
+    }
+    return formData.description || t("preview.defaultDescription");
   };
+
+  // Theme classes
+  const bgClass = isDark ? 'bg-gray-900' : 'bg-[#E8F8F5]';
+  const cardBgClass = isDark ? 'bg-gray-800' : 'bg-white';
+  const textClass = isDark ? 'text-white' : 'text-gray-900';
+  const textSecondaryClass = isDark ? 'text-gray-300' : 'text-gray-700';
+  const textMutedClass = isDark ? 'text-gray-400' : 'text-gray-600';
+  const inputBgClass = isDark ? 'bg-gray-700 border-gray-600' : 'bg-teal-50 border-gray-300';
+  const inputFocusClass = isDark 
+    ? 'focus:ring-teal-400 focus:border-teal-400' 
+    : 'focus:ring-teal-500 focus:border-teal-500';
+  const previewBgClass = isDark ? 'bg-gray-700' : 'bg-gray-50';
+  const previewCardBgClass = isDark ? 'bg-gray-800' : 'bg-white';
+  const previewImageBgClass = isDark ? 'bg-gray-600' : 'bg-gray-100';
 
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          ما اسم المنتج الخاص بك؟ <span className="text-red-500">*</span>
+        <label className={`block text-sm font-medium mb-2 ${textSecondaryClass}`}>
+          {t("step1.nameLabel")} <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          value={formData.nameAr}
-          onChange={(e) => handleInputChange("nameAr", e.target.value)}
-          placeholder="مثال: روتر D-Link 3000"
-          className="w-4/5 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
+          value={isRTL ? formData.nameAr : formData.name}
+          onChange={(e) => handleInputChange(isRTL ? "nameAr" : "name", e.target.value)}
+          placeholder={t("step1.namePlaceholder")}
+          className={`w-4/5 px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all duration-200 ${inputBgClass} ${inputFocusClass} ${textClass}`}
           disabled={loading}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          كيف تريد أن تصف المحتوى؟ (اختياري)
+        <label className={`block text-sm font-medium mb-2 ${textSecondaryClass}`}>
+          {t("step1.descriptionLabel")}
         </label>
         <textarea
-          value={formData.descriptionAr}
-          onChange={(e) => handleInputChange("descriptionAr", e.target.value)}
-          placeholder="مثال: متقدمة في تجربة الاستخدام"
+          value={isRTL ? formData.descriptionAr : formData.description}
+          onChange={(e) => handleInputChange(isRTL ? "descriptionAr" : "description", e.target.value)}
+          placeholder={t("step1.descriptionPlaceholder")}
           rows={1}
-          className="w-4/5 px-4 py-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none bg-teal-50 transition-all duration-200"
+          className={`w-4/5 px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 resize-none transition-all duration-200 ${inputBgClass} ${inputFocusClass} ${textClass}`}
           disabled={loading}
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          حمل صورة غلاف المنتج هنا <span className="text-red-500">*</span>
+        <label className={`block text-sm font-medium mb-3 ${textSecondaryClass}`}>
+          {t("step1.imageLabel")} <span className="text-red-500">*</span>
         </label>
 
         <div className="flex justify-center">
-          <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer w-48">
+          <div className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer w-48 ${
+            isDark 
+              ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' 
+              : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+          }`}>
             <input
               type="file"
               accept="image/*"
@@ -319,7 +335,7 @@ const AddProductPage: React.FC = () => {
               htmlFor="cover-image-upload"
               className={`cursor-pointer block ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <ImageIcon className="mx-auto w-8 h-8 text-gray-400 mb-2" />
+              <ImageIcon className={`mx-auto w-8 h-8 mb-2 ${textMutedClass}`} />
               <div className="flex items-center justify-center">
                 <Edit2 className="w-4 h-4 text-teal-500" />
               </div>
@@ -334,7 +350,7 @@ const AddProductPage: React.FC = () => {
           disabled={loading}
           className="px-8 py-3 rounded-xl bg-teal-500 hover:bg-teal-600 text-white font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          متابعة
+          {t("buttons.continue")}
         </button>
       </div>
     </div>
@@ -344,8 +360,8 @@ const AddProductPage: React.FC = () => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ما هو السعر الخاص بالمنتج؟ <span className="text-red-500">*</span>
+          <label className={`block text-sm font-medium mb-2 ${textSecondaryClass}`}>
+            {t("step2.priceLabel")} <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <input
@@ -357,17 +373,19 @@ const AddProductPage: React.FC = () => {
                   handleInputChange("price", value);
                 }
               }}
-              placeholder="مثال: 65.50"
-              className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
+              placeholder={t("step2.pricePlaceholder")}
+              className={`w-1/3 px-4 py-3 ${isRTL ? 'pr-12' : 'pl-12'} rounded-xl border focus:outline-none focus:ring-2 transition-all duration-200 ${inputBgClass} ${inputFocusClass} ${textClass}`}
               disabled={loading}
             />
-            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+            <span className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 ${textMutedClass}`}>
+              $
+            </span>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ما هي نسبة الخصم؟ (اختياري)
+          <label className={`block text-sm font-medium mb-2 ${textSecondaryClass}`}>
+            {t("step2.discountLabel")}
           </label>
           <div className="relative">
             <input
@@ -375,61 +393,63 @@ const AddProductPage: React.FC = () => {
               value={formData.discountPercentage}
               onChange={(e) => {
                 const value = e.target.value;
-                // السماح بالأرقام والنقاط العشرية فقط
                 if (/^\d*\.?\d*$/.test(value) || value === "") {
-                  // التحقق من أن القيمة لا تتجاوز 100
                   const numValue = parseFloat(value);
                   if (value === "" || (!isNaN(numValue) && numValue <= 100)) {
                     handleInputChange("discountPercentage", value);
                   }
                 }
               }}
-              placeholder="مثال: 15"
-              className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
+              placeholder={t("step2.discountPlaceholder")}
+              className={`w-1/3 px-4 py-3 ${isRTL ? 'pr-12' : 'pl-12'} rounded-xl border focus:outline-none focus:ring-2 transition-all duration-200 ${inputBgClass} ${inputFocusClass} ${textClass}`}
               disabled={loading}
               max="100"
               min="0"
             />
-            <Percent className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-4 h-4" />
+            <Percent className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 ${textMutedClass} w-4 h-4`} />
           </div>
           {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 && (
             <div className="mt-2 text-sm text-green-600">
-              السعر بعد الخصم: {calculateDiscountedPrice()?.toFixed(2)} $
+              {t("step2.discountedPrice")}: {calculateDiscountedPrice()?.toFixed(2)} $
             </div>
           )}
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          ما هي كمية المنتج؟ <span className="text-red-500">*</span>
+        <label className={`block text-sm font-medium mb-2 ${textSecondaryClass}`}>
+          {t("step2.quantityLabel")} <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <input
             type="number"
             value={formData.quantity}
             onChange={(e) => handleInputChange("quantity", e.target.value)}
-            placeholder="مثال: 150"
-            className="w-1/3 px-4 py-3 pl-12 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-teal-50 transition-all duration-200"
+            placeholder={t("step2.quantityPlaceholder")}
+            className={`w-1/3 px-4 py-3 ${isRTL ? 'pr-12' : 'pl-12'} rounded-xl border focus:outline-none focus:ring-2 transition-all duration-200 ${inputBgClass} ${inputFocusClass} ${textClass}`}
             disabled={loading}
             min="0"
           />
-          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">قطعة</span>
+          <span className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 ${textMutedClass}`}>
+            {t("step2.quantityUnit")}
+          </span>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          ارفع بقية صور المنتج هنا
+        <label className={`block text-sm font-medium mb-3 ${textSecondaryClass}`}>
+          {t("step2.additionalImagesLabel")}
         </label>
 
         <div className="grid grid-cols-4 gap-3">
           {formData.images.map((image, index) => (
             <div key={image.id} className="relative group">
-              <div className="aspect-square rounded-xl overflow-hidden border-2 border-gray-200">
+              <div className={`aspect-square rounded-xl overflow-hidden border-2 ${
+                isDark ? 'border-gray-600' : 'border-gray-200'
+              }`}>
                 <img
                   src={image.preview}
-                  alt={`Product ${index + 1}`}
+                  alt={`${t("preview.productImage")} ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
                 <button
@@ -442,7 +462,7 @@ const AddProductPage: React.FC = () => {
                 {index === 0 && (
                   <div className="absolute bottom-1 right-1">
                     <div className="bg-teal-500 text-white px-2 py-1 rounded text-xs">
-                      غلاف
+                      {t("preview.coverImage")}
                     </div>
                   </div>
                 )}
@@ -457,8 +477,12 @@ const AddProductPage: React.FC = () => {
                 htmlFor="image-upload"
                 className={`cursor-pointer ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <div className="aspect-square rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-center">
-                  <ImageIcon className="w-6 h-6 text-gray-400" />
+                <div className={`aspect-square rounded-xl border-2 border-dashed transition-colors flex items-center justify-center ${
+                  isDark 
+                    ? 'border-gray-600 bg-gray-700 hover:bg-gray-600' 
+                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                }`}>
+                  <ImageIcon className={`w-6 h-6 ${textMutedClass}`} />
                 </div>
               </label>
             )
@@ -480,9 +504,13 @@ const AddProductPage: React.FC = () => {
         <button
           onClick={handleBack}
           disabled={loading}
-          className="px-6 py-3 rounded-xl border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-6 py-3 rounded-xl border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isDark 
+              ? 'border-gray-600 bg-gray-800 hover:bg-gray-700 text-gray-300' 
+              : 'border-gray-300 bg-white hover:bg-gray-50 text-gray-700'
+          }`}
         >
-          الخلف
+          {t("buttons.back")}
         </button>
 
         <button
@@ -493,17 +521,17 @@ const AddProductPage: React.FC = () => {
           {loading ? (
             <>
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              جاري الإنشاء...
+              {t("buttons.creating")}
             </>
           ) : (
-            "إنهاء"
+            t("buttons.finish")
           )}
         </button>
       </div>
     </div>
   );
 
-  // التحقق من تحميل StoreContext
+  // Loading states
   if (!isLoaded) {
     return (
       <LoadingSpinner
@@ -518,17 +546,17 @@ const AddProductPage: React.FC = () => {
 
   if (!storeId) {
     return (
-      <AdminLayout title="خطأ" subtitle="خطأ في تحديد المتجر">
+      <AdminLayout title={t("errors.title")} subtitle={t("errors.storeNotFound")}>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="text-red-600 text-lg mb-4">
-              لا يمكن تحديد المتجر. يرجى إعادة تسجيل الدخول.
+            <div className={`text-red-600 text-lg mb-4 ${textClass}`}>
+              {t("errors.storeNotFoundMessage")}
             </div>
             <button
               onClick={() => window.location.reload()}
               className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600"
             >
-              إعادة المحاولة
+              {t("buttons.retry")}
             </button>
           </div>
         </div>
@@ -536,13 +564,12 @@ const AddProductPage: React.FC = () => {
     );
   }
 
-  // عرض LoadingSpinner عند التحميل
   if (loading) {
     return (
       <LoadingSpinner
         size="lg"
         color="green"
-        message="🛍️ جاري إنشاء منتجك الجديد..."
+        message={t("loading.creatingProduct")}
         overlay={true}
         pulse={true}
         dots={true}
@@ -552,20 +579,18 @@ const AddProductPage: React.FC = () => {
 
   return (
     <AdminLayout
-      title="إضافة منتج جديد"
-      subtitle="قم بإضافة منتج جديد إلى متجرك"
+      title={t("pageTitle")}
+      subtitle={t("pageSubtitle")}
     >
-      <div className="bg-[#E8F8F5] min-h-screen">
-        <div className="p-6 rtl">
+      <div className={`min-h-screen ${bgClass}`}>
+        <div className={`p-6 ${isRTL ? 'rtl' : 'ltr'}`}>
           <div className="max-w-6xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className={`rounded-2xl shadow-sm overflow-hidden ${cardBgClass}`}>
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 <div className="p-6">
                   <div className="mb-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                      {currentStep === 1
-                        ? "نقوم بمساعدتك بإضافة المنتج"
-                        : "اختر السعر والكمية"}
+                    <h2 className={`text-lg font-semibold mb-4 ${textClass}`}>
+                      {currentStep === 1 ? t("step1.title") : t("step2.title")}
                     </h2>
 
                     <div className="flex gap-2 mb-4">
@@ -586,25 +611,24 @@ const AddProductPage: React.FC = () => {
                   {currentStep === 2 && renderStep2()}
                 </div>
                 
-                <div className="bg-gray-50 p-8 flex flex-col items-center justify-center relative">
+                <div className={`p-8 flex flex-col items-center justify-center relative ${previewBgClass}`}>
                   <div className="w-full max-w-xs">
-                    <div className="bg-white rounded-2xl shadow-sm overflow-hidden mb-6">
-                      <div className="aspect-[3/2] bg-gray-100 flex items-center justify-center relative">
+                    <div className={`rounded-2xl shadow-sm overflow-hidden mb-6 ${previewCardBgClass}`}>
+                      <div className={`aspect-[3/2] flex items-center justify-center relative ${previewImageBgClass}`}>
                         {getMainImage() ? (
                           <img
                             src={getMainImage()!}
-                            alt="Product Preview"
+                            alt={t("preview.productImage")}
                             className="w-full h-full object-cover"
                           />
                         ) : (
-                          <ImageIcon className="w-12 h-12 text-gray-400" />
+                          <ImageIcon className={`w-12 h-12 ${textMutedClass}`} />
                         )}
                         {currentStep === 2 && (
                           <div className="absolute top-4 right-4 bg-teal-500 text-white px-3 py-1 rounded-lg text-sm font-medium">
-                            مسودة
+                            {t("status.draft")}
                           </div>
                         )}
-                        {/* عرض شارة الخصم إذا كان موجوداً */}
                         {currentStep === 2 && formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 && (
                           <div className="absolute top-4 left-4 bg-red-500 text-white px-2 py-1 rounded-lg text-sm font-bold">
                             -{formData.discountPercentage}%
@@ -613,20 +637,20 @@ const AddProductPage: React.FC = () => {
                       </div>
 
                       <div className="p-4 text-center">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className={`text-lg font-semibold mb-2 ${textClass}`}>
                           {getProductName()}
                         </h3>
-                        <hr className="border-gray-300 mb-4" />
+                        <hr className={`mb-4 ${isDark ? 'border-gray-600' : 'border-gray-300'}`} />
                         <div className="min-h-[120px] flex items-start justify-start mb-4">
-                          <p className="text-sm text-gray-600 leading-relaxed text-right">
+                          <p className={`text-sm leading-relaxed ${isRTL ? 'text-right' : 'text-left'} ${textMutedClass}`}>
                             {getProductDescription()}
                           </p>
                         </div>
 
                         {currentStep === 2 && (
                           <div className="text-center mb-4">
-                            <div className="text-sm text-gray-500 mb-1">
-                              العدد ضمن المخزون
+                            <div className={`text-sm mb-1 ${textMutedClass}`}>
+                              {t("preview.stockQuantity")}
                             </div>
                             <div className="text-2xl font-bold text-teal-500">
                               {formData.quantity || "150"}
@@ -635,25 +659,25 @@ const AddProductPage: React.FC = () => {
                         )}
 
                         {currentStep === 2 && (
-                          <div className="pt-4 border-t">
-                            <div className="text-right">
-                              <div className="text-sm text-gray-500 mb-1">
-                                السعر
+                          <div className={`pt-4 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                            <div className={isRTL ? 'text-right' : 'text-left'}>
+                              <div className={`text-sm mb-1 ${textMutedClass}`}>
+                                {t("preview.price")}
                               </div>
                               {formData.discountPercentage && parseFloat(formData.discountPercentage) > 0 ? (
                                 <div>
-                                  <div className="text-lg text-gray-400 line-through">
+                                  <div className={`text-lg line-through ${textMutedClass}`}>
                                     {formData.price ? `${formData.price} $` : "65 $"}
                                   </div>
                                   <div className="text-2xl font-bold text-green-600">
                                     {calculateDiscountedPrice()?.toFixed(2) || "55.25"} $
                                   </div>
                                   <div className="text-sm text-red-600 font-medium">
-                                    خصم {formData.discountPercentage}%
+                                    {t("preview.discount")} {formData.discountPercentage}%
                                   </div>
                                 </div>
                               ) : (
-                                <div className="text-2xl font-bold text-gray-900">
+                                <div className={`text-2xl font-bold ${textClass}`}>
                                   {formData.price ? `${formData.price} $` : "65 $"}
                                 </div>
                               )}
@@ -664,8 +688,8 @@ const AddProductPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <button className="absolute left-8 bottom-8 py-2 px-7 rounded-tl-2xl rounded-lg bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors flex items-center gap-2">
-                    اطلب المساعدة
+                  <button className={`absolute ${isRTL ? 'right-8' : 'left-8'} bottom-8 py-2 px-7 rounded-tl-2xl rounded-lg bg-teal-500 hover:bg-teal-600 text-white text-sm font-medium transition-colors flex items-center gap-2`}>
+                    {t("buttons.getHelp")}
                     <HelpCircle className="w-4 h-4" />
                   </button>
                 </div>

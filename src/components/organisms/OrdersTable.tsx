@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import DataTable, { TableColumn } from '../../components/organisms/DataTable';
 import { ViewButton, ShipButton } from '../../components/common/ActionButtons';
 import { Order, TabType } from '../../types/orders';
@@ -17,7 +18,7 @@ interface OrdersTableProps {
   onMarkAsShipped: (order: Order) => void;
   onExport: () => void;
   onSearch?: (searchTerm: string) => void;
-  onApiSearch?: (filters: SearchFilters) => void; // جديد: للبحث عبر API
+  onApiSearch?: (filters: SearchFilters) => void;
   isDark: boolean;
 }
 
@@ -29,13 +30,15 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   onMarkAsShipped,
   onExport,
   onSearch,
-  onApiSearch, // جديد
+  onApiSearch,
   isDark
 }) => {
+  const { t, i18n } = useTranslation("");
+
   const columns: TableColumn[] = [
     {
       key: "customerName",
-      title: "اسم الزبون",
+      title: t("columns.customerName"),
       width: "150px",
       render: (value, row) => (
         <div className="flex items-center gap-2">
@@ -53,7 +56,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                   ? 'bg-blue-900 text-blue-200' 
                   : 'bg-blue-100 text-blue-800'
               }`}>
-                مرصود
+                {t("status.monitored")}
               </span>
             )}
           </div>
@@ -62,7 +65,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     },
     {
       key: "productImage",
-      title: "المنتج",
+      title: t("columns.product"),
       width: "200px",
       render: (value, row) => (
         <div className="flex items-center gap-3">
@@ -78,7 +81,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               }
             </span>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              {row.orderNumber} • {row.products?.length || 0} منتج
+              {row.orderNumber} • {t("productCount", { count: row.products?.length || 0 })}
             </p>
           </div>
         </div>
@@ -86,37 +89,37 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     },
     {
       key: "orderNumber",
-      title: "رقم الطلب",
+      title: t("columns.orderNumber"),
       width: "120px",
     },
     {
       key: "price",
-      title: "السعر",
+      title: t("columns.price"),
       width: "120px",
       render: (value) => `${value.toLocaleString()} $`,
     },
     {
       key: "quantity",
-      title: "الكمية",
+      title: t("columns.quantity"),
       width: "100px",
       render: (value) => value.toLocaleString(),
     },
     {
       key: "category",
-      title: "الحالة",
+      title: t("columns.status"),
       width: "120px",
       render: (value: string, row) => {
         const statusColors: { [key: string]: string } = {
-          مشحون:
+          [t("status.shipped")]:
             "bg-teal-100 text-teal-800 dark:bg-teal-900 dark:text-teal-100",
-          "غير مشحون":
+          [t("status.unshipped")]:
             "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-          مرصود:
+          [t("status.monitored")]:
             "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
         };
         
-        // If it's a monitored order, show "مرصود" status
-        const displayValue = row.isMonitored ? "مرصود" : value;
+        // If it's a monitored order, show "monitored" status
+        const displayValue = row.isMonitored ? t("status.monitored") : value;
         
         return (
           <span
@@ -132,7 +135,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     },
     {
       key: "actions",
-      title: "الإجراءات",
+      title: t("columns.actions"),
       width: "160px",
       align: "center",
       render: (_, row) => (
@@ -140,16 +143,16 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
           <ViewButton
             size="sm"
             onClick={() => onView(row)}
-            tooltip="عرض التفاصيل"
+            tooltip={t("actions.viewDetails")}
           />
           {/* Show "Mark as Shipped" button for unshipped orders (excluding monitored orders) */}
           {!row.isMonitored && 
            (activeTab === "unshipped" ||
-            (activeTab === "all" && row.category === "غير مشحون")) && (
+            (activeTab === "all" && row.category === t("status.unshipped"))) && (
             <ShipButton
               size="sm"
               onClick={() => onMarkAsShipped(row)}
-              tooltip="تم الشحن"
+              tooltip={t("actions.markAsShipped")}
             />
           )}
         </div>
@@ -170,7 +173,7 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
       onApiSearch={onApiSearch} // تمرير callback للبحث عبر API
       itemsPerPageOptions={[10, 25, 50]}
       className="shadow-sm"
-      emptyMessage={onApiSearch ? "لم يتم العثور على طلبات تطابق معايير البحث" : "لا توجد طلبات للعرض"}
+      emptyMessage={onApiSearch ? t("messages.noMatchingOrders") : t("messages.noOrdersToDisplay")}
     />
   );
 };

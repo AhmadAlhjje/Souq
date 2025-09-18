@@ -1,6 +1,7 @@
 import React from 'react';
 import { DollarSign, RotateCcw } from 'lucide-react';
 import { OrderStats } from '../../types/orders';
+import { useTranslation } from "react-i18next";
 
 interface ShippedOrdersTotalProps {
   stats: OrderStats;
@@ -13,6 +14,8 @@ const ShippedOrdersTotal: React.FC<ShippedOrdersTotalProps> = ({
   onResetTotal,
   isDark
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className={`p-6 rounded-2xl shadow-sm ${
       isDark 
@@ -27,9 +30,9 @@ const ShippedOrdersTotal: React.FC<ShippedOrdersTotalProps> = ({
             <DollarSign className="text-teal-600" size={24} />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">مجموع الطلبات المشحونة</h3>
+            <h3 className="text-lg font-semibold">{t("shippedOrdersTotal.title")}</h3>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              إجمالي قيمة الطلبات التي تم شحنها
+              {t("shippedOrdersTotal.subtitle")}
             </p>
           </div>
         </div>
@@ -39,7 +42,7 @@ const ShippedOrdersTotal: React.FC<ShippedOrdersTotalProps> = ({
               {stats.totalShippedPrice.toLocaleString()} $
             </p>
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              من {stats.shippedOrders} طلب مشحون
+              {t("shippedOrdersTotal.fromOrders", { count: stats.shippedOrders })}
             </p>
           </div>
           <button
@@ -49,10 +52,10 @@ const ShippedOrdersTotal: React.FC<ShippedOrdersTotalProps> = ({
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-red-500 hover:bg-red-600 text-white'
             }`}
-            title="تصفير المبلغ"
+            title={t("shippedOrdersTotal.resetTooltip")}
           >
             <RotateCcw size={16} />
-            <span>تصفير</span>
+            <span>{t("shippedOrdersTotal.resetButton")}</span>
           </button>
         </div>
       </div>

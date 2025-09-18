@@ -1,5 +1,6 @@
 // src/components/common/ConfirmationModal.tsx
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, AlertTriangle, CheckCircle, Info, XCircle } from 'lucide-react';
 
 export type ConfirmationVariant = 'success' | 'warning' | 'danger' | 'info';
@@ -23,12 +24,19 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   onConfirm,
   title,
   message,
-  confirmText = "تأكيد",
-  cancelText = "إلغاء",
+  confirmText,
+  cancelText,
   variant = 'warning',
   isDark = false,
   loading = false
 }) => {
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
+
+  // استخدام النصوص المُمررة أو النصوص الافتراضية المترجمة
+  const finalConfirmText = confirmText || t('buttons.confirm');
+  const finalCancelText = cancelText || t('buttons.cancel');
+
   if (!isOpen) return null;
 
   // تحديد الألوان والأيقونات حسب النوع
@@ -87,7 +95,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
@@ -105,13 +113,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <button
           onClick={handleCancel}
           disabled={loading}
-          className={`absolute top-4 right-4 p-1 rounded-full transition-colors ${
+          className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'} p-1 rounded-full transition-colors ${
             loading ? 'opacity-50 cursor-not-allowed' : ''
           } ${
             isDark 
               ? 'hover:bg-gray-700 text-gray-400 hover:text-white' 
               : 'hover:bg-gray-100 text-gray-600 hover:text-gray-900'
           }`}
+          aria-label={t('buttons.close')}
         >
           <X size={20} />
         </button>
@@ -150,7 +159,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 border border-gray-300'
               }`}
             >
-              {cancelText}
+              {finalCancelText}
             </button>
             
             <button
@@ -163,10 +172,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>جاري المعالجة...</span>
+                  <span>{t('loading.processing')}</span>
                 </div>
               ) : (
-                confirmText
+                finalConfirmText
               )}
             </button>
           </div>

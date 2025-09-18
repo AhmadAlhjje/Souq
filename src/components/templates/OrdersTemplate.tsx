@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import OrdersStatsGrid from '../organisms/OrdersStatsGrid';
 import TabsGroup from '../molecules/TabsGroup';
 import OrdersTable from '../organisms/OrdersTable';
@@ -39,7 +40,7 @@ interface OrdersTemplateProps {
   onExport: () => void;
   onCloseModal: () => void;
   onCloseConfirmation: () => void;
-  onApiSearch?: (filters: SearchFilters) => void; // جديد: للبحث عبر API
+  onApiSearch?: (filters: SearchFilters) => void;
 }
 
 const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
@@ -59,8 +60,23 @@ const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
   onExport,
   onCloseModal,
   onCloseConfirmation,
-  onApiSearch // جديد
+  onApiSearch
 }) => {
+  const { t, i18n } = useTranslation("ordersTemplate");
+  const isRTL = i18n.language === 'ar';
+
+  // دالة لتحديد نص زر التأكيد
+  const getConfirmText = () => {
+    switch (confirmationModal.variant) {
+      case "danger":
+        return t("confirmButtons.reset");
+      case "success":
+        return t("confirmButtons.confirmShipping");
+      default:
+        return t("confirmButtons.confirm");
+    }
+  };
+
   return (
     <div
       className={`min-h-screen p-6 transition-colors duration-300 ${
@@ -68,42 +84,53 @@ const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
           ? "bg-gray-900 text-gray-100"
           : "bg-gradient-to-br from-teal-50 to-cyan-50 text-gray-900"
       }`}
+      dir={isRTL ? 'rtl' : 'ltr'}
     >
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Page Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold">جميع الطلبات</h1>
+          <h1 className="text-2xl font-bold">
+            {t("pageTitle")}
+          </h1>
         </div>
 
         {/* Statistics Cards */}
-        <OrdersStatsGrid stats={stats} loading={loading} />
+        <section aria-label={t("sections.statistics")}>
+          <OrdersStatsGrid stats={stats} loading={loading} />
+        </section>
 
         {/* Tabs */}
-        <TabsGroup
-          activeTab={activeTab}
-          onTabChange={onTabChange}
-          stats={stats}
-          isDark={isDark}
-        />
+        <section aria-label={t("sections.tabs")}>
+          <TabsGroup
+            activeTab={activeTab}
+            onTabChange={onTabChange}
+            stats={stats}
+            isDark={isDark}
+          />
+        </section>
 
         {/* Orders Table */}
-        <OrdersTable
-          orders={filteredOrders}
-          activeTab={activeTab}
-          loading={loading}
-          onView={onView}
-          onMarkAsShipped={onMarkAsShipped}
-          onExport={onExport}
-          onApiSearch={onApiSearch} // تمرير معالج البحث عبر API
-          isDark={isDark}
-        />
+        <section aria-label={t("sections.ordersTable")}>
+          <OrdersTable
+            orders={filteredOrders}
+            activeTab={activeTab}
+            loading={loading}
+            onView={onView}
+            onMarkAsShipped={onMarkAsShipped}
+            onExport={onExport}
+            onApiSearch={onApiSearch}
+            isDark={isDark}
+          />
+        </section>
 
         {/* Shipped Orders Total Section */}
-        <ShippedOrdersTotal
-          stats={stats}
-          onResetTotal={onResetTotal}
-          isDark={isDark}
-        />
+        <section aria-label={t("sections.shippedTotal")}>
+          <ShippedOrdersTotal
+            stats={stats}
+            onResetTotal={onResetTotal}
+            isDark={isDark}
+          />
+        </section>
       </div>
 
       {/* Order Details Modal */}
@@ -124,13 +151,7 @@ const OrdersTemplate: React.FC<OrdersTemplateProps> = ({
         variant={confirmationModal.variant}
         isDark={isDark}
         loading={confirmationModal.loading}
-        confirmText={
-          confirmationModal.variant === "danger" 
-            ? "تصفير" 
-            : confirmationModal.variant === "success" 
-            ? "تأكيد الشحن" 
-            : "تأكيد"
-        }
+        confirmText={getConfirmText()}
       />
     </div>
   );

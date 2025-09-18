@@ -13,6 +13,7 @@ import {
 } from "../../../../api/orders";
 import { useStore } from "@/contexts/StoreContext";
 import { useToast } from "@/hooks/useToast";
+import { useTranslation } from "react-i18next";
 
 // نوع البيانات للفلاتر
 interface SearchFilters {
@@ -21,6 +22,8 @@ interface SearchFilters {
 }
 
 const OrdersPageComponent: React.FC = () => {
+  const { t } = useTranslation();
+
   // States
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,12 +51,11 @@ const OrdersPageComponent: React.FC = () => {
   const { storeId, isLoaded } = useStore();
 
   // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
-  // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
   const transformApiDataToOrders = (apiData: any): Order[] => {
     if (apiData?.allOrders?.orders && Array.isArray(apiData.allOrders.orders)) {
       return apiData.allOrders.orders.map((order: any) => ({
         id: order.order_id.toString(),
-        customerName: order.Shipping?.customer_name || "غير محدد",
+        customerName: order.Shipping?.customer_name || t("orders.unknown"),
         orderNumber: `#${order.order_id}`,
         price: parseFloat(order.total_price),
         quantity:
@@ -63,15 +65,15 @@ const OrdersPageComponent: React.FC = () => {
           ) || 0,
         category:
           order.status === "monitored"
-            ? "مرصود"
+            ? t("orders.monitored")
             : order.status === "shipped"
-            ? "مشحون"
-            : "غير مشحون",
+            ? t("orders.shipped")
+            : t("orders.unshipped"),
         products:
           order.OrderItems && order.OrderItems.length > 0
             ? order.OrderItems.map((item: any) => ({
                 id: item.order_item_id?.toString() || "",
-                name: item.Product?.name || "منتج",
+                name: item.Product?.name || t("orders.product"),
                 image: "📦",
                 quantity: item.quantity || 0,
                 price: parseFloat(item.price_at_time || "0"),
@@ -81,7 +83,7 @@ const OrdersPageComponent: React.FC = () => {
             : [
                 {
                   id: "0",
-                  name: "منتج افتراضي",
+                  name: t("orders.defaultProduct"),
                   image: "📦",
                   quantity: 1,
                   price: parseFloat(order.total_price || "0"),
@@ -90,11 +92,7 @@ const OrdersPageComponent: React.FC = () => {
               ],
         isMonitored:
           order.status === "monitored" || order.is_programmatic || false,
-
-        // إضافة تاريخ الطلب
         createdAt: order.created_at,
-
-        // إضافة بيانات الشحن هنا
         shipping: order.Shipping
           ? {
               shipping_id: order.Shipping.shipping_id,
@@ -119,7 +117,7 @@ const OrdersPageComponent: React.FC = () => {
     return [];
   };
 
-  // Load initial data from API
+  // تحميل البيانات
   useEffect(() => {
     if (!isLoaded || !storeId) return;
 
@@ -127,10 +125,8 @@ const OrdersPageComponent: React.FC = () => {
       try {
         setLoading(true);
         const data = await getStoreOrdersStats(storeId);
-        console.log("جاتا",data);
         setApiStats(data);
-        const transformedOrders = transformApiDataToOrders(data);
-        setOrders(transformedOrders);
+        setOrders(transformApiDataToOrders(data));
         setIsSearchMode(false);
       } catch (error) {
         console.error("Error loading orders:", error);
@@ -142,7 +138,7 @@ const OrdersPageComponent: React.FC = () => {
     loadOrdersData();
   }, [storeId, isLoaded]);
 
-  // دالة البحث عبر API
+  // البحث
   const handleApiSearch = async (filters: SearchFilters) => {
     if (!storeId) return;
 
@@ -153,8 +149,7 @@ const OrdersPageComponent: React.FC = () => {
       if (!filters.customerName.trim() && !filters.productName.trim()) {
         const data = await getStoreOrdersStats(storeId);
         setApiStats(data);
-        const transformedOrders = transformApiDataToOrders(data);
-        setOrders(transformedOrders);
+        setOrders(transformApiDataToOrders(data));
         setIsSearchMode(false);
       } else {
         const searchData = await getFilteredOrders(storeId, {
@@ -179,13 +174,13 @@ const OrdersPageComponent: React.FC = () => {
     }
   };
 
-  // Updated filtered orders logic
+  // الفلاتر حسب التبويب
   const filteredOrders = orders.filter((order) => {
     switch (activeTab) {
       case "shipped":
-        return order.category === "مشحون" && !order.isMonitored;
+        return order.category === t("orders.shipped") && !order.isMonitored;
       case "unshipped":
-        return order.category === "غير مشحون" && !order.isMonitored;
+        return order.category === t("orders.unshipped") && !order.isMonitored;
       case "monitored":
         return order.isMonitored;
       default:
@@ -193,7 +188,7 @@ const OrdersPageComponent: React.FC = () => {
     }
   });
 
-  // Calculate statistics using API response
+  // الإحصائيات
   const stats: OrderStats = apiStats?.statistics
     ? {
         totalOrders: apiStats.statistics.totalOrders || 0,
@@ -214,16 +209,17 @@ const OrdersPageComponent: React.FC = () => {
         totalMonitoredPrice: 0,
       };
 
-  // Event handlers
+  // شحن الطلب
   const handleMarkAsShipped = (order: Order) => {
-    if (order.isMonitored) {
-      return;
-    }
+    if (order.isMonitored) return;
 
     setConfirmationModal({
       isOpen: true,
-      title: "تأكيد الشحن",
-      message: `هل أنت متأكد من أنه تم شحن الطلب ${order.orderNumber} للزبون ${order.customerName}؟`,
+      title: t("orders.confirmShippingTitle"),
+      message: t("orders.confirmShippingMessage", {
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+      }),
       variant: "success",
       loading: false,
       onConfirm: () => confirmShipOrder(order),
@@ -231,12 +227,10 @@ const OrdersPageComponent: React.FC = () => {
   };
 
   const confirmShipOrder = async (order: Order) => {
-    console.log("🚀 Starting confirmShipOrder for order:", order);
-
     setConfirmationModal((prev) => ({ ...prev, loading: true }));
 
     try {
-      if (!storeId) throw new Error("⚠️ StoreId is not available");
+      if (!storeId) throw new Error("StoreId missing");
 
       if (order.isMonitored) {
         await updateProgrammaticShipped(storeId);
@@ -244,21 +238,69 @@ const OrdersPageComponent: React.FC = () => {
         await updateOrderStatus(Number(order.id), "shipped");
       }
 
-      // إعادة تحميل البيانات بناءً على الحالة الحالية
-      if (
-        isSearchMode &&
-        (currentFilters.customerName || currentFilters.productName)
-      ) {
-        // إذا كنا في وضع البحث، نعيد البحث
+      if (isSearchMode && (currentFilters.customerName || currentFilters.productName)) {
         await handleApiSearch(currentFilters);
       } else {
-        // إذا لم نكن في وضع البحث، نحمل البيانات العادية
         const data = await getStoreOrdersStats(storeId);
         setApiStats(data);
         setOrders(transformApiDataToOrders(data));
       }
     } catch (error) {
-      console.error("❌ Failed to update order status:", error);
+      console.error("Failed to update order status:", error);
+    } finally {
+      setConfirmationModal({
+        isOpen: false,
+        title: "",
+        message: "",
+        onConfirm: () => {},
+        variant: "warning" as ConfirmationVariant,
+        loading: false,
+      });
+    }
+  };
+
+  // تصفير المبلغ
+  const handleResetShippedTotal = () => {
+    setConfirmationModal({
+      isOpen: true,
+      title: t("orders.resetTotalTitle"),
+      message: t("orders.resetTotalMessage"),
+      variant: "danger",
+      loading: false,
+      onConfirm: confirmResetTotal,
+    });
+  };
+
+  const confirmResetTotal = async () => {
+    setConfirmationModal((prev) => ({ ...prev, loading: true }));
+
+    try {
+      if (!storeId) throw new Error("StoreId missing");
+
+      const response = await requestSettlement(storeId);
+
+      if (isSearchMode && (currentFilters.customerName || currentFilters.productName)) {
+        await handleApiSearch(currentFilters);
+      } else {
+        const data = await getStoreOrdersStats(storeId);
+        setApiStats(data);
+        setOrders(transformApiDataToOrders(data));
+      }
+
+      if (response?.data?.message) {
+        showToast(response.data.message, "success");
+      } else if (response?.message) {
+        showToast(response.message, "success");
+      } else {
+        showToast(t("orders.resetSuccess"), "success");
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error?.response?.data?.error ||
+        error?.response?.data?.message ||
+        error?.message ||
+        t("orders.resetError");
+      showToast(errorMessage, "error");
     } finally {
       setConfirmationModal({
         isOpen: false,
@@ -276,73 +318,8 @@ const OrdersPageComponent: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleResetShippedTotal = () => {
-    setConfirmationModal({
-      isOpen: true,
-      title: "تصفير المبلغ",
-      message:
-        "هل أنت متأكد من تصفير مجموع الطلبات المشحونة؟ هذا الإجراء لا يمكن التراجع عنه.",
-      variant: "danger",
-      loading: false,
-      onConfirm: confirmResetTotal,
-    });
-  };
-
-  const confirmResetTotal = async () => {
-    setConfirmationModal((prev) => ({ ...prev, loading: true }));
-
-    try {
-      if (!storeId) throw new Error("⚠️ StoreId is not available");
-
-      // استخدام requestSettlement بدلاً من updateProgrammaticShipped
-      const response = await requestSettlement(storeId);
-
-      // إعادة تحميل البيانات بناءً على الحالة الحالية
-      if (
-        isSearchMode &&
-        (currentFilters.customerName || currentFilters.productName)
-      ) {
-        await handleApiSearch(currentFilters);
-      } else {
-        const data = await getStoreOrdersStats(storeId);
-        setApiStats(data);
-        setOrders(transformApiDataToOrders(data));
-      }
-
-      // عرض رسالة نجاح من الباك اند
-      if (response?.data?.message) {
-        showToast(response.data.message, "success");
-      } else if (response?.message) {
-        showToast(response.message, "success");
-      } else {
-        showToast("تم إرسال طلب التصفية بنجاح", "success");
-      }
-
-      console.log("✅ تم إرسال طلب التصفية بنجاح عبر requestSettlement");
-    } catch (error: any) {
-      console.error("❌ فشل في استدعاء requestSettlement:", error);
-
-      // عرض رسالة خطأ من الباك اند أو رسالة افتراضية
-      const errorMessage =
-        error?.response?.data?.error ||
-        error?.response?.data?.message ||
-        error?.message ||
-        "حدث خطأ أثناء إرسال طلب التصفية";
-      showToast(errorMessage, "error");
-    } finally {
-      setConfirmationModal({
-        isOpen: false,
-        title: "",
-        message: "",
-        onConfirm: () => {},
-        variant: "warning" as ConfirmationVariant,
-        loading: false,
-      });
-    }
-  };
-
   const handleExport = () => {
-    console.log("تصدير بيانات الطلبات...");
+    console.log("Export orders...");
   };
 
   const handleCloseModal = () => {
