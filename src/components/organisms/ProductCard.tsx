@@ -1,102 +1,140 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ShoppingCart, Eye, Check, AlertTriangle, Star } from "lucide-react";
+import { ShoppingCart, Eye, Check } from "lucide-react";
 import Card from "../atoms/Card";
 import { SimpleStarRating } from "../molecules/StarRating";
 import { SimplePriceDisplay } from "../molecules/PriceDisplay";
-import { CompactQuantityCounter } from "../molecules/QuantityCounter";
-import { Product } from "@/api/storeProduct";
-import { useSessionContext } from "@/components/SessionProvider";
-import { useToast } from "@/hooks/useToast";
-import { createReview, generateSessionId } from "@/api/stores";
+import { useCart, useCartNotifications } from "@/contexts/CartContext";
+import { useThemeContext } from "@/contexts/ThemeContext";
 
-interface ProductCardProps {
-  product: Product;
-  onViewDetails?: (product: Product) => void;
+// استيراد النوع الأساسي
+import { Product as BaseProduct } from "@/types/product";
+
+// عمل نوع ممتد (لحقول إضافية من الـ API)
+interface ExtendedProduct extends BaseProduct {
+  sale_price?: number;
+  original_price?: number;
+  salePrice?: number;
+  originalPrice?: number;
+  isNew?: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({
-  product,
-  onViewDetails,
-}) => {
+interface ProductCardProps {
+  product: ExtendedProduct;
+  onViewDetails?: (product: ExtendedProduct) => void;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({ product, onViewDetails }) => {
   const [localQuantity, setLocalQuantity] = useState<number>(1);
   const [isAdding, setIsAdding] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-
-  // حالات التقييم الجديدة
-  const [userRating, setUserRating] = useState<number | null>(
-    getUserRating(product.id)
-  );
-  const [hoverRating, setHoverRating] = useState<number | null>(null);
-  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
-  const [ratingError, setRatingError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const router = useRouter();
-  const { sessionId } = useSessionContext();
-  const { showToast } = useToast();
+  const { addToCart, isItemInCart, getItemQuantity, updateQuantity } = useCart();
+  const { showAddToCartSuccess } = useCartNotifications();
+  const { theme, isDark, isLight } = useThemeContext();
 
-  // Constants
-  const API_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+  // دالة للحصول على ألوان وأنماط الثيم
+  const getThemeClasses = () => {
+    return {
+      // خلفية البطاقة
+      cardBg: isDark 
+        ? "bg-gray-800 border border-gray-700" 
+        : "bg-white border border-gray-100",
+      
+      // خلفية الصورة
+      imageBg: isDark 
+        ? "bg-gray-700" 
+        : "bg-gray-50",
+      
+      // نص العنوان
+      titleText: isDark 
+        ? "text-white" 
+        : "text-gray-900",
+      
+      // النص الثانوي
+      secondaryText: isDark 
+        ? "text-gray-300" 
+        : "text-gray-600",
+      
+      // زر التفاصيل
+      detailsButton: isDark 
+        ? "border border-teal-400 text-teal-400 hover:bg-teal-400/10 hover:text-teal-300" 
+        : "border border-teal-800 text-teal-800 hover:bg-teal-50",
+      
+      // زر الإضافة للسلة (عادي)
+      addButton: isDark 
+        ? "bg-teal-500 hover:bg-teal-600 text-white shadow-lg shadow-teal-500/25" 
+        : "bg-teal-800 hover:bg-teal-900 text-white shadow-md",
+      
+      // زر الإضافة للسلة (نجح)
+      successButton: isDark 
+        ? "bg-green-500 hover:bg-green-600 text-white shadow-lg shadow-green-500/25" 
+        : "bg-green-500 hover:bg-green-600 text-white shadow-md",
+      
+      // شارة الخصم
+      discountBadge: isDark 
+        ? "bg-red-500 text-white shadow-lg shadow-red-500/25" 
+        : "bg-red-500 text-white shadow-md",
+      
+      // شارة جديد
+      newBadge: isDark 
+        ? "bg-green-500 text-white shadow-lg shadow-green-500/25" 
+        : "bg-green-500 text-white shadow-md",
+      
+      // ظلال البطاقة
+      cardShadow: isDark 
+        ? "shadow-lg shadow-gray-900/25 hover:shadow-xl hover:shadow-gray-900/40" 
+        : "shadow-sm hover:shadow-lg shadow-gray-500/10",
+      
+      // الخطوط والحدود
+      border: isDark 
+        ? "border-gray-600" 
+        : "border-gray-200",
+      
+      // خلفية متحركة للتفاعل
+      hoverOverlay: isDark 
+        ? "bg-gradient-to-br from-teal-500/5 to-transparent" 
+        : "bg-gradient-to-br from-teal-50/50 to-transparent",
+    };
+  };
 
-  // جلب التقييم الشخصي من localStorage
-  function getUserRating(productId: number): number | null {
-    if (typeof window === "undefined") return null;
-    const key = `userProductReview_${productId}`;
-    const saved = localStorage.getItem(key);
-    return saved ? parseFloat(saved) : null;
-  }
+  const themeClasses = getThemeClasses();
 
-  // عند النقر على نجمة المنتج — إرسال التقييم للخادم
-  const handleStarClick = async (rating: number) => {
-    if (isSubmittingRating) return;
-
-    setIsSubmittingRating(true);
-    setRatingError(null);
-
-    try {
-      await createReview({
-        product_id: product.id,
-        rating,
-        session_id: sessionId || generateSessionId(),
-      });
-
-      setUserRating(rating);
-      localStorage.setItem(
-        `userProductReview_${product.id}`,
-        rating.toString()
-      );
-
-      showToast(`تم تقييم ${product.name} بـ ${rating} نجوم`, "success");
-      console.log("تم إرسال تقييم المنتج بنجاح:", rating);
-    } catch (error: any) {
-      console.error("فشل إرسال تقييم المنتج:", error);
-      setRatingError("فشل إرسال التقييم. حاول مرة أخرى.");
-      showToast("فشل إرسال التقييم. حاول مرة أخرى.", "error");
-    } finally {
-      setIsSubmittingRating(false);
+  // تحميل الكمية من السلة عند فتح الكارت
+  useEffect(() => {
+    const productId =
+      typeof product.id === "string" ? parseInt(product.id, 10) : product.id;
+    if (productId && !isNaN(productId)) {
+      const cartQuantity = getItemQuantity(productId);
+      if (cartQuantity > 0) {
+        setLocalQuantity(cartQuantity);
+      }
     }
-  };
-
-  // عند التمرير فوق النجمة
-  const handleStarHover = (rating: number) => {
-    setHoverRating(rating);
-  };
-
-  // عند مغادرة النجوم
-  const handleMouseLeave = () => {
-    setHoverRating(null);
-  };
+  }, [product.id, getItemQuantity]);
 
   const handleQuantityIncrease = () => {
-    setLocalQuantity((prev) => prev + 1);
+    const newQuantity = localQuantity + 1;
+    setLocalQuantity(newQuantity);
+    const productId =
+      typeof product.id === "string" ? parseInt(product.id, 10) : product.id;
+    if (productId && !isNaN(productId) && isItemInCart(productId)) {
+      updateQuantity(productId, newQuantity);
+    }
   };
 
   const handleQuantityDecrease = () => {
     if (localQuantity > 1) {
-      setLocalQuantity((prev) => prev - 1);
+      const newQuantity = localQuantity - 1;
+      setLocalQuantity(newQuantity);
+      const productId =
+        typeof product.id === "string" ? parseInt(product.id, 10) : product.id;
+      if (productId && !isNaN(productId) && isItemInCart(productId)) {
+        updateQuantity(productId, newQuantity);
+      }
     }
   };
 
@@ -104,80 +142,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
     if (onViewDetails) {
       onViewDetails(product);
     }
-
-    setIsLoadingDetail(true);
-
-    setTimeout(() => {
-      router.push(`/products/${product.id}`);
-    }, 300);
+    router.push(`/products/${product.id}`);
   };
 
-  const handleAddToCartClick = async () => {
-    if (!sessionId) {
-      showToast("جلسة غير صحيحة. يرجى إعادة تحميل الصفحة", "error");
-      return;
-    }
-
-    if (!product.inStock || product.stock <= 0) {
-      showToast("المنتج غير متوفر حالياً", "warning");
-      return;
-    }
-
+  const handleAddToCart = async () => {
     try {
       setIsAdding(true);
-
-      console.log("Adding product to cart:", {
-        productId: product.id,
-        quantity: localQuantity,
-        sessionId: sessionId,
-      });
-
-      const response = await fetch(`${API_BASE_URL}/cart/add`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-ID": sessionId,
-        },
-        body: JSON.stringify({
-          session_id: sessionId,
-          product_id: product.id,
-          quantity: localQuantity,
-        }),
-      });
-
-      console.log("Add to cart response status:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error("Add to cart error:", errorData);
-        throw new Error(` فشل في إضافة المنتج بسبب نفاد الكمية  `);
-      }
-
-      const result = await response.json();
-      console.log("Add to cart success:", result);
-
-      showToast(
-        `تم إضافة ${localQuantity} من ${product.name} للسلة`,
-        "success"
-      );
-
+      addToCart(product, localQuantity);
+      showAddToCartSuccess(product.name, localQuantity);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
-
-      setLocalQuantity(1);
     } catch (error) {
       console.error("خطأ في إضافة المنتج للسلة:", error);
-
-      const errorMessage =
-        error instanceof Error ? error.message : "حدث خطأ غير متوقع";
-
-      showToast(errorMessage, "error");
     } finally {
       setIsAdding(false);
     }
   };
 
-  // حل مشكلة الخصائص المفقودة - استخدام original_price بدلاً من originalPrice
   const calculateDiscountPercentage = (
     originalPrice?: number,
     salePrice?: number
@@ -188,206 +169,140 @@ const ProductCard: React.FC<ProductCardProps> = ({
     return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   };
 
-  const truncateText = (text: string, maxLength: number = 80): string => {
-    if (!text) return "";
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + "...";
+  const handleImageError = () => {
+    console.warn("فشل تحميل الصورة:", product.image);
+    setImageError(true);
   };
 
-  const isOutOfStock =
-    !product.inStock || product.stock <= 0 || product.status === "out_of_stock";
-  const isLowStock =
-    product.stock > 0 && (product.stock <= 5 || product.status === "low_stock");
+  const getImageSrc = () => {
+    if (imageError) {
+      return "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop";
+    }
+    if (product.image && product.image.startsWith("http")) {
+      return product.image;
+    }
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001";
+    return `${baseUrl}/uploads/${product.image}`;
+  };
+
+  // نطبق الأسعار سواء camelCase أو snake_case
+  const originalPrice = product.originalPrice ?? product.original_price;
+  const salePrice = product.salePrice ?? product.sale_price;
 
   return (
-    <Card hover className="overflow-hidden group relative">
-      {isOutOfStock && (
-        <div className="absolute inset-0 bg-gray-500/50 z-10 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-3 text-center shadow-lg">
-            <AlertTriangle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-            <span className="text-sm font-bold text-red-600">غير متوفر</span>
-          </div>
-        </div>
-      )}
+    <div className={`${themeClasses.cardBg} ${themeClasses.cardShadow} rounded-xl overflow-hidden group transition-all duration-300 hover:scale-105 relative`}>
+      {/* طبقة التفاعل */}
+      <div className={`absolute inset-0 ${themeClasses.hoverOverlay} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none rounded-xl`}></div>
 
-      <div
-        className="relative overflow-hidden"
-        style={{ backgroundColor: "#F6F8F9" }}
-      >
+      <div className={`relative overflow-hidden ${themeClasses.imageBg} transition-colors duration-300`}>
         <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-44 object-cover"
-           onError={(e) => {
-            console.warn("فشل تحميل الصورة:", product.image);
-            (e.target as HTMLImageElement).src =
-              "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
+          src={getImageSrc()}
+          alt={product.name || "منتج"}
+          className="w-full h-44 object-cover group-hover:scale-105 transition-transform duration-300"
+          onError={handleImageError}
+          loading="lazy"
+          style={{
+            maxWidth: "100%",
+            height: "176px",
+            objectFit: "cover",
           }}
         />
-        {product.salePrice &&
-          product.originalPrice &&
-          calculateDiscountPercentage(
-            product.originalPrice,
-            product.salePrice
-          ) > 0 && (
-            <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-              -{calculateDiscountPercentage(product.price, product.salePrice)}%
-            </div>
-          )}
 
+        {/* شارة الخصم */}
+        {salePrice && originalPrice && calculateDiscountPercentage(originalPrice, salePrice) > 0 && (
+          <div className={`absolute top-2 right-2 ${themeClasses.discountBadge} px-2 py-1 rounded-full text-xs font-bold transition-all duration-300 hover:scale-110`}>
+            -{calculateDiscountPercentage(originalPrice, salePrice)}%
+          </div>
+        )}
+
+        {/* شارة جديد */}
         {product.isNew && (
-          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+          <div className={`absolute top-2 left-2 ${themeClasses.newBadge} px-2 py-1 rounded-full text-xs font-bold transition-all duration-300 hover:scale-110`}>
             جديد
           </div>
         )}
 
-        {isLowStock && !isOutOfStock && (
-          <div className="absolute bottom-2 left-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            آخر {product.stock}
+        {/* مؤشر الثيم في الزاوية */}
+        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className={`text-xs px-2 py-1 rounded-full ${isDark ? 'bg-gray-800/80 text-gray-300' : 'bg-white/80 text-gray-600'} backdrop-blur-sm`}>
+            {isDark ? "🌙" : "☀️"}
           </div>
-        )}
+        </div>
       </div>
 
-      <div className="p-2 text-right">
-        <h3 className="text-sm font-semibold text-gray-900 mb-2 line-clamp-2">
-          {product.nameAr || product.name}
+      <div className="p-2 text-right relative z-10">
+        <h3 className={`text-sm font-semibold ${themeClasses.titleText} mb-3 line-clamp-2 transition-colors duration-300`}>
+          {product.name || "منتج بدون اسم"}
         </h3>
 
-        {product.description && (
-          <p className="text-xs text-gray-600 mb-2 leading-relaxed">
-            {truncateText(product.descriptionAr || product.description, 60)}
-          </p>
-        )}
-
-        {/* التقييم من الخادم + التقييم الشخصي التفاعلي في مكان واحد */}
-        <div className="mb-2">
-          <div
-            className="flex items-center justify-end cursor-pointer"
-            onMouseLeave={handleMouseLeave}
-          >
-            {[...Array(5)].map((_, i) => {
-              const starIndex = i + 1;
-              const isFilled =
-                (hoverRating !== null ? hoverRating : userRating || 0) >=
-                starIndex;
-
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => handleStarClick(starIndex)}
-                  onMouseEnter={() => handleStarHover(starIndex)}
-                  disabled={isSubmittingRating}
-                  aria-label={`تقييم بـ ${starIndex} نجوم`}
-                  className="focus:outline-none focus:ring-2 focus:ring-teal-400 rounded-full transition-all duration-150 disabled:cursor-not-allowed"
-                >
-                  <Star
-                    className={`w-4 h-4 ${
-                      isFilled
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    } hover:fill-yellow-300 hover:text-yellow-300 ${
-                      isSubmittingRating ? "opacity-50" : ""
-                    }`}
-                  />
-                </button>
-              );
-            })}
-          </div>
-
-          {/* عرض التقييم العام مع عدد المراجعات */}
-          <div className="flex items-center justify-end mt-1">
-            {product.rating && product.rating > 0 ? (
-              <span className="text-xs text-gray-500">
-                {product.rating.toFixed(1)} ({product.reviewCount} تقييم)
-              </span>
-            ) : (
-              <span className="text-xs text-gray-400">لا يوجد تقييم بعد</span>
-            )}
-          </div>
-
-          {/* عرض خطأ التقييم */}
-          {ratingError && (
-            <p className="text-red-500 text-xs mt-1">{ratingError}</p>
-          )}
-
-          {/* عرض تأكيد التقييم أثناء التحميل */}
-          {isSubmittingRating && (
-            <p className="text-teal-600 text-xs mt-1">جاري إرسال تقييمك...</p>
-          )}
+        <div className="mb-1 flex justify-end">
+          <SimpleStarRating rating={product.rating || 0} />
         </div>
 
         <div className="mb-2">
           <SimplePriceDisplay
-            originalPrice={product.price || product.price}
-            salePrice={product.salePrice}
+            originalPrice={originalPrice || product.price || 0}
+            salePrice={salePrice}
           />
         </div>
 
-        <div className="mb-2 text-xs text-center">
-          {isOutOfStock ? (
-            <span className="text-red-600 font-bold">غير متوفر</span>
-          ) : isLowStock ? (
-            <span className="text-orange-600 font-bold">
-              كمية محدودة: {product.stock}
+        <div className="mb-2 flex items-center justify-end">
+          {/* CompactQuantityCounter مع دعم الثيم المحسن */}
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handleQuantityDecrease}
+              disabled={localQuantity <= 1}
+              className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium transition-all duration-200 hover:scale-110 active:scale-95 ${
+                localQuantity <= 1
+                  ? isDark
+                    ? "bg-gray-700 text-gray-500 cursor-not-allowed"
+                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : isDark
+                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200 hover:text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700 hover:text-gray-900"
+              }`}
+            >
+              -
+            </button>
+            
+            <span className={`px-2 text-xs font-medium min-w-[24px] text-center ${themeClasses.titleText} transition-colors duration-300`}>
+              {localQuantity}
             </span>
-          ) : (
-            <span className="text-green-600">متوفر ({product.stock})</span>
-          )}
+            
+            <button
+              onClick={handleQuantityIncrease}
+              className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-medium transition-all duration-200 hover:scale-110 active:scale-95 ${
+                isDark
+                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200 hover:text-white"
+                  : "bg-gray-200 hover:bg-gray-300 text-gray-700 hover:text-gray-900"
+              }`}
+            >
+              +
+            </button>
+          </div>
         </div>
 
-        {!isOutOfStock && (
-          <div className="mb-2 flex items-center justify-end">
-            <CompactQuantityCounter
-              quantity={localQuantity}
-              onIncrease={handleQuantityIncrease}
-              onDecrease={handleQuantityDecrease}
-              min={1}
-              max={product.stock}
-            />
-          </div>
-        )}
-
-        <div className="flex space-x-1 gap-2">
+        <div className="flex" style={{ gap: "12px" }}>
           <button
             onClick={handleViewDetails}
-            disabled={isLoadingDetail}
-            className={`flex-1 border border-teal-800 text-teal-800 hover:bg-teal-50 text-xs py-1.5 rounded-md transition-colors flex items-center justify-center space-x-1 ${
-              isLoadingDetail ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+            className={`flex-1 ${themeClasses.detailsButton} text-xs py-1.5 rounded-md transition-all duration-200 flex items-center justify-center gap-1 hover:scale-105 active:scale-95`}
           >
-            {isLoadingDetail ? (
-              <>
-                <div className="w-3 h-3 border border-teal-800 border-t-transparent rounded-full animate-spin"></div>
-                <span>جاري التحميل...</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-3 h-3" />
-                <span>التفاصيل</span>
-              </>
-            )}
+            <Eye className="w-3 h-3" />
+            <span>التفاصيل</span>
           </button>
 
           <button
-            onClick={handleAddToCartClick}
-            disabled={isAdding || isOutOfStock}
-            className={`flex-1 text-white text-xs py-1.5 rounded-md transition-colors flex items-center justify-center space-x-1 ${
-              isOutOfStock
-                ? "bg-gray-400 cursor-not-allowed"
-                : showSuccess
-                ? "bg-green-500 hover:bg-green-600"
-                : "bg-teal-800 hover:bg-teal-900"
+            onClick={handleAddToCart}
+            disabled={isAdding}
+            className={`flex-1 text-xs py-1.5 rounded-md transition-all duration-200 flex items-center justify-center gap-1 hover:scale-105 active:scale-95 ${
+              showSuccess
+                ? themeClasses.successButton
+                : themeClasses.addButton
             } ${isAdding ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            {isOutOfStock ? (
+            {showSuccess ? (
               <>
-                <AlertTriangle className="w-3 h-3" />
-                <span>غير متوفر</span>
-              </>
-            ) : showSuccess ? (
-              <>
-                <Check className="w-3 h-3" />
+                <Check className="w-3 h-3 animate-bounce" />
                 <span>تمت الإضافة</span>
               </>
             ) : isAdding ? (
@@ -404,7 +319,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
       </div>
-    </Card>
+
+      {/* تأثير برق خفيف عند النجاح */}
+      {showSuccess && (
+        <div className="absolute inset-0 bg-gradient-to-r from-green-400/20 to-transparent animate-pulse rounded-xl pointer-events-none"></div>
+      )}
+    </div>
   );
 };
 

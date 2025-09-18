@@ -332,7 +332,6 @@ const StoresPage: React.FC = () => {
 
   const handleViewDetails = (store: LocalStore) => {
     console.log(`زيارة متجر ${store.name}`);
-    showToast(`جاري فتح متجر ${store.name}...`, "info");
     router.push(
       `/products?store=${store.id}&storeName=${encodeURIComponent(store.name)}`
     );
@@ -457,10 +456,6 @@ const StoresPage: React.FC = () => {
       // تحديث الحالة
       setStores(convertedStores);
       setHasLoaded(true);
-
-      // Toast ترحيبي مع إحصائيات
-      showToast(`تم تحميل ${convertedStores.length} متجر بنجاح`, "success");
-
       // Toast إضافي للترحيب
       setTimeout(() => {
       }, 2000);
@@ -531,15 +526,6 @@ const StoresPage: React.FC = () => {
           >
             {isLight ? 'الوضع المظلم' : 'الوضع المضيء'}
           </Button>
-
-          {/* عنوان الصفحة */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-2 border border-white/20">
-            <h1 className={`text-lg font-bold ${
-              isDark ? 'text-white' : 'text-gray-800'
-            }`}>
-              متاجرنا المميزة
-            </h1>
-          </div>
         </div>
       </div>
 

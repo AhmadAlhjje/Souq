@@ -35,7 +35,7 @@ export const useLogout = () => {
       console.log('تم تسجيل الخروج بنجاح');
       
       // توجيه المستخدم إلى صفحة تسجيل الدخول
-      window.location.href = '/LoginPage';
+      window.location.href = '/';
       
     } catch (error) {
       console.error('خطأ في تسجيل الخروج:', error);

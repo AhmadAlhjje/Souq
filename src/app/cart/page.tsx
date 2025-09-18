@@ -177,9 +177,7 @@ const CartPage = () => {
   // Handle retry fetch cart
   const handleRetryFetchCart = async () => {
     try {
-      showToast("جاري إعادة تحميل السلة...", "info");
       await fetchCart();
-      showToast("تم تحميل السلة بنجاح ✓", "success");
     } catch (error: any) {
       showToast(`فشل في إعادة التحميل: ${error.message}`, "error");
     }

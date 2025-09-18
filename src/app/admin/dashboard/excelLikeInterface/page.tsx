@@ -538,7 +538,7 @@ const ExcelLikeInterface = () => {
                   />
                   <button
                     disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
+                    className="bg-[#1a5394] hover:bg-[#164880] disabled:bg-blue-400 text-white px-3 py-2 rounded-lg transition-colors flex items-center gap-2 disabled:cursor-not-allowed text-sm"
                     title={t("tooltips.uploadExcel")}
                   >
                     <FileUp className="w-4 h-4" />

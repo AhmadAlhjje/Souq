@@ -308,9 +308,6 @@ function ProductContent() {
           setProducts(convertedProducts);
           setHasLoaded(true);
 
-          // Toast ترحيبي مع إحصائيات
-          showToast(`تم تحميل ${convertedProducts.length} منتج من ${storeInfo?.store_name || 'المتجر'}`, "success");
-
           // Toast إضافي للترحيب
           setTimeout(() => {
           }, 2000);

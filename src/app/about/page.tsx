@@ -130,9 +130,6 @@ const AboutPage: React.FC = () => {
       setIsLoading(false);
       setHasLoaded(true);
 
-      // ← Toast ترحيبي مع إحصائيات الصفحة
-      showToast(`تم تحميل الأقسام`, "success");
-
       // ← Toast إضافي للترحيب بعد ثانيتين
       setTimeout(() => {
       }, 2000);
