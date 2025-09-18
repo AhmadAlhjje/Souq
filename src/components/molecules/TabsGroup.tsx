@@ -48,6 +48,8 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
   };
 
   useEffect(() => {
+    const scrollContainer = scrollContainerRef.current;
+
     checkScrollability();
     const handleResize = () => checkScrollability();
     const handleScroll = () => checkScrollability();
@@ -57,7 +59,7 @@ const TabsGroup: React.FC<TabsGroupProps> = ({
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      scrollContainerRef.current?.removeEventListener('scroll', handleScroll);
+      scrollContainer?.removeEventListener('scroll', handleScroll);
     };
   }, []);
 

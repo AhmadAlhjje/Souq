@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import OrdersTemplate from "../../../../components/templates/OrdersTemplate";
 import useTheme from "@/hooks/useTheme";
 import { Order, TabType, OrderStats } from "../../../../types/orders";
@@ -51,7 +51,7 @@ const OrdersPageComponent: React.FC = () => {
   const { storeId, isLoaded } = useStore();
 
   // دالة محدثة لتحويل بيانات API لتشمل معلومات الشحن
-  const transformApiDataToOrders = (apiData: any): Order[] => {
+  const transformApiDataToOrders =useCallback( (apiData: any): Order[] => {
     if (apiData?.allOrders?.orders && Array.isArray(apiData.allOrders.orders)) {
       return apiData.allOrders.orders.map((order: any) => ({
         id: order.order_id.toString(),
@@ -115,7 +115,7 @@ const OrdersPageComponent: React.FC = () => {
       }));
     }
     return [];
-  };
+  },[t]);
 
   // تحميل البيانات
   useEffect(() => {
@@ -136,7 +136,7 @@ const OrdersPageComponent: React.FC = () => {
     };
 
     loadOrdersData();
-  }, [storeId, isLoaded]);
+  }, [storeId, isLoaded , transformApiDataToOrders]);
 
   // البحث
   const handleApiSearch = async (filters: SearchFilters) => {
