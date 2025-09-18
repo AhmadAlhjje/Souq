@@ -170,17 +170,7 @@ const StoresSection: React.FC<StoresSectionProps> = ({
           </div>
         )}
 
-        {/* Load More Button */}
-        {displayedStores.length > 0 && !currentSearchTerm && (
-          <div className="text-center">
-            <button className="bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-medium flex items-center gap-3 mx-auto transition-all duration-300 hover:shadow-lg hover:scale-105 group">
-              <span>استكشف جميع المتاجر</span>
-              <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        )}
+       
       </div>
     </ToastProvider>
   );

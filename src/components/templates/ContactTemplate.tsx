@@ -12,7 +12,6 @@ const ContactTemplate: React.FC = () => {
   const { showToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
-
   // محاكاة تحميل أولي مع toast
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -20,13 +19,10 @@ const ContactTemplate: React.FC = () => {
       setHasLoaded(true);
       // Toast ترحيبي عند تحميل الصفحة
       showToast("مرحباً بك في صفحة التواصل!", "success");
-
       // Toast معلوماتي بعد ثانيتين
       setTimeout(() => {
-        showToast("نحن هنا لمساعدتك في أي استفسار", "info");
       }, 2000);
     }, 1500);
-
     return () => clearTimeout(timer);
   }, [showToast]);
 

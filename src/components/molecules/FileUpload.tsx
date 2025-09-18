@@ -100,94 +100,116 @@ const FileUpload: React.FC<FileUploadProps> = (props) => {
     }
   };
 
-  // Render V1 (shippings branch style)
-  if (isV1) {
-    const v1Props = props as FileUploadV1Props;
-    const theme = v1Props.theme || 'light';
-    
-    return (
-      <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">{v1Props.label}</label>
-        
-        {!selectedFile ? (
-          <label 
-            className={`
-              flex flex-col items-center justify-center w-full h-32 
-              border-2 border-dashed rounded-lg cursor-pointer 
-              transition-all duration-300 hover:shadow-md
-              ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}
-              ${props.error ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'}
-              ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
-            `}
-          >
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 mb-2 text-gray-400">
-                {v1Props.icon}
-              </div>
-              <p className="text-xs sm:text-sm text-center px-2 mb-2 font-medium text-gray-600">
-                اضغط لاختيار صورة
-              </p>
-              <p className="text-xs sm:text-sm text-center px-2 text-gray-500">
-                {v1Props.label}
-              </p>
+ // Render V1 (shippings branch style)
+if (isV1) {
+  const v1Props = props as FileUploadV1Props;
+  const theme = v1Props.theme || 'light';
+  
+  return (
+    <div className="mb-4">
+      {/* ✅ تعديل لون التسمية ليكون أبيض في الوضع الداكن */}
+      <label className={`block text-sm font-medium mb-2 ${
+        theme === 'dark' ? 'text-white' : 'text-gray-900'
+      }`}>
+        {v1Props.label}
+      </label>
+      
+      {!selectedFile ? (
+        <label 
+          className={`
+            flex flex-col items-center justify-center w-full h-32 
+            border-2 border-dashed rounded-lg cursor-pointer 
+            transition-all duration-300 hover:shadow-md
+            ${props.disabled ? 'opacity-50 cursor-not-allowed' : ''}
+            ${props.error ? 'border-red-500' : 'border-gray-300 hover:border-gray-400'}
+            ${theme === 'dark' ? 'bg-gray-800' : 'bg-gray-50'}
+          `}
+        >
+          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+            <div className={`w-8 h-8 sm:w-10 sm:h-10 mb-2 ${
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-400'
+            }`}>
+              {v1Props.icon}
             </div>
-            <input
-              type="file"
-              className="hidden"
-              accept={props.accept}
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                handleFileChange(file);
-              }}
-              disabled={props.disabled}
-            />
-          </label>
-        ) : (
-          <div className={`relative w-full h-32 border-2 rounded-lg overflow-hidden ${
-            props.error ? 'border-red-500' : 'border-gray-300'
-          }`}>
-            {previewUrl ? (
-              <img 
-                src={previewUrl} 
-                alt={v1Props.label}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full">
-                <FileText size={32} className="text-gray-500" />
-                <p className="text-xs mt-2 text-center px-2 text-gray-600">
-                  {selectedFile.name}
-                </p>
-              </div>
-            )}
-            
-            <button
-              onClick={removeFile}
-              className="absolute top-2 left-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-              type="button"
-            >
-              <X size={14} />
-            </button>
-            
-            <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-2">
-              <p className="text-xs truncate">{selectedFile.name}</p>
-              <p className="text-xs opacity-75">
-                {(selectedFile.size / 1024).toFixed(1)} KB
-              </p>
-            </div>
+            {/* ✅ تعديل نص "اضغط لاختيار صورة" */}
+            <p className={`text-xs sm:text-sm text-center px-2 mb-2 font-medium ${
+              theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              اضغط لاختيار صورة
+            </p>
+            {/* ✅ تعديل نص التسمية المكررة */}
+            <p className={`text-xs sm:text-sm text-center px-2 ${
+              theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              {v1Props.label}
+            </p>
           </div>
-        )}
-        
-        {props.error && (
-          <p className="mt-1 text-xs text-red-500 text-right">{props.error}</p>
-        )}
-        {props.helperText && !props.error && (
-          <p className="mt-1 text-xs text-gray-500 text-right">{props.helperText}</p>
-        )}
-      </div>
-    );
-  }
-
+          <input
+            type="file"
+            className="hidden"
+            accept={props.accept}
+            onChange={(e) => {
+              const file = e.target.files?.[0] || null;
+              handleFileChange(file);
+            }}
+            disabled={props.disabled}
+          />
+        </label>
+      ) : (
+        <div className={`relative w-full h-32 border-2 rounded-lg overflow-hidden ${
+          props.error ? 'border-red-500' : 'border-gray-300'
+        }`}>
+          {previewUrl ? (
+            <img 
+              src={previewUrl} 
+              alt={v1Props.label}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full">
+              <FileText size={32} className={`${
+                theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+              }`} />
+              <p className={`text-xs mt-2 text-center px-2 ${
+                theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                {selectedFile.name}
+              </p>
+            </div>
+          )}
+          
+          <button
+            onClick={removeFile}
+            className="absolute top-2 left-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+            type="button"
+          >
+            <X size={14} />
+          </button>
+          
+          <div className={`absolute bottom-0 left-0 right-0 p-2 ${
+            theme === 'dark' ? 'bg-black bg-opacity-70 text-white' : 'bg-black bg-opacity-70 text-white'
+          }`}>
+            <p className="text-xs truncate">{selectedFile.name}</p>
+            <p className="text-xs opacity-75">
+              {(selectedFile.size / 1024).toFixed(1)} KB
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {props.error && (
+        <p className="mt-1 text-xs text-red-500 text-right">{props.error}</p>
+      )}
+      {props.helperText && !props.error && (
+        <p className={`mt-1 text-xs text-right ${
+          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+        }`}>
+          {props.helperText}
+        </p>
+      )}
+    </div>
+  );
+}
   // Render V2 (deploy branch style)
   if (isV2) {
     const v2Props = props as FileUploadV2Props;

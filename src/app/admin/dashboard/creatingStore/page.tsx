@@ -7,7 +7,7 @@ import TextareaField from "../../../../components/molecules/TextareaField";
 import FileUpload from "../../../../components/molecules/FileUpload";
 import ProgressSection from "../../../../components/molecules/ProgressSection";
 import StepIndicator from "../../../../components/molecules/StepIndicator";
-import SuccessMessage from "../../../../components/organisms/SuccessMessage";
+import SuccessMessage from "@/components/organisms/SuccessMessage";
 import { useToast } from "@/hooks/useToast";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { createStore } from "@/api/stores";

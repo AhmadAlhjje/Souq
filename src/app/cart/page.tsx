@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/useCart";
 import { useSessionContext } from "@/components/SessionProvider";
 import { useToast } from "@/hooks/useToast";
-import { Trash2, RefreshCw, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Trash2, RefreshCw, ShoppingBag, ArrowLeft, Sun, Moon } from "lucide-react";
 import AtomicCartPage from "@/components/templates/AtomicCartPage";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useThemeContext } from '@/contexts/ThemeContext'; // ✅ استيراد الثيم
 
 const CartPage = () => {
   const router = useRouter();
@@ -15,6 +16,18 @@ const CartPage = () => {
   const { sessionId, isLoading: sessionLoading } = useSessionContext();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
+
+  // ✅ استخدام الثيم
+  const { theme, toggleTheme, isDark, isLight } = useThemeContext();
+
+  // ✅ دالة الخلفية حسب الثيم
+  const getBackgroundGradient = () => {
+    if (isLight) {
+      return 'linear-gradient(135deg, #96EDD9 0%, #96EDD9 20%, #96EDD9 50%, #96EDD9 80%, #FFFFFF 100%)';
+    } else {
+      return 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)';
+    }
+  };
 
   const {
     cartData,
@@ -77,7 +90,7 @@ const CartPage = () => {
       showToast("جاري تحديث المجموع...", "info");
       await refreshCartTotal();
       await fetchCart();
-      showToast("تم تحديhandleCheckoutClick ث المجموع بنجاح ✓", "success");
+      showToast("تم تحديث المجموع بنجاح ✓", "success");
     } catch (error: any) {
       console.error("Error refreshing cart total:", error);
       showToast(`خطأ في تحديث المجموع: ${error.message}`, "error");
@@ -175,7 +188,13 @@ const CartPage = () => {
   // حالة تحميل الجلسة
   if (sessionLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <LoadingSpinner
           size="lg"
           color="green"
@@ -191,13 +210,19 @@ const CartPage = () => {
   // حالة خطأ في الجلسة
   if (!sessionId) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">
+          <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
             خطأ في الجلسة
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
             لم يتم العثور على معرف الجلسة. يرجى إعادة تحميل الصفحة.
           </p>
           <button
@@ -205,7 +230,11 @@ const CartPage = () => {
               showToast("جاري إعادة تحميل الصفحة...", "info");
               window.location.reload();
             }}
-            className="bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors"
+            className={`px-6 py-3 rounded-lg transition-colors ${
+              isDark 
+                ? 'bg-teal-500 hover:bg-teal-400 text-white' 
+                : 'bg-teal-600 hover:bg-teal-700 text-white'
+            }`}
           >
             إعادة تحميل الصفحة
           </button>
@@ -217,7 +246,13 @@ const CartPage = () => {
   // حالة تحميل السلة
   if (cartLoading && !cartData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <LoadingSpinner
           size="lg"
           color="green"
@@ -233,16 +268,28 @@ const CartPage = () => {
   // حالة الخطأ في جلب السلة
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <div className="text-center max-w-md mx-auto p-8">
           <div className="text-red-500 text-6xl mb-4">❌</div>
-          <h2 className="text-2xl font-bold text-red-600 mb-4">حدث خطأ</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+            حدث خطأ
+          </h2>
+          <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{error}</p>
           <div className="space-y-3">
             <button
               onClick={handleRetryFetchCart}
               disabled={cartLoading}
-              className="w-full bg-teal-600 text-white px-4 py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              className={`w-full px-4 py-2 rounded-lg inline-flex items-center justify-center gap-2 ${
+                isDark
+                  ? 'bg-teal-500 hover:bg-teal-400 disabled:opacity-50 text-white'
+                  : 'bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white'
+              }`}
             >
               <RefreshCw
                 className={`w-4 h-4 ${cartLoading ? "animate-spin" : ""}`}
@@ -254,7 +301,11 @@ const CartPage = () => {
                 showToast("العودة للصفحة الرئيسية", "info");
                 router.push("/");
               }}
-              className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700"
+              className={`w-full px-4 py-2 rounded-lg ${
+                isDark
+                  ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                  : 'bg-gray-600 hover:bg-gray-700 text-white'
+              }`}
             >
               العودة للرئيسية
             </button>
@@ -267,16 +318,24 @@ const CartPage = () => {
   // حالة السلة فارغة
   if (!cartData || cartData.items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-blue-50/30">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{
+          background: getBackgroundGradient(),
+          backgroundAttachment: 'fixed',
+        }}
+      >
         <div className="text-center max-w-md mx-auto p-8">
           <div className="mb-8">
-            <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <ShoppingBag className="w-12 h-12 text-gray-400" />
+            <div className={`w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center ${
+              isDark ? 'bg-gray-800' : 'bg-gray-100'
+            }`}>
+              <ShoppingBag className={`w-12 h-12 ${isDark ? 'text-gray-400' : 'text-gray-400'}`} />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               السلة فارغة
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
               لم تقم بإضافة أي منتجات إلى سلة التسوق بعد
             </p>
           </div>
@@ -285,7 +344,11 @@ const CartPage = () => {
               onClick={() => {
                 router.push("/Stores");
               }}
-              className="w-full bg-teal-600 text-white px-6 py-3 rounded-lg hover:bg-teal-700 transition-colors flex items-center justify-center gap-2"
+              className={`w-full px-6 py-3 rounded-lg flex items-center justify-center gap-2 ${
+                isDark
+                  ? 'bg-teal-500 hover:bg-teal-400 text-white'
+                  : 'bg-teal-600 hover:bg-teal-700 text-white'
+              }`}
             >
               <ShoppingBag className="w-5 h-5" />
               تصفح المتاجر
@@ -300,22 +363,34 @@ const CartPage = () => {
   const isProcessing = cartLoading;
 
   return (
-    <div className="mt-24 relative min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
+    <div 
+      className="mt-24 relative min-h-screen"
+      style={{
+        background: getBackgroundGradient(),
+        backgroundAttachment: 'fixed',
+      }}
+    >
+      
+
       {/* Clear Cart Confirmation Modal */}
       {showClearConfirm && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           dir="rtl"
         >
-          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-2xl">
+          <div className={`rounded-lg p-6 max-w-md mx-4 shadow-2xl ${
+            isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+          }`}>
             <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+              <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                isDark ? 'bg-red-900/50' : 'bg-red-100'
+              }`}>
                 <Trash2 className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 mb-2">
+              <h3 className="text-lg font-bold mb-2">
                 تأكيد تفريغ السلة
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className={`mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                 هل أنت متأكد من رغبتك في حذف جميع المنتجات (
                 {cartData.items.length} منتج) من السلة؟ لا يمكن التراجع عن هذا
                 الإجراء.
@@ -333,7 +408,9 @@ const CartPage = () => {
                     setShowClearConfirm(false);
                     showToast("تم إلغاء تفريغ السلة", "info");
                   }}
-                  className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    isDark ? 'bg-gray-700 text-gray-200 hover:bg-gray-600' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+                  }`}
                 >
                   إلغاء
                 </button>

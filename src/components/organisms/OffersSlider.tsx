@@ -1,10 +1,10 @@
-// components/organisms/OffersSlider.tsx - النسخة المحدثة مع الصورة الافتراضية
+// components/organisms/OffersSlider.tsx - النسخة المُصححة والكاملة مع دعم الثيم
 import React, { useState, useEffect, useCallback } from "react";
 import { ChevronLeft, ChevronRight, Tag, Gift, Truck } from "lucide-react";
 import { Product } from '@/api/storeProduct';
 import { api } from "@/api/api";
-import { useCart } from '@/hooks/useCart'; // ⬅️ الهوك الصحيح الذي يتصل بالخادم
-import { useSessionContext } from '@/components/SessionProvider'; // ⬅️ للحصول على sessionId
+import { useCart } from '@/hooks/useCart';
+import { useSessionContext } from '@/components/SessionProvider';
 
 // نوع المنتج من API مع التحديثات الجديدة
 interface ApiProduct {
@@ -15,7 +15,7 @@ interface ApiProduct {
   price: string;
   discount_percentage: string | null;
   stock_quantity: number;
-  images: string;
+  images: string | string[]; // يمكن أن يكون string أو مصفوفة
   created_at: string;
   Store?: {
     store_name: string;
@@ -41,11 +41,12 @@ interface Offer {
 }
 
 interface OffersSliderProps {
-  storeId?: number; // إضافة prop اختياري لمعرف المتجر
-  storeName?: string; // إضافة اسم المتجر للعرض
+  storeId?: number;
+  storeName?: string;
+  theme?: 'light' | 'dark';
 }
 
-const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
+const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName, theme }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slidesToShow, setSlidesToShow] = useState(1);
   const [addingStates, setAddingStates] = useState<{ [key: number]: boolean }>({});
@@ -53,47 +54,147 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ✅ استخدام الهوك الصحيح الذي يتصل بالخادم
   const { addToCart: addToCartAPI, fetchCart } = useCart();
   const { sessionId } = useSessionContext();
 
-  // الصورة الافتراضية المطلوبة
+  // استخدام theme المُمرر كـ prop أو الافتراضي
+  const currentTheme = theme || 'light';
+  const isDark = currentTheme === 'dark';
+  const isLight = currentTheme === 'light';
+
   const DEFAULT_OFFER_IMAGE = "https://placehold.co/400x250/00C8B8/FFFFFF?text=متجر";
 
-  // في OffersSlider.tsx - إصلاح دالة convertApiProductToProduct
+  // دالة للحصول على ألوان النص حسب الثيم
+  const getTextColor = (type: 'primary' | 'secondary' | 'muted') => {
+    if (isLight) {
+      switch (type) {
+        case 'primary': return 'text-gray-800';
+        case 'secondary': return 'text-gray-600';
+        case 'muted': return 'text-gray-500';
+        default: return 'text-gray-800';
+      }
+    } else {
+      switch (type) {
+        case 'primary': return 'text-white';
+        case 'secondary': return 'text-gray-300';
+        case 'muted': return 'text-gray-400';
+        default: return 'text-white';
+      }
+    }
+  };
+
+  // دالة مُصححة لمعالجة الصور - تدعم المصفوفات والنصوص
+  const processProductImages = useCallback((
+    images: string | string[] | undefined | null
+  ): string[] => {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
+    
+    console.log("🖼️ معالجة صور المنتج:", {
+      data: images,
+      type: typeof images,
+      isArray: Array.isArray(images)
+    });
+
+    if (!images || images === null || images === undefined) {
+      console.log("📷 لا توجد صور");
+      return [DEFAULT_OFFER_IMAGE];
+    }
+
+    try {
+      // إذا كانت مصفوفة بالفعل
+      if (Array.isArray(images)) {
+        console.log("✅ الصور عبارة عن مصفوفة:", images);
+        
+        const validImages = images
+          .filter(img => img && typeof img === 'string' && img.trim() !== '' && img !== 'null')
+          .map(img => {
+            if (img.startsWith('http')) {
+              return img;
+            } else if (img.startsWith('/uploads')) {
+              return `${baseUrl}${img}`;
+            } else {
+              return `${baseUrl}/${img.replace(/^\/+/, '')}`;
+            }
+          });
+        
+        return validImages.length > 0 ? validImages : [DEFAULT_OFFER_IMAGE];
+      }
+      
+      // إذا كانت string
+      if (typeof images === 'string') {
+        const trimmedImages = images.trim();
+        
+        if (trimmedImages === '' || trimmedImages === 'null') {
+          console.log("📷 نص فارغ");
+          return [DEFAULT_OFFER_IMAGE];
+        }
+        
+        // محاولة تحليل JSON
+        if (trimmedImages.startsWith('[') || trimmedImages.startsWith('{')) {
+          try {
+            // تنظيف النص أولاً قبل التحليل
+            const cleanImages = trimmedImages.replace(/\\"/g, '"');
+            const parsed = JSON.parse(cleanImages);
+            
+            console.log("✅ تم تحليل JSON بنجاح:", parsed);
+            
+            if (Array.isArray(parsed)) {
+              const validImages = parsed
+                .filter(img => img && typeof img === 'string' && img.trim() !== '' && img !== 'null')
+                .map(img => {
+                  if (img.startsWith('http')) {
+                    return img;
+                  } else if (img.startsWith('/uploads')) {
+                    return `${baseUrl}${img}`;
+                  } else {
+                    return `${baseUrl}/${img.replace(/^\/+/, '')}`;
+                  }
+                });
+              
+              return validImages.length > 0 ? validImages : [DEFAULT_OFFER_IMAGE];
+            }
+          } catch (jsonError) {
+            console.warn("❌ خطأ في تحليل JSON:", jsonError);
+          }
+        } else {
+          // معاملة كصورة واحدة
+          const imageUrl = trimmedImages.startsWith('http') 
+            ? trimmedImages 
+            : `${baseUrl}/${trimmedImages.replace(/^\/+/, '')}`;
+          
+          console.log("📷 صورة واحدة:", imageUrl);
+          return [imageUrl];
+        }
+      }
+      
+      console.log("⚠️ نوع غير متوقع، استخدام الافتراضية");
+      return [DEFAULT_OFFER_IMAGE];
+    } catch (err) {
+      console.error("❌ خطأ في معالجة الصور:", err);
+      return [DEFAULT_OFFER_IMAGE];
+    }
+  }, []);
+
+  // دالة تحويل مُصححة
   const convertApiProductToProduct = useCallback((
     apiProduct: ApiProduct
   ): Product => {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
-    
-    let images: string[] = [];
-    try {
-      if (apiProduct.images) {
-        const cleanImages = apiProduct.images.replace(/\\"/g, '"');
-        const parsedImages = JSON.parse(cleanImages);
-        if (Array.isArray(parsedImages)) {
-          images = parsedImages.map(img => {
-            if (img.startsWith('/uploads')) {
-              return `${baseUrl}${img}`;
-            } else if (img.startsWith('http')) {
-              return img;
-            } else {
-              return `${baseUrl}/${img}`;
-            }
-          });
-        }
-      }
-    } catch (e) {
-      console.warn("خطأ في تحليل صور المنتج:", e);
-      images = [DEFAULT_OFFER_IMAGE];
-    }
+    const processedImages = processProductImages(apiProduct.images);
+    const mainImage = processedImages[0]; // أخذ أول صورة صالحة
 
-    // إذا لم توجد صور، استخدم الصورة الافتراضية المطلوبة
-    if (images.length === 0) {
-      images = [DEFAULT_OFFER_IMAGE];
-    }
+    // فحص إذا كانت الصورة حقيقية أم افتراضية
+    const isRealImage = mainImage && 
+                       !mainImage.includes('placehold.co') && 
+                       !mainImage.includes('unsplash.com') &&
+                       mainImage !== DEFAULT_OFFER_IMAGE;
 
-    // إصلاح نوع status - تحويل "inactive" إلى "out_of_stock" و تحديد low_stock
+    console.log(`🖼️ صورة المنتج ${apiProduct.product_id}:`, {
+      original: apiProduct.images,
+      processed: mainImage,
+      isReal: isRealImage
+    });
+
+    // تحديد حالة المنتج
     let productStatus: "active" | "out_of_stock" | "low_stock";
     
     if (apiProduct.stock_quantity <= 0) {
@@ -115,10 +216,10 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       originalPrice: apiProduct.original_price,
       rating: apiProduct.averageRating || 4.5,
       reviewCount: apiProduct.reviewsCount || Math.floor(Math.random() * 100) + 10,
-      image: images[0],
+      image: mainImage, // استخدام الصورة المعالجة
       isNew: false,
       stock: apiProduct.stock_quantity,
-      status: productStatus, // استخدام النوع المُصحح
+      status: productStatus,
       description: apiProduct.description,
       descriptionAr: apiProduct.description,
       brand: apiProduct.Store?.store_name || storeName || "متجر محلي",
@@ -132,7 +233,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       discountAmount: apiProduct.has_discount ? apiProduct.discount_amount : undefined,
       hasDiscount: apiProduct.has_discount,
     };
-  }, [storeName]);
+  }, [processProductImages, storeName]);
 
   // دالة إنشاء العروض من المنتجات المخفضة
   const createOffersFromProducts = useCallback((products: ApiProduct[]): Offer[] => {
@@ -140,9 +241,9 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       {
         title: "خصم مميز",
         description: "عرض لفترة محدودة",
-        bgColor: "bg-gray-50", // ← خلفية فاتحة جداً، قريبة من البياض
-        icon: <Tag className="w-5 h-5 text-gray-700" />, // ← لون الأيقونة هادئ
-        borderColor: "border border-gray-100", // ← حافة خفيفة للتمييز
+        bgColor: "bg-gray-50",
+        icon: <Tag className="w-5 h-5 text-gray-700" />,
+        borderColor: "border border-gray-100",
       },
       {
         title: "تخفيضات هائلة",
@@ -183,24 +284,21 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       const product = convertApiProductToProduct(apiProduct);
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
 
-      // تحديد صورة العرض مع إعطاء أولوية للصورة الافتراضية عند عدم وجود صورة صالحة
-      let offerImage = DEFAULT_OFFER_IMAGE; // البداية بالصورة الافتراضية
+      // تحديد صورة العرض بنفس منطق المنتج
+      let offerImage = product.image; // استخدام نفس الصورة المعالجة
       
-      // محاولة استخدام صورة المنتج إذا كانت متوفرة وصالحة
-      if (product.image && 
-          !product.image.includes('placehold.co') && 
-          !product.image.includes('unsplash.com') &&
-          product.image.trim() !== '') {
-        offerImage = product.image;
-      } 
-      // إذا لم تكن صورة المنتج متوفرة، حاول استخدام شعار المتجر
-      else if (apiProduct.Store?.logo_image) {
-        if (apiProduct.Store.logo_image.startsWith('/uploads')) {
-          offerImage = `${baseUrl}${apiProduct.Store.logo_image}`;
-        } else if (apiProduct.Store.logo_image.startsWith('http')) {
-          offerImage = apiProduct.Store.logo_image;
+      // إذا لم تكن هناك صورة صالحة، حاول استخدام شعار المتجر
+      if (!offerImage || offerImage === DEFAULT_OFFER_IMAGE) {
+        if (apiProduct.Store?.logo_image) {
+          if (apiProduct.Store.logo_image.startsWith('/uploads')) {
+            offerImage = `${baseUrl}${apiProduct.Store.logo_image}`;
+          } else if (apiProduct.Store.logo_image.startsWith('http')) {
+            offerImage = apiProduct.Store.logo_image;
+          } else {
+            offerImage = `${baseUrl}/${apiProduct.Store.logo_image}`;
+          }
         } else {
-          offerImage = `${baseUrl}/${apiProduct.Store.logo_image}`;
+          offerImage = DEFAULT_OFFER_IMAGE;
         }
       }
 
@@ -348,7 +446,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
     setCurrentIndex(Math.min(index, maxIndex));
   };
 
-  // ✅ دالة إضافة المنتج للسلة — محدثة لتستخدم addToCartAPI من useCart
+  // دالة إضافة المنتج للسلة
   const handleOfferClick = async (offer: Offer) => {
     if (!sessionId) {
       console.warn("❌ لا يمكن الإضافة بدون معرف جلسة.");
@@ -365,13 +463,9 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
     try {
       setAddingStates((prev) => ({ ...prev, [offer.id]: true }));
 
-      // ✅ الإضافة للخادم
       await addToCartAPI(offer.product.id, 1);
-
-      // ✅ إعادة تحميل السلة لتحديث الواجهة
       await fetchCart();
 
-      // ✅ رسالة نجاح (يمكنك استبدالها بـ toast إذا أردت)
       console.log(`✅ تم إضافة ${offer.product.name} إلى السلة`);
 
       setTimeout(() => {
@@ -403,15 +497,13 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
   if (loading) {
     return (
       <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+      <h2 className={`text-2xl md:text-3xl font-bold flex items-center gap-2 ${getTextColor('primary')} transition-colors duration-300`}>
             {getTitle()}
             <span className="text-orange-500">🔥</span>
           </h2>
-        </div>
         <div className="flex justify-center items-center py-20">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-teal-600"></div>
-          <span className="mr-4 text-gray-600">جاري تحميل العروض...</span>
+          <span className={`mr-4 ${getTextColor('secondary')} transition-colors duration-300`}>جاري تحميل العروض...</span>
         </div>
       </div>
     );
@@ -422,14 +514,14 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
     return (
       <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className={`text-2xl md:text-3xl font-bold flex items-center gap-2 ${getTextColor('primary')} transition-colors duration-300`}>
             {getTitle()}
             <span className="text-orange-500">🔥</span>
           </h2>
         </div>
         <div className="text-center py-20">
           <div className="text-red-500 mb-4">❌</div>
-          <p className="text-gray-600 mb-4">المخزون غير كافي للكمية</p>
+          <p className={`${getTextColor('secondary')} mb-4 transition-colors duration-300`}>حدث خطأ في تحميل العروض</p>
           <button
             onClick={fetchDiscountedProducts}
             className="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2 rounded-lg transition-colors"
@@ -447,7 +539,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
       <div className="relative max-w-7xl mx-auto mb-4 px-4" dir="rtl">
         <div className="text-center py-8">
           <div className="text-4xl mb-2">🎁</div>
-          <p className="text-gray-500 text-sm">{getNoOffersMessage()}</p>
+          <p className={`${getTextColor('muted')} text-sm transition-colors duration-300`}>{getNoOffersMessage()}</p>
         </div>
       </div>
     );
@@ -457,11 +549,10 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
     <div className="relative max-w-7xl mx-auto mb-12 px-4" dir="rtl">
       {/* العنوان */}
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 flex items-center gap-2">
+        <h2 className={`text-2xl md:text-3xl font-bold flex items-center gap-2 ${getTextColor('primary')} transition-colors duration-300`}>
           {getTitle()}
           <span className="text-orange-500">🔥</span>
         </h2>
-     
       </div>
 
       {/* الحاوية الرئيسية */}
@@ -570,7 +661,7 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
                         ? "bg-green-500 text-white cursor-not-allowed"
                         : !offer.product.inStock
                         ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                        : "bg-white/90 hover:bg-white text-gray-800 hover:scale-105"
+                        : "bg-teal-500 hover:bg-teal-600 text-white hover:scale-105"
                     }`}
                   >
                     {addingStates[offer.id]
@@ -584,7 +675,6 @@ const OffersSlider: React.FC<OffersSliderProps> = ({ storeId, storeName }) => {
             ))}
           </div>
         </div>
-
         {/* مؤشرات التنقل */}
         {maxIndex > 0 && (
           <div className="flex justify-center mt-6 gap-2">

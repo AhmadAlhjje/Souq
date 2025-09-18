@@ -16,6 +16,7 @@ import { useCart } from "@/hooks/useCart";
 import { useSessionContext } from '@/components/SessionProvider';
 import { useToast } from '@/hooks/useToast';
 import { createReview, generateSessionId } from "@/api/stores";
+import { useThemeContext } from '@/contexts/ThemeContext'; // ✅ استيراد الثيم
 
 interface ProductDetailsPageProps {
   product: Product;
@@ -39,6 +40,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     isLoading: cartLoading,
     fetchCart
   } = useCart();
+  const { isDark } = useThemeContext(); // ✅ استخدام الثيم
 
   // State للمنتج والسلة
   const [selectedImage, setSelectedImage] = useState(0);
@@ -60,7 +62,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   // دالة لجلب التعليقات
   const getProductComments = () => {
     const comments = (product as any)?.reviewsData?.comments || [];
-    console.log('📝 التعليقات المجلبة:', comments); // للتأكد من وصول البيانات
+    console.log('📝 التعليقات المجلبة:', comments);
     return comments
       .filter((comment: any) => comment.comment && comment.comment.trim() !== '')
       .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -68,12 +70,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
   // State مبسط للتقييم والتعليق
   const [reviewState, setReviewState] = useState({
-    // التقييم السريع (النجوم العلوية)
     quickRating: getUserRating(product.id),
     isSubmittingQuickRating: false,
     quickRatingError: null as string | null,
-    
-    // نموذج التعليق البسيط
     reviewerName: '',
     comment: '',
     isSubmittingReview: false,
@@ -83,7 +82,7 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const productComments = getProductComments();
   const displayedComments = showAllComments ? productComments : productComments.slice(0, 3);
 
-  // التقييم السريع (النجوم العلوية) - تقييم فقط بدون تعليق
+  // التقييم السريع (النجوم العلوية)
   const handleQuickRating = async (rating: number) => {
     if (reviewState.isSubmittingQuickRating || !product.id) return;
     
@@ -127,7 +126,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   const handleSubmitReview = async () => {
     if (reviewState.isSubmittingReview || !product.id) return;
 
-    // التحقق من الحقول المطلوبة
     if (!reviewState.comment.trim()) {
       setReviewState(prev => ({
         ...prev,
@@ -161,7 +159,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
       console.log('🔄 إرسال التعليق:', reviewData);
       await createReview(reviewData);
 
-      // إعادة تعيين النموذج
       setReviewState(prev => ({
         ...prev,
         reviewerName: '',
@@ -170,7 +167,6 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
       showToast("تم إرسال تعليقك بنجاح، جاري تحديث الصفحة...", 'success');
       
-      // إعادة تحميل الصفحة لجلب التعليقات المحدثة
       setTimeout(() => {
         window.location.reload();
       }, 1500);
@@ -208,7 +204,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               className={`w-4 h-4 ${
                 isFilled
                   ? "fill-yellow-400 text-yellow-400"
-                  : "text-gray-300"
+                  : isDark
+                    ? "text-gray-600" 
+                    : "text-gray-300"
               } hover:fill-yellow-300 hover:text-yellow-300 ${
                 reviewState.isSubmittingQuickRating ? "opacity-50" : ""
               }`}
@@ -219,43 +217,32 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
     </div>
   );
 
-  // معالجة الصور - دعم المصفوفة والـ string
+  // معالجة الصور
   const getProductImages = () => {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://192.168.74.12:4000";
     
-    // إذا كان المنتج يحتوي على images كمصفوفة
     if (Array.isArray(product.images) && product.images.length > 0) {
       return product.images.map(img => {
-        if (img.startsWith("http")) {
-          return img;
-        } else if (img.startsWith("/uploads")) {
-          return `${baseUrl}${img}`;
-        } else {
-          return `${baseUrl}/uploads/${img}`;
-        }
+        if (img.startsWith("http")) return img;
+        else if (img.startsWith("/uploads")) return `${baseUrl}${img}`;
+        else return `${baseUrl}/uploads/${img}`;
       });
     }
     
-    // إذا كان المنتج يحتوي على images كـ string
     if (typeof (product as any).images === 'string') {
       try {
         const parsed = JSON.parse((product as any).images);
         const images = Array.isArray(parsed) ? parsed : [parsed];
         return images.map((img: string) => {
-          if (img.startsWith("http")) {
-            return img;
-          } else if (img.startsWith("/uploads")) {
-            return `${baseUrl}${img}`;
-          } else {
-            return `${baseUrl}/uploads/${img}`;
-          }
+          if (img.startsWith("http")) return img;
+          else if (img.startsWith("/uploads")) return `${baseUrl}${img}`;
+          else return `${baseUrl}/uploads/${img}`;
         });
       } catch (error) {
         console.error("خطأ في تحليل صور المنتج:", error);
       }
     }
     
-    // استخدام الصورة الرئيسية أو الافتراضية
     const mainImage = product.image || "/images/default-product.jpg";
     return [mainImage, mainImage, mainImage, mainImage];
   };
@@ -331,21 +318,41 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen mt-10 text-gray-800 font-cairo" dir="rtl">
+    <div 
+      className={`min-h-screen mt-10 font-cairo ${isDark ? 'text-gray-200' : 'text-gray-800'}`} 
+      dir="rtl"
+      style={{
+        background: isDark 
+          ? 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #374151 100%)' 
+          : 'linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 50%, #F1F3F4 100%)',
+      }}
+    >
       <div className="mx-auto px-6 py-12 max-w-6xl">
-        <div className="rounded-2xl shadow-lg shadow-gray-200/50 p-8">
+        <div 
+          className={`rounded-2xl p-8 ${
+            isDark 
+              ? 'bg-gray-900 shadow-lg shadow-black/30 border border-gray-800' 
+              : 'bg-white shadow-lg shadow-gray-200/50'
+          }`}
+        >
           
           {/* العودة للخلف */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={handleBackToProducts}
-              className="text-teal-600 flex items-center gap-2 text-lg hover:text-teal-700 transition-colors duration-200"
+              className={`flex items-center gap-2 text-lg transition-colors duration-200 ${
+                isDark ? 'text-teal-400 hover:text-teal-300' : 'text-teal-600 hover:text-teal-700'
+              }`}
             >
               <ArrowRight className="w-5 h-5" />
               العودة للخلف
             </button>
             {isInCart && (
-              <div className="bg-teal-100 text-teal-800 px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2">
+              <div className={`px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 ${
+                isDark 
+                  ? 'bg-teal-900/50 text-teal-300 border border-teal-800' 
+                  : 'bg-teal-100 text-teal-800'
+              }`}>
                 <Check className="w-4 h-4" />
                 المنتج في السلة ({cartQuantity} قطعة)
               </div>
@@ -355,47 +362,63 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start relative">
             
             {/* خط فاصل */}
-            <div className="absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 hidden lg:block w-px bg-gradient-to-b from-transparent via-teal-600 to-transparent" />
+            <div className="absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2 hidden lg:block w-px bg-gradient-to-b from-transparent via-teal-500 to-transparent" />
             
             {/* القسم 1: التفاصيل */}
             <div className="space-y-3 lg:order-1 pr-4">
               
               {/* اسم المنتج */}
               <div className="flex items-start justify-between">
-                <h1 className="font-bold text-gray-900 text-lg leading-relaxed flex-1">
+                <h1 className={`font-bold text-lg leading-relaxed flex-1 ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>
                   {product.nameAr || product.name}
                 </h1>
               </div>
               
               {/* التقييم السريع المحسن */}
-              <div className="py-3 border-t border-gray-100">
+              <div className={`py-3 border-t ${
+                isDark ? 'border-gray-700' : 'border-gray-100'
+              }`}>
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-medium text-gray-700">تقييمك السريع:</span>
+                  <span className={`text-sm font-medium ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>تقييمك السريع:</span>
                   {renderQuickStars()}
                   {reviewState.isSubmittingQuickRating && (
-                    <span className="text-xs text-teal-600">جاري الإرسال...</span>
+                    <span className="text-xs text-teal-400">جاري الإرسال...</span>
                   )}
                 </div>
                 {reviewState.quickRatingError && (
                   <p className="text-red-500 text-xs mt-1">{reviewState.quickRatingError}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">
+                <p className={`text-xs mt-1 ${
+                  isDark ? 'text-gray-500' : 'text-gray-500'
+                }`}>
                   انقر على النجوم للتقييم السريع
                 </p>
               </div>
 
               {/* السعر */}
-              <div className="font-bold text-teal-600 py-2 text-base">
+              <div className={`font-bold py-2 text-base ${
+                isDark ? 'text-teal-400' : 'text-teal-600'
+              }`}>
                 <span>
                   {product.salePrice ? product.salePrice : product.originalPrice || product.price}
                 </span>
-                <span className="text-gray-500 mr-1">$</span>
+                <span className={`mr-1 ${
+                  isDark ? 'text-gray-400' : 'text-gray-500'
+                }`}>$</span>
                 {product.salePrice && product.originalPrice && (
                   <>
-                    <span className="text-gray-400 line-through text-sm mr-2">
+                    <span className={`line-through text-sm mr-2 ${
+                      isDark ? 'text-gray-500' : 'text-gray-400'
+                    }`}>
                       {product.originalPrice} $
                     </span>
-                    <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded mr-2">
+                    <span className={`text-xs px-2 py-1 rounded mr-2 ${
+                      isDark ? 'bg-red-900/50 text-red-400 border border-red-800' : 'bg-red-100 text-red-600'
+                    }`}>
                       وفر {Math.round(((product.originalPrice - product.salePrice) / product.originalPrice) * 100)}%
                     </span>
                   </>
@@ -403,9 +426,15 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* الوصف */}
-              <div className="py-3">
-                <h3 className="font-semibold text-gray-900 mb-2 text-sm">وصف المنتج</h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
+              <div className={`py-3 ${
+                isDark ? 'border-t border-gray-700' : ''
+              }`}>
+                <h3 className={`font-semibold mb-2 text-sm ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}>وصف المنتج</h3>
+                <p className={`leading-relaxed text-sm ${
+                  isDark ? 'text-gray-300' : 'text-gray-600'
+                }`}>
                   {product.descriptionAr || product.description}
                 </p>
               </div>
@@ -414,10 +443,13 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               {product.stock && product.stock > 0 && (
                 <div className="py-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-600">المتوفر في المخزون:</span>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>المتوفر في المخزون:</span>
                     <span className={`font-medium ${
-                      product.stock > 10 ? "text-green-600" :
-                      product.stock > 5 ? "text-yellow-600" : "text-red-600"
+                      product.stock > 10 
+                        ? isDark ? "text-green-400" : "text-green-600"
+                        : product.stock > 5 
+                          ? isDark ? "text-yellow-400" : "text-yellow-600" 
+                          : isDark ? "text-red-400" : "text-red-600"
                     }`}>
                       {product.stock} قطعة
                     </span>
@@ -428,26 +460,44 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               {/* الكمية */}
               <div className="py-2">
                 <div className="flex items-center gap-3">
-                  <label className="text-sm font-medium">الكمية:</label>
-                  <div className="flex items-center border border-gray-300 rounded text-center w-24">
+                  <label className={`text-sm font-medium ${
+                    isDark ? 'text-gray-300' : 'text-gray-700'
+                  }`}>الكمية:</label>
+                  <div className={`flex items-center rounded text-center w-24 ${
+                    isDark ? 'border border-gray-700' : 'border border-gray-300'
+                  }`}>
                     <button
                       onClick={() => handleQuantityChange(quantity - 1)}
                       disabled={quantity <= 1}
-                      className="p-1 disabled:opacity-50 hover:bg-gray-100 transition-colors duration-200"
+                      className={`p-1 transition-colors duration-200 ${
+                        isDark 
+                          ? 'disabled:opacity-50 hover:bg-gray-800' 
+                          : 'disabled:opacity-50 hover:bg-gray-100'
+                      }`}
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="px-2 py-1 bg-gray-50 w-8 text-sm">{quantity}</span>
+                    <span className={`px-2 py-1 w-8 text-sm ${
+                      isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-gray-900'
+                    }`}>{quantity}</span>
                     <button
                       onClick={() => handleQuantityChange(quantity + 1)}
                       disabled={quantity >= (product.stock || 20)}
-                      className="p-1 disabled:opacity-50 hover:bg-gray-100 transition-colors duration-200"
+                      className={`p-1 transition-colors duration-200 ${
+                        isDark 
+                          ? 'disabled:opacity-50 hover:bg-gray-800' 
+                          : 'disabled:opacity-50 hover:bg-gray-100'
+                      }`}
                     >
                       <Plus className="w-3 h-3" />
                     </button>
                   </div>
                   {isInCart && (
-                    <span className="text-xs text-teal-600">(في السلة: {cartQuantity})</span>
+                    <span className={`text-xs ${
+                      isDark ? 'text-teal-400' : 'text-teal-600'
+                    }`}>
+                      (في السلة: {cartQuantity})
+                    </span>
                   )}
                 </div>
               </div>
@@ -459,10 +509,14 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                   disabled={isAdding || !product.inStock || cartLoading}
                   className={`w-full py-3 rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200 ${
                     !product.inStock
-                      ? "bg-gray-400 cursor-not-allowed text-white"
+                      ? isDark 
+                        ? "bg-gray-700 cursor-not-allowed text-gray-400" 
+                        : "bg-gray-400 cursor-not-allowed text-white"
                       : showSuccess
                       ? "bg-green-500 hover:bg-green-600 text-white"
-                      : "bg-teal-600 hover:bg-teal-700 text-white"
+                      : isDark
+                        ? "bg-teal-700 hover:bg-teal-600 text-white"
+                        : "bg-teal-600 hover:bg-teal-700 text-white"
                   } ${isAdding || cartLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   {!product.inStock ? (
@@ -488,7 +542,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                 <button
                   onClick={handleBuyNow}
                   disabled={isAdding || !product.inStock || cartLoading}
-                  className="w-full border-2 border-teal-600 text-teal-600 py-2.5 rounded text-sm font-medium hover:bg-teal-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full py-2.5 rounded text-sm font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDark
+                      ? 'border-2 border-teal-500 text-teal-400 hover:bg-teal-900/30'
+                      : 'border-2 border-teal-600 text-teal-600 hover:bg-teal-50'
+                  }`}
                 >
                   {!product.inStock
                     ? "غير متوفر"
@@ -499,10 +557,16 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* قسم التعليق المبسط */}
-              <div className="py-4 border-t border-gray-100">
+              <div className={`py-4 ${
+                isDark ? 'border-t border-gray-700' : 'border-t border-gray-100'
+              }`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <MessageSquare className="w-4 h-4 text-teal-600" />
-                  <h3 className="font-semibold text-gray-900 text-sm">اترك تعليقاً</h3>
+                  <MessageSquare className={`w-4 h-4 ${
+                    isDark ? 'text-teal-400' : 'text-teal-600'
+                  }`} />
+                  <h3 className={`font-semibold text-sm ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>اترك تعليقاً</h3>
                 </div>
 
                 <div className="mb-3">
@@ -514,7 +578,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       ...prev, 
                       reviewerName: e.target.value 
                     }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                    className={`w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 ${
+                      isDark
+                        ? 'bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:ring-teal-500'
+                        : 'border border-gray-300 focus:ring-teal-400'
+                    }`}
                   />
                 </div>
 
@@ -526,13 +594,21 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     comment: e.target.value 
                   }))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 mb-3"
+                  className={`w-full px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 ${
+                    isDark
+                      ? 'bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:ring-teal-500'
+                      : 'border border-gray-300 focus:ring-teal-400'
+                  } mb-3`}
                 />
 
                 <button
                   onClick={handleSubmitReview}
                   disabled={reviewState.isSubmittingReview || !reviewState.comment.trim() || !reviewState.reviewerName.trim()}
-                  className="w-full bg-teal-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className={`w-full py-2 px-4 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                    isDark
+                      ? 'bg-teal-700 hover:bg-teal-600 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                      : 'bg-teal-600 hover:bg-teal-700 text-white disabled:opacity-50 disabled:cursor-not-allowed'
+                  }`}
                 >
                   {reviewState.isSubmittingReview ? (
                     <>
@@ -554,32 +630,44 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
 
               {/* قسم عرض التعليقات */}
               {productComments.length > 0 && (
-                <div className="py-6 border-t border-gray-100">
-                  <h3 className="font-semibold text-gray-900 text-lg mb-4">
+                <div className={`py-6 ${
+                  isDark ? 'border-t border-gray-700' : 'border-t border-gray-100'
+                }`}>
+                  <h3 className={`font-semibold text-lg mb-4 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>
                     التعليقات ({productComments.length})
                   </h3>
 
                   <div className="space-y-4">
                     {displayedComments.map((comment: any) => (
-                      <div key={comment.review_id} className="bg-gray-50 rounded-lg p-4">
+                      <div key={comment.review_id} className={`rounded-lg p-4 ${
+                        isDark ? 'bg-gray-800' : 'bg-gray-50'
+                      }`}>
                         <div className="flex items-start gap-3">
-                          <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span className="text-teal-600 text-lg font-medium">
+                          <div className="w-10 h-10 bg-teal-900/30 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-teal-400 text-lg font-medium">
                               {(comment.reviewer_name || 'م').charAt(0)}
                             </span>
                           </div>
                           
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-medium text-gray-900">
+                              <h4 className={`font-medium ${
+                                isDark ? 'text-white' : 'text-gray-900'
+                              }`}>
                                 {comment.reviewer_name || 'مستخدم مجهول'}
                               </h4>
-                              <span className="text-sm text-gray-500">
+                              <span className={`text-sm ${
+                                isDark ? 'text-gray-500' : 'text-gray-500'
+                              }`}>
                                 {comment.time_ago}
                               </span>
                             </div>
                             
-                            <p className="text-gray-700 leading-relaxed">
+                            <p className={`leading-relaxed ${
+                              isDark ? 'text-gray-300' : 'text-gray-700'
+                            }`}>
                               {comment.comment}
                             </p>
                           </div>
@@ -592,7 +680,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                     <div className="mt-6 text-center">
                       <button
                         onClick={() => setShowAllComments(!showAllComments)}
-                        className="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 transition-colors"
+                        className={`px-6 py-2 rounded-lg transition-colors ${
+                          isDark
+                            ? 'bg-teal-700 hover:bg-teal-600 text-white'
+                            : 'bg-teal-600 hover:bg-teal-700 text-white'
+                        }`}
                       >
                         {showAllComments 
                           ? 'عرض أقل' 
@@ -609,7 +701,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
             {/* القسم 2: الصور */}
             <div className="space-y-6 lg:order-2 pl-4">
               {/* الصورة الرئيسية */}
-              <div className="bg-white rounded-xl overflow-hidden shadow-lg w-full">
+              <div className={`rounded-xl overflow-hidden shadow-lg w-full ${
+                isDark ? 'shadow-black/30' : 'shadow-lg'
+              }`}>
                 <div
                   className="aspect-square relative bg-gray-100 w-full cursor-pointer group"
                   style={{ minHeight: "250px", maxHeight: "250px" }}
@@ -647,7 +741,9 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* الصور المصغرة */}
-              <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+              <div className={`rounded-xl p-4 shadow-sm ${
+                isDark ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-100'
+              }`}>
                 <div className="grid grid-cols-4 gap-2">
                   {Array.from({ length: 8 }).map((_, idx) => {
                     const hasImage = idx < productImages.length;
@@ -656,7 +752,11 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                       return (
                         <div
                           key={`placeholder-${idx}`}
-                          className="aspect-square bg-gray-50 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors cursor-default"
+                          className={`aspect-square rounded-lg border-2 border-dashed flex items-center justify-center cursor-default ${
+                            isDark 
+                              ? 'bg-gray-900 border-gray-700' 
+                              : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                          }`}
                         >
                         </div>
                       );
@@ -666,7 +766,13 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
                         key={idx}
                         onClick={() => setSelectedImage(idx)}
                         className={`aspect-square rounded-lg overflow-hidden border-2 hover:border-teal-400 transition-all duration-200 transform hover:scale-105 ${
-                          isSelected ? "border-teal-500 ring-2 ring-teal-200" : "border-gray-200"
+                          isSelected 
+                            ? isDark 
+                              ? "border-teal-400 ring-2 ring-teal-900/50" 
+                              : "border-teal-500 ring-2 ring-teal-200"
+                            : isDark 
+                              ? "border-gray-700" 
+                              : "border-gray-200"
                         }`}
                       >
                         <img
@@ -682,24 +788,34 @@ const ProductDetailsPage: React.FC<ProductDetailsPageProps> = ({
               </div>
 
               {/* معلومات إضافية */}
-              <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+              <div className={`rounded-lg p-4 space-y-2 text-sm ${
+                isDark ? 'bg-gray-800' : 'bg-gray-50'
+              }`}>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">المتجر:</span>
-                  <span className="font-medium">{product.brandAr || product.brand || "غير محدد"}</span>
+                  <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>المتجر:</span>
+                  <span className={`font-medium ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>{product.brandAr || product.brand || "غير محدد"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">التصنيف:</span>
-                  <span className="font-medium">{product.categoryAr || product.category}</span>
+                  <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>التصنيف:</span>
+                  <span className={`font-medium ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>{product.categoryAr || product.category}</span>
                 </div>
                 {product.sales && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">عدد المبيعات:</span>
-                    <span className="font-medium">{product.sales}</span>
+                    <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>عدد المبيعات:</span>
+                    <span className={`font-medium ${
+                      isDark ? 'text-white' : 'text-gray-900'
+                    }`}>{product.sales}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">عدد التقييمات:</span>
-                  <span className="font-medium">{product.reviewCount}</span>
+                  <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>عدد التقييمات:</span>
+                  <span className={`font-medium ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}>{product.reviewCount}</span>
                 </div>
               </div>
             </div>
